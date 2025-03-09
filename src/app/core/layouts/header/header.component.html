@@ -1,0 +1,363 @@
+<!-- header.component.html -->
+<!-- Modernized main header with theme colors and primary on search -->
+<header class="w-full bg-white shadow-sm sticky top-0 z-50">
+  <!-- Smaller top bar with clean design - MASQUÉ SUR MOBILE -->
+  <div
+    class="hidden md:block bg-opacity-10 py-2 px-4 border-b border-opacity-20 text-gray-500"
+  >
+    <div class="container mx-auto flex flex-wrap justify-between items-center">
+      <div class="flex items-center space-x-5 text-sm">
+        <span class="flex items-center">
+          <i class="lni lni-phone-set mr-1"></i>
+          +33 (0)1 23 45 67 89
+        </span>
+        <span class="flex items-center">
+          <i class="lni lni-envelope mr-1"></i>
+          contactkiapanou.com
+        </span>
+      </div>
+      <div class="flex items-center space-x-6">
+        <!-- Language selector with improved dropdown -->
+        <div class="relative" data-dropdown>
+          <button
+            (click)="toggleLanguageDropdown()"
+            class="flex items-center space-x-1 text-gray-500 hover:text-primary transition-colors duration-300 text-sm font-medium"
+          >
+            <span>{{ currentLanguage || "Français" }}</span>
+            <i class="lni lni-chevron-down text-xs"></i>
+          </button>
+          <div
+            *ngIf="isLanguageDropdownOpen"
+            class="absolute right-0 mt-2 w-28 shadow-lg rounded-md overflow-hidden z-50 border border-gray-100 bg-white"
+          >
+            <a
+              href="#"
+              (click)="selectLanguage('French', $event)"
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >Français</a
+            >
+            <a
+              href="#"
+              (click)="selectLanguage('English', $event)"
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >Anglais</a
+            >
+            <a
+              href="#"
+              (click)="selectLanguage('German', $event)"
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >Allemand</a
+            >
+            <a
+              href="#"
+              (click)="selectLanguage('Spanish', $event)"
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >Espagnol</a
+            >
+          </div>
+        </div>
+
+        <!-- Authentication menu with login/signup or account/logout -->
+        <div class="relative" data-dropdown>
+          <button
+            (click)="toggleAuthDropdown()"
+            class="text-sm flex items-center text-gray-500 hover:text-primary transition-colors duration-300 font-medium"
+          >
+            <i class="lni lni-user mr-1"></i>
+            <span *ngIf="isUserLoggedIn">Mon Compte</span>
+            <span *ngIf="!isUserLoggedIn">Se Connecter</span>
+            <i class="lni lni-chevron-down text-xs ml-1"></i>
+          </button>
+          <div
+            *ngIf="isAuthDropdownOpen"
+            class="absolute right-0 mt-2 w-32 shadow-lg rounded-md overflow-hidden z-50 border border-gray-100 bg-white"
+          >
+            <ng-container *ngIf="isUserLoggedIn">
+              <a
+                routerLink="/account"
+                (click)="closeAuthDropdown()"
+                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+                >Mon Compte</a
+              >
+              <a
+                href="#"
+                (click)="logout($event)"
+                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+                >Déconnexion</a
+              >
+            </ng-container>
+            <ng-container *ngIf="!isUserLoggedIn">
+              <a
+                routerLink="/login"
+                (click)="closeAuthDropdown()"
+                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+                >Se Connecter</a
+              >
+              <a
+                routerLink="/signup"
+                (click)="closeAuthDropdown()"
+                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+                >S'inscrire</a
+              >
+            </ng-container>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main header part with logo, search and icons -->
+  <div class="container mx-auto px-4 py-3 border-b">
+    <div class="flex items-center justify-between">
+      <!-- Logo with fixed width for better balance -->
+      <div class="w-1/4 md:w-1/4 flex justify-start">
+        <a routerLink="/" class="flex-shrink-0">
+          <img
+            src="assets/images/logo.jpeg"
+            alt="NKIAPA'NOU"
+            class="h-16 md:h-24 rounded-lg shadow-sm hover:shadow-md transition-shadow duration-300"
+          />
+        </a>
+      </div>
+
+      <!-- Search bar - DESKTOP VERSION -->
+      <div class="hidden md:block w-2/4">
+        <div class="relative max-w-xl mx-auto">
+          <div class="flex rounded-lg transition-colors duration-300">
+            <div class="relative">
+              <select
+                class="h-10 pl-4 pr-10 py-2 font-body cursor-pointer border-e-0 rounded-e-none"
+              >
+                <option value="all">Catégories</option>
+                <option value="decorations">Décorations</option>
+                <option value="groceries">Épicerie</option>
+                <option value="fashion">Mode</option>
+                <option value="jewelry">Bijoux</option>
+              </select>
+            </div>
+            <input
+              type="text"
+              placeholder="Rechercher un produit..."
+              class="h-10 flex-grow pl-4 pr-12 py-2 text-gray-600"
+              style="
+                border-top-left-radius: 0px;
+                border-bottom-left-radius: 0px;
+              "
+            />
+            <button
+              class="absolute right-0 top-0 h-full px-4 bg-primary text-white hover:bg-primary-dark transition-colors duration-300 rounded-e-lg"
+            >
+              <i class="lni lni-search-alt text-xl"></i>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile actions (Search icon, Favorites, Cart, Menu) -->
+      <div class="md:w-1/4 flex items-center justify-end space-x-4">
+        <!-- Mobile search icon - NEW -->
+        <button
+          class="md:hidden text-gray-500 hover:text-primary transition-colors duration-300"
+          (click)="toggleMobileSearch()"
+        >
+          <i class="lni lni-search-alt text-2xl"></i>
+        </button>
+
+        <!-- Favorites icon -->
+        <a
+          routerLink="/favorites"
+          class="relative text-gray-500 hover:text-primary transition-colors duration-300"
+        >
+          <i class="lni lni-heart text-2xl"></i>
+          <span
+            class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
+            >5</span
+          >
+        </a>
+
+        <!-- Cart icon -->
+        <a
+          routerLink="/cart"
+          class="relative text-gray-500 hover:text-primary transition-colors duration-300"
+        >
+          <i class="lni lni-cart text-2xl"></i>
+          <span
+            class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
+            >3</span
+          >
+        </a>
+
+        <!-- Mobile menu button -->
+        <button
+          class="md:hidden rounded-lg focus:outline-none focus:ring-2 focus:ring-primary p-2"
+          (click)="toggleMobileMenu()"
+        >
+          <i class="lni lni-menu text-gray-500 text-2xl"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Mobile search bar - IDENTIQUE AU DESKTOP -->
+  <div class="md:hidden" [ngClass]="{ hidden: !isMobileSearchOpen }">
+    <div class="container mx-auto px-4 py-3 border-t border-gray-100">
+      <div class="relative">
+        <div class="flex rounded-lg transition-colors duration-300">
+          <div class="relative">
+            <select
+              class="h-10 pl-4 pr-10 py-2 font-body cursor-pointer border-e-0 rounded-e-none"
+            >
+              <option value="all">Catégories</option>
+              <option value="decorations">Décorations</option>
+              <option value="groceries">Épicerie</option>
+              <option value="fashion">Mode</option>
+              <option value="jewelry">Bijoux</option>
+            </select>
+          </div>
+          <input
+            type="text"
+            placeholder="Rechercher un produit..."
+            class="h-10 flex-grow pl-4 pr-12 py-2 text-gray-600"
+            style="border-top-left-radius: 0px; border-bottom-left-radius: 0px"
+          />
+          <button
+            class="absolute right-0 top-0 h-full px-4 bg-primary text-white hover:bg-primary-dark transition-colors duration-300 rounded-e-lg"
+          >
+            <i class="lni lni-search-alt text-xl"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Categories menu with subtle gradient and improved active state -->
+  <div class="bg-gray-50">
+    <div class="container mx-auto">
+      <!-- Main navigation -->
+      <nav class="hidden md:flex justify-center mt-0 space-x-8">
+        <a
+          routerLink="/decorations"
+          routerLinkActive="text-primary border-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
+        >
+          Décorations
+        </a>
+        <a
+          routerLink="/groceries"
+          routerLinkActive="text-primary border-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
+        >
+          Épicerie
+        </a>
+        <a
+          routerLink="/fashion"
+          routerLinkActive="text-primary border-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
+        >
+          Mode
+        </a>
+        <a
+          routerLink="/jewelry"
+          routerLinkActive="text-primary border-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
+        >
+          Bijoux
+        </a>
+      </nav>
+    </div>
+  </div>
+
+  <!-- Mobile menu with theme colors and improved design -->
+  <div
+    class="md:hidden shadow-lg rounded-b-lg bg-white"
+    [ngClass]="{ hidden: !isMobileMenuOpen }"
+  >
+    <div class="container mx-auto px-4 py-2">
+      <nav class="flex flex-col">
+        <a
+          routerLink="/decorations"
+          routerLinkActive="text-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary py-3 border-b border-gray-100 flex items-center"
+        >
+          <i class="lni lni-gallery mr-2 text-sm"></i> Décorations
+        </a>
+        <a
+          routerLink="/groceries"
+          routerLinkActive="text-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary py-3 border-b border-gray-100 flex items-center"
+        >
+          <i class="lni lni-restaurant mr-2 text-sm"></i> Épicerie
+        </a>
+        <a
+          routerLink="/fashion"
+          routerLinkActive="text-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary py-3 border-b border-gray-100 flex items-center"
+        >
+          <i class="lni lni-t-shirt mr-2 text-sm"></i> Mode
+        </a>
+        <a
+          routerLink="/jewelry"
+          routerLinkActive="text-primary font-semibold"
+          class="font-medium text-gray-600 hover:text-primary py-3 flex items-center"
+        >
+          <i class="lni lni-diamond mr-2 text-sm"></i> Bijoux
+        </a>
+      </nav>
+
+      <!-- Mobile language and account section with improved styling -->
+      <div
+        class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100"
+      >
+        <!-- Mobile language selector with primary styling -->
+        <div class="relative">
+          <select
+            [(ngModel)]="currentLanguage"
+            class="pl-3 pr-8 py-2 rounded-md border border-primary bg-white focus:outline-none focus:ring-2 focus:ring-primary text-sm text-gray-600 appearance-none"
+          >
+            <option value="French">Français</option>
+            <option value="German">Allemand</option>
+            <option value="English">Anglais</option>
+            <option value="Spanish">Espagnol</option>
+          </select>
+          <div
+            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-primary"
+          >
+            <i class="lni lni-chevron-down text-sm"></i>
+          </div>
+        </div>
+
+        <!-- Mobile auth buttons with consistent styling -->
+        <div class="flex space-x-2">
+          <ng-container *ngIf="!isUserLoggedIn">
+            <a
+              routerLink="/login"
+              class="px-3 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors duration-300 flex items-center"
+            >
+              <i class="lni lni-enter mr-1 text-xs"></i> Se Connecter
+            </a>
+            <a
+              routerLink="/signup"
+              class="px-3 py-2 border border-primary text-primary text-sm rounded-md hover:bg-primary hover:text-white transition-colors duration-300 flex items-center"
+            >
+              <i class="lni lni-user mr-1 text-xs"></i> S'inscrire
+            </a>
+          </ng-container>
+          <ng-container *ngIf="isUserLoggedIn">
+            <a
+              routerLink="/account"
+              class="px-3 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors duration-300 flex items-center"
+            >
+              <i class="lni lni-user mr-1 text-xs"></i> Compte
+            </a>
+            <button
+              (click)="logout($event)"
+              class="px-3 py-2 border border-primary text-primary text-sm rounded-md hover:bg-primary hover:text-white transition-colors duration-300 flex items-center"
+            >
+              <i class="lni lni-exit mr-1 text-xs"></i> Déconnexion
+            </button>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </div>
+</header>

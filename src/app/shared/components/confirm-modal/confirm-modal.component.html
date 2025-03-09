@@ -1,0 +1,47 @@
+<div class="rounded-lg shadow-lg p-6 relative">
+  <div class="flex justify-center items-center mb-4">
+    <div class="relative">
+      <div
+        class="w-16 h-16 flex items-center justify-center bg-green-100 rounded-full"
+      >
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          class="h-8 w-8 text-green-600"
+          viewBox="0 0 20 20"
+          fill="currentColor"
+        >
+          <path
+            fill-rule="evenodd"
+            d="M10 18a8 8 0 100-16 8 8 0 000 16zm4.707-10.707a1 1 0 00-1.414-1.414L9 10.586 6.707 8.293a1 1 0 00-1.414 1.414l3 3a1 1 0 001.414 0l5-5z"
+            clip-rule="evenodd"
+          />
+        </svg>
+      </div>
+    </div>
+  </div>
+
+  <!-- Title -->
+  <h2
+    id="confirm-modal-title"
+    class="text-lg font-semibold text-gray-800 text-center mb-2"
+  >
+    {{ title }}
+  </h2>
+
+  <!-- Description -->
+  <p
+    id="confirm-modal-description"
+    class="text-sm text-gray-600 text-center mb-6"
+  >
+    {{ description }}
+  </p>
+
+  <!-- Action Buttons -->
+  <div class="flex justify-evenly">
+    <button class="btn btn-outline-primary" (click)="closeModal()">
+      Cancel
+    </button>
+
+    <a [href]="confirmLink" class="btn btn-primary"> Confirm </a>
+  </div>
+</div>

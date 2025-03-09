@@ -1,0 +1,79 @@
+<div class="container mx-auto p-4">
+  <h1 class="text-2xl text-center font-bold mb-4 text-[#0d6efd]">
+    Confirm the Payment
+  </h1>
+
+  <form [formGroup]="paymentForm" (ngSubmit)="validatePayment()">
+    <!-- Phone Number Input -->
+    <div class="mb-4">
+      <label
+        class="block text-sm font-medium mb-1 text-black"
+        for="phone_number"
+      >
+        Phone Number
+      </label>
+      <input
+        type="text"
+        id="phone_number"
+        formControlName="phone_number"
+        placeholder="Enter your phone number"
+        pattern="^6\d{8}$"
+        class="w-full border border-gray-300 rounded-lg p-2 text-black text-sm"
+      />
+
+      <!-- Error Message -->
+      <div
+        *ngIf="
+          paymentForm.get('phone_number')?.dirty &&
+          paymentForm.get('phone_number')?.invalid
+        "
+        class="text-red-500 text-sm mt-2"
+      >
+        <div *ngIf="paymentForm.get('phone_number')?.hasError('required')">
+          Phone number is required.
+        </div>
+        <div *ngIf="paymentForm.get('phone_number')?.hasError('pattern')">
+          Invalid phone number format. Please use 6XXXXXXXX.
+        </div>
+      </div>
+    </div>
+
+    <!-- Amount to Pay Input -->
+    <div class="mb-4">
+      <label class="block text-sm font-medium mb-1 text-black" for="amount">
+        Amount
+      </label>
+      <input
+        readonly
+        type="number"
+        id="amount"
+        [value]="order_payment.amount_paid"
+        placeholder="Enter payment amount"
+        class="w-full border border-gray-300 rounded-lg bg-gray-100 p-2 text-black text-sm"
+      />
+    </div>
+
+    <!-- Confirmation Buttons -->
+    <div class="flex justify-evenly mt-6">
+      <button
+        class="btn btn-primary"
+        type="submit"
+        [disabled]="paymentForm.invalid || isSubmitting"
+      >
+        <ng-container *ngIf="isSubmitting; else btnText">
+          <spinner></spinner>
+        </ng-container>
+        <ng-template #btnText>
+          <span>Reset</span>
+        </ng-template>
+      </button>
+      <button
+        class="btn btn-outline-primary"
+        type="button"
+        (click)="closeModal()"
+      >
+        Confirm
+      </button>
+    </div>
+  </form>
+</div>

@@ -1,0 +1,387 @@
+<div class="mx-auto mt-6">
+  <div class="flex justify-between items-center mb-6">
+    <h3 class="text-xl sm:text-2xl text-gray-800 font-semibold">Mon profil</h3>
+  </div>
+</div>
+
+<div class="mx-auto container">
+  <div class="border-b pb-8">
+    <div class="p-4 md:max-w-[45rem]">
+      <div
+        class="flex flex-col md:flex-row justify-between space-y-3 md:space-x-3"
+      >
+        <div class="flex flex-col justify-center items-center">
+          <div class="flex flex-col justify-center space-y-4 relative">
+            <div
+              class="flex-shrink-0 w-[9rem] h-[9rem] border rounded-full overflow-hidden cursor-pointer"
+            >
+              <img
+                [src]="profileUrl"
+                alt="Photo de profil"
+                class="w-full h-full object-cover rounded-full border-2 p-1 border-blue-500"
+              />
+              <div
+                class="absolute top-0 right-0 flex items-center justify-center w-full h-full opacity-0 hover:opacity-100 transition-opacity duration-300"
+              >
+                <label
+                  for="imageInput"
+                  class="cursor-pointer p-3 px-4 bg-white rounded-full transition-all"
+                >
+                  <i
+                    class="bi bi-camera text-[#0167F3]"
+                    style="font-size: 3rem"
+                  ></i>
+                </label>
+              </div>
+            </div>
+
+            <input
+              type="file"
+              (change)="changeProfileImage($event)"
+              class="hidden"
+              id="imageInput"
+              accept="image/*"
+            />
+
+            @if (selectedProfileFile) {
+
+            <button (click)="saveProfileImage()" class="btn btn-primary">
+              <ng-container *ngIf="isLoading; else buttonText">
+                <spinner></spinner>
+              </ng-container>
+              <ng-template #buttonText>
+                <span>Save</span>
+              </ng-template>
+            </button>
+            }
+          </div>
+        </div>
+
+        <form
+          [formGroup]="profileForm"
+          class="flex flex-col justify-center w-full md:w-[30rem] space-y-4"
+        >
+          <div
+            class="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-4"
+          >
+            <div class="w-full sm:w-2/4 mb-2 sm:mb-0">
+              <label class="text-gray-600">Email</label
+              ><abbr
+                class="text-danger"
+                title="
+              required
+            "
+                >*</abbr
+              >
+            </div>
+            <div class="w-full">
+              <input
+                class="form-control"
+                type="email"
+                formControlName="email"
+                [ngClass]="{
+                  'is-invalid':
+                    f.email.errors && (f.email.touched || f.email.dirty),
+                  'is-valid': f.email.valid
+                }"
+              />
+              @if (f.email.touched && f.email.errors?.required) {
+              <div class="text-danger">Email is required.</div>
+              } @if (f.email.errors?.email) {
+              <div class="text-danger">Invalid email format.</div>
+              }
+            </div>
+          </div>
+
+          <div
+            class="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-4"
+          >
+            <div class="w-full sm:w-2/4 mb-2 sm:mb-0">
+              <label class="text-gray-600 whitespace-nowrap"
+                >Nom d'utilisateur</label
+              ><abbr
+                class="text-danger"
+                title="
+              required
+            "
+                >*</abbr
+              >
+            </div>
+            <div class="w-full">
+              <input
+                class="form-control"
+                type="text"
+                formControlName="name"
+                [ngClass]="{
+                  'is-invalid':
+                    f.name.errors && (f.name.touched || f.name.dirty),
+                  'is-valid': f.name.valid
+                }"
+              />
+              @if (f.name.touched && f.name.errors?.required) {
+              <span class="text-danger">Username is required.</span>
+              }
+            </div>
+          </div>
+
+          <div
+            class="flex flex-col sm:flex-row items-center space-x-0 sm:space-x-4"
+          >
+            <div class="w-full sm:w-2/4 mb-2 sm:mb-0">
+              <label class="text-gray-600 whitespace-nowrap"
+                >Numéro de téléphone</label
+              ><abbr
+                class="text-danger"
+                title="
+              required
+            "
+                >*</abbr
+              >
+            </div>
+            <div class="w-full">
+              <input
+                class="form-control"
+                type="text"
+                formControlName="phone"
+                [ngClass]="{
+                  'is-invalid':
+                    f.phone.errors && (f.phone.touched || f.phone.dirty),
+                  'is-valid': f.phone.valid
+                }"
+              />
+              @if (f.phone.touched && f.phone.errors?.required) {
+              <span class="text-danger">Phone number is required.</span>
+              }
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+    <div class="flex justify-end mt-4">
+      <button
+        (click)="onUpdateProfile()"
+        [disabled]="profileForm.invalid"
+        class="btn btn-primary"
+      >
+        <ng-container *ngIf="isLoading; else buttonText">
+          <spinner></spinner>
+        </ng-container>
+        <ng-template #buttonText>
+          <span>Save</span>
+        </ng-template>
+      </button>
+    </div>
+  </div>
+
+  <div class="mt-6">
+    <div class="border border-gray-300 rounded-lg">
+      <div
+        class="bg-gradient-to-r from-blue-50 to-blue-100 px-6 py-4 cursor-pointer flex justify-between items-center rounded-t-lg hover:from-blue-100 hover:to-blue-50 transition-all duration-300"
+        (click)="togglePanel('vendeur')"
+        [class.active]="isPanelOpen('vendeur')"
+      >
+        <h2 class="text-lg font-semibold">Vendeur</h2>
+        <svg
+          xmlns="http://www.w3.org/2000/svg"
+          fill="none"
+          viewBox="0 0 24 24"
+          stroke-width="2"
+          stroke="currentColor"
+          class="w-5 h-5 transition-transform duration-300"
+          [class.rotate-180]="isPanelOpen('vendeur')"
+        >
+          <path
+            stroke-linecap="round"
+            stroke-linejoin="round"
+            d="M19 9l-7 7-7-7"
+          />
+        </svg>
+      </div>
+      <div
+        *ngIf="isPanelOpen('vendeur')"
+        class="px-6 py-4 border-t border-gray-300 rounded-b-lg shadow-inner transition-all duration-500"
+      >
+        <div class="w-full mt">
+          <div
+            class="flex flex-col md:flex-row justify-between items-center space-y-6 md:space-x-6 mb-8"
+          >
+            <!-- Logo Section -->
+            <div class="flex flex-col justify-center items-center">
+              <div
+                class="mb-2 w-36 h-36 rounded-full overflow-hidden border-2 p-1 border-blue-500"
+              >
+                <img
+                  [src]="logoUrl"
+                  alt="Logo"
+                  class="w-full h-full object-cover rounded-full"
+                />
+              </div>
+
+              <!-- Logo Buttons -->
+              <div>
+                <button
+                  *ngIf="selectedLogoFile"
+                  (click)="saveLogoImage()"
+                  class="btn bg-blue-500 text-white py-2 px-4 rounded-sm hover:bg-blue-600 transition-all"
+                >
+                  <ng-container *ngIf="isLoading">
+                    <span class="spinner"></span>
+                  </ng-container>
+                  Save
+                </button>
+
+                <label
+                  *ngIf="!selectedLogoFile"
+                  for="logoInput"
+                  class="btn bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all"
+                >
+                  Changer Logo
+                </label>
+              </div>
+
+              <input
+                type="file"
+                (change)="changeLogo($event)"
+                class="hidden"
+                id="logoInput"
+                accept="image/*"
+              />
+            </div>
+
+            <div class="hidden md:block w-0.5 h-32 bg-gray-200"></div>
+
+            <!-- Cover Photo Section -->
+            <div class="flex flex-col justify-center items-center">
+              <div
+                class="mb-2 w-full h-80 rounded-lg overflow-hidden border-2 p-1 border-blue-500"
+              >
+                <img
+                  [src]="coverPhotoUrl"
+                  alt="Cover picture"
+                  class="object-cover"
+                />
+              </div>
+
+              <div>
+                <button
+                  *ngIf="selectedCoverFile"
+                  (click)="saveCoverImage()"
+                  class="btn bg-blue-500 text-white py-2 px-4 rounded-sm hover:bg-blue-600 transition-all"
+                >
+                  <ng-container *ngIf="isLoading">
+                    <span class="spinner"></span>
+                  </ng-container>
+                  Save
+                </button>
+                <label
+                  *ngIf="!selectedCoverFile"
+                  for="coverPhotoInput"
+                  class="btn bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all"
+                >
+                  Changer Couverture
+                </label>
+              </div>
+
+              <input
+                type="file"
+                (change)="changeCoverPhoto($event)"
+                class="hidden"
+                id="coverPhotoInput"
+                accept="image/*"
+              />
+            </div>
+          </div>
+
+          <!-- Vendor Details Form -->
+          <form
+            [formGroup]="shopForm"
+            class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6"
+          >
+            <div>
+              <label class="text-gray-700 font-medium mb-2">Name</label>
+              <abbr class="text-red-500" title="required">*</abbr>
+              <input
+                type="text"
+                formControlName="name"
+                class="form-control"
+                placeholder="Name"
+              />
+            </div>
+            <div>
+              <label class="text-gray-700 font-medium mb-2"
+                >Numéro de contact</label
+              >
+              <abbr class="text-red-500" title="required">*</abbr>
+              <input
+                type="text"
+                formControlName="contact_number"
+                class="form-control"
+                placeholder="Entrez le numéro de contact"
+              />
+            </div>
+            <div>
+              <label class="text-gray-700 font-medium mb-2">Localisation</label>
+              <abbr class="text-red-500" title="required">*</abbr>
+              <input
+                type="text"
+                formControlName="location"
+                class="form-control"
+                placeholder="Location"
+              />
+            </div>
+            <div>
+              <label class="text-gray-700 font-medium mb-2">Site Web</label>
+              <input
+                type="text"
+                formControlName="website_url"
+                class="form-control"
+                placeholder="Entrez l'URL du site web"
+              />
+            </div>
+            <div>
+              <label class="text-gray-700 font-medium mb-2">Visite</label>
+              <input
+                type="text"
+                formControlName="visit_count"
+                class="form-control"
+                placeholder="Visite"
+              />
+            </div>
+            <div>
+              <label class="text-gray-700 font-medium mb-2">Rating</label>
+              <input
+                type="text"
+                formControlName="rating"
+                class="form-control"
+                placeholder="Rating"
+              />
+            </div>
+            <div class="md:col-span-2">
+              <label class="text-gray-700 font-medium mb-2">Description</label>
+              <abbr class="text-red-500" title="required">*</abbr>
+              <textarea
+                formControlName="description"
+                class="form-control"
+                rows="4"
+                placeholder="Entrez la description du vendeur"
+              ></textarea>
+            </div>
+          </form>
+
+          <div class="flex justify-end">
+            <button
+              (click)="onUpdateShopDetails()"
+              [disabled]="shopForm.invalid"
+              class="btn bg-blue-500 text-white py-2 px-4 rounded-lg hover:bg-blue-600 transition-all"
+            >
+              <ng-container *ngIf="isLoading">
+                <span class="spinner"></span>
+              </ng-container>
+              <span>Sauvegarder</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

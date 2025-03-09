@@ -1,0 +1,76 @@
+<div class="max-w-xl mx-auto p-6 bg-white shadow-md rounded-md">
+  <h2 class="text-2xl font-semibold text-center mb-4 text-blue-600">
+    Leave a Review
+  </h2>
+  <form [formGroup]="reviewForm" (ngSubmit)="submitReview()">
+    <div class="mb-4">
+      <label for="review-rating" class="block text-sm font-medium text-gray-700"
+        >Rating</label
+      >
+      <select
+        id="review-rating"
+        formControlName="rating"
+        class="form-control mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+      >
+        <option value="5">5 ⭐</option>
+        <option value="4">4 ⭐</option>
+        <option value="3">3 ⭐</option>
+        <option value="2">2 ⭐</option>
+        <option value="1">1 ⭐</option>
+      </select>
+      <div
+        *ngIf="
+          reviewForm.get('rating')?.invalid && reviewForm.get('rating')?.touched
+        "
+        class="text-red-500 text-sm mt-1"
+      >
+        Rating is required.
+      </div>
+    </div>
+
+    <div class="mb-4">
+      <label
+        for="review-message"
+        class="block text-sm font-medium text-gray-700"
+        >Review</label
+      >
+      <textarea
+        id="review-message"
+        formControlName="review"
+        rows="4"
+        class="mt-1 form-control w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+        placeholder="Your review here..."
+      ></textarea>
+      <div
+        *ngIf="
+          reviewForm.get('review')?.invalid && reviewForm.get('review')?.touched
+        "
+        class="text-red-500 text-sm mt-1"
+      >
+        Review is required.
+      </div>
+    </div>
+
+    <div class="flex justify-center gap-4">
+      <button
+        type="submit"
+        class="btn btn-primary"
+        [disabled]="reviewForm.invalid || isSubmitted"
+      >
+        <ng-container *ngIf="!isSubmitted; else loadingTemplate">
+          Submit
+        </ng-container>
+        <ng-template #loadingTemplate>
+          <spinner></spinner>
+        </ng-template>
+      </button>
+      <button
+        type="button"
+        class="btn btn-outline-primary"
+        (click)="closeModal()"
+      >
+        Cancel
+      </button>
+    </div>
+  </form>
+</div>

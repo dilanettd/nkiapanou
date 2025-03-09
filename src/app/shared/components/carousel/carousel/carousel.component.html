@@ -1,0 +1,104 @@
+<div class="relative overflow-hidden">
+  <div class="container mx-auto px-4">
+    <div class="hero-slider carousel-container relative">
+      <!-- Slides du carrousel -->
+      @for (slide of slides(); track slide.category; let i = $index) {
+      <div
+        class="carousel-slide relative min-h-[400px] md:min-h-[500px] rounded-2xl overflow-hidden"
+        [class.active]="currentSlide() === i"
+        [class.hidden]="currentSlide() !== i"
+      >
+        <div
+          class="absolute inset-0 bg-cover bg-center"
+          [style.background-image]="'url(' + slide.backgroundImage + ')'"
+        >
+          <div class="absolute inset-0 bg-black/30"></div>
+        </div>
+        <div class="relative h-full flex items-center p-6 md:p-12">
+          <div class="max-w-xl">
+            <span
+              class="inline-block px-4 py-1 rounded-full text-sm font-medium mb-4 text-white"
+              [style.background-color]="slide.badgeColor"
+              >{{ slide.category }}</span
+            >
+            <h2 class="text-3xl md:text-5xl font-bold text-white mb-4">
+              {{ slide.title }}
+            </h2>
+            <p class="text-white/90 text-sm md:text-base mb-6">
+              {{ slide.description }}
+            </p>
+            <a
+              [routerLink]="slide.buttonLink"
+              class="btn inline-block px-6 py-3 bg-white rounded-lg font-medium transition-colors duration-300"
+              [style.color]="slide.textColor"
+              [style]="{
+                hover:
+                  'background-color: ' + slide.hoverColor + '; color: white;'
+              }"
+            >
+              {{ slide.buttonText }}
+            </a>
+          </div>
+        </div>
+      </div>
+      }
+
+      <!-- Navigation sur l'image -->
+      <div class="navigation-buttons">
+        <!-- Bouton précédent -->
+        <div
+          class="nav-button nav-prev"
+          (click)="prevSlide()"
+          aria-label="Slide précédente"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="15 18 9 12 15 6"></polyline>
+          </svg>
+        </div>
+
+        <!-- Bouton suivant -->
+        <div
+          class="nav-button nav-next"
+          (click)="nextSlide()"
+          aria-label="Slide suivante"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="white"
+            stroke-width="2"
+            stroke-linecap="round"
+            stroke-linejoin="round"
+          >
+            <polyline points="9 18 15 12 9 6"></polyline>
+          </svg>
+        </div>
+
+        <!-- Indicateurs en bas à droite -->
+        <div class="carousel-indicators">
+          @for (i of getIndexArray(); track i) {
+          <div
+            class="indicator"
+            [class.active]="currentSlide() === i"
+            (click)="goToSlide(i)"
+            [attr.aria-label]="'Aller à la diapositive ' + (i + 1)"
+          ></div>
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

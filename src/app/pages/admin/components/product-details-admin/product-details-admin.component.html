@@ -1,0 +1,185 @@
+<!-- product-details-admin.component.html -->
+<div class="max-w-7xl mx-auto p-6">
+  <!-- Back button -->
+  <button
+    (click)="goBack()"
+    class="mb-6 flex items-center gap-2 text-gray-600 hover:text-[#0167F3] transition-colors"
+  >
+    <i class="fas fa-arrow-left"></i>
+    <span>Back</span>
+  </button>
+
+  <ng-container *ngIf="isLoading">
+    <div class="flex justify-center items-center min-h-[400px]">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0167F3]"
+      ></div>
+    </div>
+  </ng-container>
+
+  <ng-container *ngIf="!isLoading && product">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Images section -->
+      <div class="bg-white rounded-lg shadow overflow-hidden">
+        <div class="relative aspect-square">
+          <img
+            [src]="
+              product.images[currentImageIndex]?.image_url ||
+              '/assets/placeholder.png'
+            "
+            [alt]="product.name + ' - Image ' + (currentImageIndex + 1)"
+            class="w-full h-full object-cover"
+          />
+
+          <ng-container *ngIf="product.images.length > 1">
+            <button
+              (click)="previousImage()"
+              class="absolute left-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-white transition-all"
+            >
+              <i class="fas fa-chevron-left text-[#0167F3] h-6 w-6"></i>
+            </button>
+            <button
+              (click)="nextImage()"
+              class="absolute right-2 top-1/2 -translate-y-1/2 bg-white/80 p-2 rounded-full hover:bg-white transition-all"
+            >
+              <i class="fas fa-chevron-right text-[#0167F3] h-6 w-6"></i>
+            </button>
+          </ng-container>
+        </div>
+
+        <!-- Thumbnails -->
+        <div class="p-4 flex gap-2 overflow-x-auto">
+          <button
+            *ngFor="let image of product.images; let i = index"
+            (click)="currentImageIndex = i"
+            [class]="
+              'flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ' +
+              (currentImageIndex === i
+                ? 'border-[#0167F3]'
+                : 'border-transparent')
+            "
+          >
+            <img
+              [src]="image.thumbnail_url || image.image_url"
+              [alt]="'Thumbnail ' + (i + 1)"
+              class="w-full h-full object-cover"
+            />
+          </button>
+        </div>
+      </div>
+
+      <!-- Information section -->
+      <div class="bg-white rounded-lg shadow">
+        <div class="p-6">
+          <div class="flex items-center justify-between mb-6">
+            <div>
+              <h1 class="text-2xl font-bold">{{ product.name }}</h1>
+              <p *ngIf="product.brand" class="text-lg text-gray-600">
+                {{ product.brand }}
+              </p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span class="text-sm text-gray-500">Status</span>
+              <label class="relative inline-flex items-center cursor-pointer">
+                <input
+                  type="checkbox"
+                  [checked]="product.is_active"
+                  (change)="onActiveToggle()"
+                  class="sr-only peer"
+                />
+                <div
+                  class="w-11 h-6 bg-gray-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-[#0167F3]"
+                ></div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Price and stock -->
+          <div class="grid grid-cols-2 gap-4 mb-6">
+            <div class="space-y-1">
+              <p class="text-sm text-gray-500">Price</p>
+              <p class="text-2xl font-bold text-[#0167F3]">
+                {{ formatPrice(product.price, product.currency) }}
+              </p>
+            </div>
+            <div class="space-y-1">
+              <p class="text-sm text-gray-500">Stock</p>
+              <p class="text-2xl font-bold">
+                {{ product.stock_quantity }}
+                <span class="text-sm text-gray-500 ml-1">units</span>
+              </p>
+            </div>
+          </div>
+
+          <div class="h-px bg-gray-200 my-6"></div>
+
+          <!-- Categories -->
+          <div class="space-y-2 mb-6">
+            <h3 class="text-sm text-gray-500">Categories</h3>
+            <div class="flex gap-2">
+              <span class="px-3 py-1 bg-gray-100 rounded-full text-sm">
+                {{ product.category }}
+              </span>
+              <span
+                *ngIf="product.subcategory"
+                class="px-3 py-1 border rounded-full text-sm"
+              >
+                {{ product.subcategory }}
+              </span>
+            </div>
+          </div>
+
+          <!-- Metrics -->
+          <div class="grid grid-cols-3 gap-4 mb-6">
+            <div class="flex items-center gap-2">
+              <i class="fas fa-star text-yellow-400"></i>
+              <span>{{ product.rating }}/5</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fas fa-eye text-gray-400"></i>
+              <span>{{ product.visit }} views</span>
+            </div>
+            <div class="flex items-center gap-2">
+              <i class="fas fa-calendar text-gray-400"></i>
+              <span>{{ formatDate(product.created_at) }}</span>
+            </div>
+          </div>
+
+          <div class="h-px bg-gray-200 my-6"></div>
+
+          <!-- Shop information -->
+          <div class="space-y-2 mb-6">
+            <h3 class="text-sm text-gray-500">Shop</h3>
+            <div class="flex items-center gap-3">
+              <i class="fas fa-store text-[#0167F3]"></i>
+              <div>
+                <p class="font-medium">{{ product.shop.name }}</p>
+                <p class="text-sm text-gray-500">{{ product.shop.email }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Installments -->
+          <div *ngIf="product.installment_count > 1" class="mb-6">
+            <div class="h-px bg-gray-200 my-6"></div>
+            <div class="space-y-2">
+              <h3 class="text-sm text-gray-500">Installments</h3>
+              <p class="text-sm">Up to {{ product.installment_count }} times</p>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <ng-container *ngIf="product.description">
+            <div class="h-px bg-gray-200 my-6"></div>
+            <div class="space-y-2">
+              <h3 class="text-sm text-gray-500">Description</h3>
+              <p class="text-sm text-gray-600 whitespace-pre-line">
+                {{ product.description }}
+              </p>
+            </div>
+          </ng-container>
+        </div>
+      </div>
+    </div>
+  </ng-container>
+</div>

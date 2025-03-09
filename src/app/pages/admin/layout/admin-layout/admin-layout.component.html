@@ -1,0 +1,18 @@
+<div class="min-h-screen flex flex-col bg-gray-100">
+  <!-- Header -->
+  <admin-header />
+
+  <!-- Contenu principal avec Sidebar et Main -->
+  <div class="flex flex-1">
+    <!-- Sidebar -->
+    <admin-sidebar class="bg-white w-64 min-h-screen" />
+
+    <!-- Contenu principal -->
+    <main class="flex-1 p-8 mt-16 overflow-auto">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+
+  <!-- Footer -->
+  <admin-footer />
+</div>

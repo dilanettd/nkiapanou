@@ -1,0 +1,143 @@
+<!-- product-list.component.html -->
+<div class="p-6 bg-gray-50 min-h-screen">
+  <!-- Header et Recherche -->
+  <div class="mb-6">
+    <h1 class="text-2xl font-bold text-gray-900 mb-4">Products Management</h1>
+
+    <!-- Barre de recherche -->
+    <div class="relative">
+      <input
+        type="text"
+        [(ngModel)]="searchTerm"
+        (input)="onSearch($event)"
+        placeholder="Search by name, brand or category..."
+        class="w-full px-6 py-2 rounded-lg border border-gray-300 focus:ring-2 focus:ring-[#0167F3] focus:border-transparent outline-none pl-10"
+      />
+      <i
+        class="bi bi-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+      ></i>
+    </div>
+  </div>
+
+  <!-- Spinner de chargement -->
+  <div *ngIf="isLoading" class="flex justify-center items-center min-h-[200px]">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0167F3]"
+    ></div>
+  </div>
+
+  <!-- Liste des produits -->
+  <div *ngIf="!isLoading" class="space-y-4">
+    <div
+      *ngFor="let product of products"
+      class="bg-white rounded-lg border border-gray-200 hover:shadow-lg transition-shadow duration-300"
+    >
+      <div class="flex flex-col md:flex-row p-4 gap-4">
+        <!-- Image du produit -->
+        <div class="w-full md:w-48 h-48 flex-shrink-0">
+          <img
+            [src]="product.images[0]?.image_url || 'assets/placeholder.png'"
+            [alt]="product.name"
+            class="w-full h-full object-cover rounded-lg"
+          />
+        </div>
+
+        <!-- Informations du produit -->
+        <div class="flex-grow">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <h2 class="text-xl font-semibold text-gray-900">
+                {{ product.name }}
+              </h2>
+              <p class="text-sm text-gray-600">{{ product.brand }}</p>
+            </div>
+            <div class="flex items-center gap-2">
+              <span
+                [class]="
+                  product.is_active
+                    ? 'bg-green-100 text-green-800'
+                    : 'bg-red-100 text-red-800'
+                "
+                class="px-3 py-1 rounded-full text-sm font-medium"
+              >
+                {{ product.is_active ? "Active" : "Inactive" }}
+              </span>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <p class="text-gray-600">
+                Category:
+                <span class="font-medium">{{ product.category }}</span>
+              </p>
+              <p class="text-gray-600">
+                Stock:
+                <span class="font-medium">{{ product.stock_quantity }}</span>
+              </p>
+            </div>
+            <div>
+              <p class="text-gray-600">
+                Visits: <span class="font-medium">{{ product.visit }}</span>
+              </p>
+              <p class="text-gray-600">
+                Shop: <span class="font-medium">{{ product.shop.name }}</span>
+              </p>
+              <p class="text-gray-600">
+                Installments:
+                <span class="font-medium"
+                  >{{ product.installment_count }}x</span
+                >
+              </p>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center">
+            <p class="text-2xl font-bold text-[#0167F3]">
+              {{ formatPrice(product.price, product.currency) }}
+            </p>
+            <div class="flex gap-2">
+              <button
+                [routerLink]="'/admin/product/' + product.id"
+                class="px-4 py-2 bg-[#0167F3] text-white rounded-lg hover:bg-blue-600 transition-colors"
+              >
+                <i class="bi bi-pencil"></i> Edit
+              </button>
+              <button
+                (click)="deleteProduct(product.id)"
+                class="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors"
+              >
+                <i class="bi bi-trash"></i> Delete
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Pagination -->
+  <div
+    *ngIf="!isLoading && products.length > 0"
+    class="flex justify-center items-center space-x-2 mt-6"
+  >
+    <button
+      *ngFor="let page of [].constructor(totalItems); let i = index"
+      (click)="changePage(i + 1)"
+      [class.bg-[#0167F3]]="currentPage === i + 1"
+      [class.text-white]="currentPage === i + 1"
+      [class.bg-white]="currentPage !== i + 1"
+      class="px-4 py-2 rounded-lg border transition-colors duration-200 hover:bg-[#0167F3] hover:text-white"
+    >
+      {{ i + 1 }}
+    </button>
+  </div>
+
+  <div
+    *ngIf="!isLoading && products.length === 0"
+    class="flex flex-col items-center justify-center min-h-[200px] text-gray-600"
+  >
+    <i class="bi bi-inbox text-4xl mb-2"></i>
+    <p>No products found</p>
+  </div>
+</div>

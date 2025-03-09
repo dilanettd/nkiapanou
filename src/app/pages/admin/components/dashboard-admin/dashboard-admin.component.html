@@ -1,0 +1,64 @@
+<!-- dashboard-admin.component.html -->
+<div class="p-6 bg-gray-50 min-h-screen">
+  <!-- Header Section -->
+  <div class="mb-8">
+    <h1 class="text-2xl font-bold text-gray-900">Dashboard Overview</h1>
+    <p class="text-gray-600 mt-1">Welcome to your admin dashboard</p>
+  </div>
+
+  <!-- Spinner -->
+  <div *ngIf="isLoading" class="flex justify-center items-center min-h-[400px]">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-b-2 border-[#0167F3]"
+    ></div>
+  </div>
+
+  <!-- Stats Grid -->
+  <div
+    *ngIf="!isLoading"
+    class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6"
+  >
+    <div
+      *ngFor="let card of dashboardCards"
+      class="bg-white rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden"
+    >
+      <div class="p-6">
+        <div class="flex items-center justify-between">
+          <div
+            [ngClass]="card.bgColor"
+            class="rounded-lg p-3 flex items-center justify-center"
+          >
+            <i [class]="card.icon" class="text-[#0167F3] text-xl"></i>
+          </div>
+          <div
+            [ngClass]="card.trend >= 0 ? 'text-green-500' : 'text-red-500'"
+            class="text-sm font-semibold flex items-center gap-1"
+          >
+            <i
+              [class]="
+                card.trend >= 0 ? 'bi-arrow-up-right' : 'bi-arrow-down-right'
+              "
+            ></i>
+            {{ card.trend >= 0 ? "+" : "" }}{{ card.trend }}%
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <h3 class="text-sm font-medium text-gray-600">{{ card.title }}</h3>
+          <p class="text-2xl font-bold text-gray-900 mt-1">{{ card.value }}</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Message d'erreur en cas de problème de chargement -->
+  <div
+    *ngIf="!isLoading && dashboardCards.length === 0"
+    class="flex justify-center items-center min-h-[200px]"
+  >
+    <div class="text-gray-600 text-center">
+      <i class="bi bi-exclamation-circle text-2xl mb-2"></i>
+      <p>No dashboard data available</p>
+    </div>
+  </div>
+</div>

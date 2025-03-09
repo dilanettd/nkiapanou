@@ -1,0 +1,110 @@
+/* Styles pour le carrousel */
+.carousel-container {
+  position: relative;
+  overflow: hidden;
+}
+
+.carousel-slide {
+  opacity: 0;
+  transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  transform: translateX(20px);
+}
+
+.carousel-slide.active {
+  opacity: 1;
+  position: relative;
+  transform: translateX(0);
+}
+
+.carousel-slide.hidden {
+  display: none;
+}
+
+/* Boutons de navigation */
+.navigation-buttons {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none; /* Permet les clics à travers sauf pour les boutons */
+  z-index: 10;
+}
+
+.nav-button {
+  position: absolute;
+  top: 80%;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(3px);
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  pointer-events: auto; /* Réactive les clics pour les boutons */
+  transition: background-color 0.3s ease;
+}
+
+.nav-button:hover {
+  background-color: rgba(255, 255, 255, 0.4);
+}
+
+.nav-prev {
+  left: 20px;
+}
+
+.nav-next {
+  right: 20px;
+}
+
+/* Indicateurs en bas à droite */
+.carousel-indicators {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.indicator {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.4);
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+  pointer-events: auto; /* Réactive les clics pour les indicateurs */
+}
+
+.indicator:hover {
+  transform: scale(1.2);
+}
+
+.indicator.active {
+  background-color: white;
+  transform: scale(1.2);
+}
+
+/* Animation de transition */
+@keyframes fadeInSlide {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.fade-in-slide {
+  animation: fadeInSlide 0.8s ease-in-out forwards;
+}

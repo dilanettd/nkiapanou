@@ -1,0 +1,233 @@
+<div class="account-login">
+  <div class="row">
+    <form class="card login-form" [formGroup]="registrationForm">
+      <div class="card-body">
+        <div class="title p-2">
+          <h3>Create Your Account</h3>
+          <p>Fill in the details below to create a new account.</p>
+        </div>
+        <div class="max-h-80 overflow-y-scroll p-3">
+          <!-- <div class="social-login">
+            <div class="row">
+              <div class="col-lg-6 col-md-6 col-12">
+                <a class="btn facebook-btn" (click)="signInWithFB()">
+                  <i class="lni lni-facebook-filled"></i> Facebook login
+                </a>
+              </div>
+              <div class="col-lg-6 col-md-6 col-12">
+                <a class="btn google-btn" (click)="signInWithGoogle()">
+                  <i class="lni lni-google"></i> Google login
+                </a>
+              </div>
+            </div>
+          </div>
+          <div class="alt-option">
+            <span>Or</span>
+          </div> -->
+
+          @if (errorMessage) {
+          <div class="alert alert-danger">{{ errorMessage }}</div>
+          }
+
+          <!-- Username field -->
+          <div class="form-group input-group">
+            <label for="reg-username">Username</label>
+            <input
+              class="form-control"
+              type="text"
+              formControlName="userName"
+              [ngClass]="{
+                'is-invalid':
+                  f.userName.errors && (f.userName.touched || f.userName.dirty),
+                'is-valid': f.userName.valid
+              }"
+            />
+            @if (f.userName.touched && f.userName.errors?.required) {
+            <span class="text-danger">Username is required.</span>
+            }
+          </div>
+
+          <!-- Email field -->
+          <div class="form-group input-group">
+            <label for="reg-email">Email</label>
+            <input
+              class="form-control"
+              type="email"
+              formControlName="email"
+              [ngClass]="{
+                'is-invalid':
+                  f.email.errors && (f.email.touched || f.email.dirty),
+                'is-valid': f.email.valid
+              }"
+            />
+            @if (f.email.touched && f.email.errors?.required) {
+            <span class="text-danger">Email is required.</span>
+            } @if (f.email.errors?.hasEmail) {
+            <span class="text-danger">Invalid email format.</span>
+            }
+          </div>
+
+          <!-- Password field -->
+          <div class="form-group input-group">
+            <label for="reg-password">Password</label>
+            <input
+              class="form-control"
+              type="password"
+              formControlName="password"
+              [ngClass]="{
+                'is-invalid':
+                  f.password.errors && (f.password.touched || f.password.dirty),
+                'is-valid': f.password.valid
+              }"
+            />
+          </div>
+
+          <div class="mb-1">
+            <div class="row" *ngIf="f.password.errors && f.password.dirty">
+              <div class="col-6">
+                <label
+                  [ngClass]="{
+                    'text-danger': f.password.errors.minlength,
+                    'text-success': !f.password.errors.minlength
+                  }"
+                >
+                  <span
+                    [ngClass]="{
+                      'bi bi-x-circle': f.password.errors.minlength,
+                      'bi bi-check-circle': !f.password.errors.minlength
+                    }"
+                  ></span>
+                  <small> at least 8 characters</small>
+                </label>
+                <label
+                  [ngClass]="{
+                    'text-danger': f.password.errors.hasSmallCase,
+                    'text-success': !f.password.errors.hasSmallCase
+                  }"
+                >
+                  <span
+                    [ngClass]="{
+                      'bi bi-x-circle': f.password.errors.hasSmallCase,
+                      'bi bi-check-circle': !f.password.errors.hasSmallCase
+                    }"
+                  ></span>
+                  <small> 1 lower case letter </small>
+                </label>
+                <label
+                  style="margin-left: 10px"
+                  [ngClass]="{
+                    'text-danger': f.password.errors.hasNumber,
+                    'text-success': !f.password.errors.hasNumber
+                  }"
+                >
+                  <span
+                    class="ms-3"
+                    [ngClass]="{
+                      'bi bi-x-circle': f.password.errors.hasNumber,
+                      'bi bi-check-circle': !f.password.errors.hasNumber
+                    }"
+                  ></span>
+                  <small>1 number</small>
+                </label>
+              </div>
+              <div class="col-6">
+                <label
+                  [ngClass]="{
+                    'text-danger': f.password.errors.hasCapitalCase,
+                    'text-success': !f.password.errors.hasCapitalCase
+                  }"
+                >
+                  <span
+                    [ngClass]="{
+                      'bi bi-x-circle': f.password.errors.hasCapitalCase,
+                      'bi bi-check-circle': !f.password.errors.hasCapitalCase
+                    }"
+                  ></span>
+                  <small> 1 upper case letter </small>
+                </label>
+                <label
+                  [ngClass]="{
+                    'text-danger': f.password.errors.hasSpecialCharacters,
+                    'text-success': !f.password.errors.hasSpecialCharacters
+                  }"
+                >
+                  <span
+                    [ngClass]="{
+                      'bi bi-x-circle': f.password.errors.hasSpecialCharacters,
+                      'bi bi-check-circle':
+                        !f.password.errors.hasSpecialCharacters
+                    }"
+                  ></span>
+                  <small> 1 special character </small>
+                </label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Confirm Password field -->
+          <div class="form-group input-group">
+            <label for="reg-confirm-password">Confirm Password</label>
+            <input
+              class="form-control"
+              type="password"
+              formControlName="confirmPassword"
+              [ngClass]="{
+                'is-invalid':
+                  f.confirmPassword.errors &&
+                  (f.confirmPassword.touched || f.confirmPassword.dirty),
+                'is-valid': f.confirmPassword.valid
+              }"
+            />
+            @if ( f.confirmPassword.errors?.mustMatch) {
+            <span class="text-danger">Passwords must match.</span>
+            }
+          </div>
+
+          <!-- Terms and Conditions -->
+          <div class="form-check">
+            <input
+              type="checkbox"
+              class="form-check-input"
+              formControlName="policy"
+              [ngClass]="{
+                'is-invalid': f.policy.errors && f.policy.touched
+              }"
+            />
+            <label class="form-check-label">
+              I agree to the
+              <a routerLink="/terms-and-conditions" (click)="closeModal()"
+                >Terms and Conditions</a
+              >
+            </label>
+          </div>
+        </div>
+
+        <!-- Buttons -->
+        <div class="flex justify-evenly mt-8">
+          <!-- Register Button -->
+          <button
+            class="btn btn-primary"
+            type="submit"
+            [disabled]="registrationForm.invalid"
+          >
+            <ng-container *ngIf="isLoading; else defaultText">
+              <spinner></spinner>
+            </ng-container>
+            <ng-template #defaultText>
+              <span>Register</span>
+            </ng-template>
+          </button>
+
+          <!-- Cancel Button -->
+          <button
+            class="btn btn-outline-primary"
+            type="button"
+            (click)="closeModal()"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
