@@ -1,126 +1,91 @@
-<div class="container mb-8 mt-2">
-  <!-- Profile Header Card -->
-  <div class="bg-white rounded-xl shadow-md overflow-hidden mb-8">
-    <!-- Profile Section -->
-    @if (userRole == 'seller') {
-    <div class="relative bg-[#f3f3f6] py-8">
-      <div class="absolute inset-0 bg-black/10"></div>
-      <div class="relative flex flex-col items-center justify-center px-4">
-        <div
-          class="w-24 h-24 sm:w-32 sm:h-32 rounded-full border-4 border-white shadow-md overflow-hidden bg-white"
-        >
-          <img
-            [src]="shopLogoUrl"
-            [alt]="shopName"
-            class="w-full h-full object-cover"
-          />
+<div class="bg-base min-h-screen pb-12">
+  <div class="container mx-auto px-4 py-8">
+    <h1 class="text-3xl font-heading font-bold text-text-dark mb-8">
+      Mon Compte
+    </h1>
+
+    <div class="flex flex-col md:flex-row gap-8">
+      <!-- Sidebar Navigation -->
+      <div class="w-full md:w-1/4">
+        <div class="bg-background-light rounded-lg shadow p-6">
+          <div class="flex items-center mb-6">
+            <div
+              class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden"
+            >
+              <span class="text-2xl font-heading font-bold text-primary">
+                {{ user?.name?.charAt(0) || "U" }}
+              </span>
+            </div>
+            <div class="ml-4">
+              <h2 class="font-heading font-semibold text-lg">
+                {{ user?.name || "Chargement..." }}
+              </h2>
+              <p class="text-text-light text-sm">
+                {{ user?.email || "Chargement..." }}
+              </p>
+            </div>
+          </div>
+
+          <nav class="space-y-2">
+            <a
+              [routerLink]="['/account/profile']"
+              [class.bg-primary]="activeLink === 'profile'"
+              [class.text-text-white]="activeLink === 'profile'"
+              [class.bg-neutral]="activeLink !== 'profile'"
+              class="block py-3 px-4 rounded-button font-body transition-colors duration-200 cursor-pointer hover:bg-primary hover:text-text-white"
+            >
+              Profil
+            </a>
+
+            <a
+              [routerLink]="['/account/purchases']"
+              [class.bg-primary]="activeLink === 'purchases'"
+              [class.text-text-white]="activeLink === 'purchases'"
+              [class.bg-neutral]="activeLink !== 'purchases'"
+              class="block py-3 px-4 rounded-button font-body transition-colors duration-200 cursor-pointer hover:bg-primary hover:text-text-white"
+            >
+              Achats
+            </a>
+            <a
+              [routerLink]="['/account/address']"
+              [class.bg-primary]="activeLink === 'address'"
+              [class.text-text-white]="activeLink === 'address'"
+              [class.bg-neutral]="activeLink !== 'address'"
+              class="block py-3 px-4 rounded-button font-body transition-colors duration-200 cursor-pointer hover:bg-primary hover:text-text-white"
+            >
+              Adresses
+            </a>
+            <a
+              [routerLink]="['/account/wishlist']"
+              [class.bg-primary]="activeLink === 'wishlist'"
+              [class.text-text-white]="activeLink === 'wishlist'"
+              [class.bg-neutral]="activeLink !== 'wishlist'"
+              class="block py-3 px-4 rounded-button font-body transition-colors duration-200 cursor-pointer hover:bg-primary hover:text-text-white"
+            >
+              Wishlist
+            </a>
+          </nav>
+
+          <div class="mt-8 pt-6 border-t border-neutral">
+            <button (click)="logout()" class="w-full btn btn-outline font-body">
+              Déconnexion
+            </button>
+          </div>
         </div>
-        <h3 class="mt-4 text-white text-xl sm:text-2xl font-bold">
-          {{ shopName }}
-        </h3>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="w-full md:w-3/4 bg-background-light rounded-lg shadow p-6">
+        <div *ngIf="loading" class="flex justify-center items-center h-64">
+          <div
+            class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+          ></div>
+        </div>
+
+        <div *ngIf="!loading">
+          <router-outlet></router-outlet>
+        </div>
       </div>
     </div>
-    }
-
-    <!-- Navigation Tabs -->
-    <div class="px-4 sm:px-0">
-      <nav class="flex overflow-x-auto scrollbar-hide">
-        <ul
-          class="flex space-x-2 sm:space-x-4 py-4 sm:justify-center w-full min-w-full sm:min-w-0"
-        >
-          <!-- Profile Tab -->
-          <li>
-            <a
-              routerLink="profile"
-              routerLinkActive="bg-blue-600 text-white hover:bg-blue-700"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap hover:bg-gray-100"
-              [class.text-gray-700]="!isActiveRoute('profile')"
-            >
-              <i class="lni lni-user mr-2"></i>
-              Mon profil
-            </a>
-          </li>
-
-          <!-- Seller-only Tabs -->
-          @if (userRole == 'seller') {
-          <!-- Dashboard Tab -->
-          <li>
-            <a
-              routerLink="dashboard"
-              routerLinkActive="bg-blue-600 text-white hover:bg-blue-700"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap hover:bg-gray-100"
-              [class.text-gray-700]="!isActiveRoute('dashboard')"
-            >
-              <i class="lni lni-dashboard mr-2"></i>
-              Dashboard
-            </a>
-          </li>
-
-          <!-- Products Tab -->
-          <li>
-            <a
-              routerLink="products"
-              routerLinkActive="bg-blue-600 text-white hover:bg-blue-700"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap hover:bg-gray-100"
-              [class.text-gray-700]="!isActiveRoute('products')"
-            >
-              <i class="lni lni-package mr-2"></i>
-              Mes produits
-            </a>
-          </li>
-
-          <!-- Orders Tab -->
-          <li>
-            <a
-              routerLink="orders"
-              routerLinkActive="bg-blue-600 text-white hover:bg-blue-700"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap hover:bg-gray-100"
-              [class.text-gray-700]="!isActiveRoute('orders')"
-            >
-              <i class="lni lni-shopping-basket mr-2"></i>
-              Mes commandes
-            </a>
-          </li>
-
-          }
-          <!-- Purchases Tab -->
-          <li>
-            <a
-              routerLink="purchases"
-              routerLinkActive="bg-blue-600 text-white hover:bg-blue-700"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap hover:bg-gray-100"
-              [class.text-gray-700]="!isActiveRoute('purchases')"
-            >
-              <i class="lni lni-cart mr-2"></i>
-              Mes achats
-            </a>
-          </li>
-
-          <!-- Transactions Tab -->
-          <li>
-            <a
-              routerLink="transactions"
-              routerLinkActive="bg-blue-600 text-white hover:bg-blue-700"
-              [routerLinkActiveOptions]="{ exact: true }"
-              class="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium transition-colors duration-200 whitespace-nowrap hover:bg-gray-100"
-              [class.text-gray-700]="!isActiveRoute('transactions')"
-            >
-              <i class="lni lni-credit-cards mr-2"></i>
-              Transactions
-            </a>
-          </li>
-        </ul>
-      </nav>
-    </div>
-  </div>
-
-  <!-- Content Area -->
-  <div class="bg-white rounded-xl shadow-md p-6">
-    <router-outlet></router-outlet>
   </div>
 </div>

@@ -1,140 +1,161 @@
-<div class="account-login">
-  <div class="row">
-    <!-- Login Form -->
-    @if (!isForgotPassword) {
-    <form
-      class="card login-form"
-      [formGroup]="loginForm"
-      (ngSubmit)="onSubmit()"
-    >
-      <div class="card-body">
-        <div class="title text-center mb-4">
-          <h3 class="text-2xl font-semibold text-gray-800">Login Now</h3>
-          <p class="text-gray-600">
-            You can login using your social media account or email address.
-          </p>
-        </div>
-        @if (errorMessage) {
-        <div class="alert alert-danger text-red-600 text-center mb-4">
-          {{ errorMessage }}
-        </div>
-        }
-        <div class="form-group input-group mb-4">
-          <label for="reg-email" class="block text-gray-700 font-medium"
-            >Email</label
-          >
-          <input
-            class="form-control w-full border border-gray-300 rounded p-2 mt-1"
-            type="email"
-            id="reg-email"
-            formControlName="email"
-          />
-        </div>
-        <div class="form-group input-group mb-4">
-          <label for="reg-pass" class="block text-gray-700 font-medium"
-            >Password</label
-          >
-          <input
-            class="form-control w-full border border-gray-300 rounded p-2 mt-1"
-            type="password"
-            id="reg-pass"
-            formControlName="password"
-          />
-        </div>
-        <div class="d-flex flex-wrap justify-between items-center mb-4">
-          <div class="form-check flex items-center">
-            <input
-              type="checkbox"
-              class="form-check-input mr-2"
-              id="rememberMe"
-              formControlName="rememberMe"
-            />
-            <label class="form-check-label text-gray-700" for="rememberMe">
-              Remember me
-            </label>
-          </div>
-          <a
-            class="lost-pass text-blue-600 hover:underline"
-            href="javascript:void(0)"
-            (click)="showForgotPasswordForm()"
-          >
-            Forgot password?
-          </a>
-        </div>
-        <div class="flex justify-evenly">
-          <button
-            class="btn btn-primary"
-            type="submit"
-            [disabled]="loginForm.invalid"
-          >
-            <ng-container *ngIf="isSubmitted; else defaultText">
-              <spinner></spinner>
-            </ng-container>
-            <ng-template #defaultText>
-              <span>Sign In</span>
-            </ng-template>
-          </button>
-          <button
-            class="btn btn-outline-primary"
-            type="button"
-            (click)="closeModal()"
-          >
-            Cancel
-          </button>
-        </div>
+<div class="row">
+  <!-- Login Form -->
+  @if (!isForgotPassword) {
+  <form
+    class="card login-form bg-background-light border border-primary rounded-lg overflow-hidden"
+    [formGroup]="loginForm"
+    (ngSubmit)="onSubmit()"
+  >
+    <div class="card-body p-6">
+      <div class="title text-center mb-6">
+        <h3 class="text-2xl font-heading font-semibold text-primary mb-2">
+          Connectez-vous
+        </h3>
+        <p class="text-text-light font-body">
+          Vous pouvez vous connecter avec votre compte de réseau social ou votre
+          adresse email.
+        </p>
       </div>
-    </form>
-    }@else {
-    <!-- Forgot Password Form -->
-    <form
-      class="card login-form"
-      [formGroup]="forgotPasswordForm"
-      (ngSubmit)="onResetPasswordSubmit()"
-    >
-      <div class="card-body">
-        <div class="title text-center mb-4">
-          <h3 class="text-2xl font-semibold text-gray-800">Reset Password</h3>
-          <p class="text-gray-600">Enter your email to reset your password.</p>
-        </div>
-        @if (errorMessage) {
-        <div class="alert alert-danger text-red-600 text-center mb-4">
-          {{ errorMessage }}
-        </div>
-        }
-        <div class="form-group input-group mb-4">
-          <label for="reset-email" class="block text-gray-700 font-medium"
-            >Email</label
-          >
-          <input
-            class="form-control w-full border border-gray-300 rounded p-2 mt-1"
-            type="email"
-            id="reset-email"
-            formControlName="email"
-          />
-        </div>
-        <div class="flex justify-evenly">
-          <button
-            class="btn btn-primary"
-            type="submit"
-            [disabled]="forgotPasswordForm.invalid"
-          >
-            <ng-container *ngIf="isSubmitted; else resetText">
-              <spinner></spinner>
-            </ng-container>
-            <ng-template #resetText>
-              <span>Reset</span>
-            </ng-template>
-          </button>
-          <button
-            class="btn btn-outline-primary"
-            type="button"
-            (click)="goBackToLogin()"
-          >
-            Back
-          </button>
-        </div>
+      @if (errorMessage) {
+      <div
+        class="alert alert-danger bg-red-100 text-red-600 text-center mb-4 p-3 rounded"
+      >
+        {{ errorMessage }}
       </div>
-    </form>
-    }
-  </div>
+      }
+      <div class="form-group input-group mb-5">
+        <label
+          for="reg-email"
+          class="block text-text-dark font-body font-medium mb-1"
+          >Email</label
+        >
+        <input
+          class="form-control w-full font-body"
+          type="email"
+          id="reg-email"
+          formControlName="email"
+          placeholder="Entrez votre adresse email"
+        />
+      </div>
+      <div class="form-group input-group mb-5">
+        <label
+          for="reg-pass"
+          class="block text-text-dark font-body font-medium mb-1"
+          >Mot de passe</label
+        >
+        <input
+          class="form-control w-full font-body"
+          type="password"
+          id="reg-pass"
+          formControlName="password"
+          placeholder="Entrez votre mot de passe"
+        />
+      </div>
+      <div class="flex flex-wrap justify-between items-center mb-6">
+        <div class="form-check flex items-center">
+          <input
+            type="checkbox"
+            class="form-check-input mr-2 border-primary focus:ring-primary-focus"
+            id="rememberMe"
+            formControlName="rememberMe"
+          />
+          <label
+            class="form-check-label text-text-light font-body"
+            for="rememberMe"
+          >
+            Se souvenir de moi
+          </label>
+        </div>
+        <a
+          class="lost-pass text-secondary hover:text-secondary-hover transition-colors font-body"
+          href="javascript:void(0)"
+          (click)="showForgotPasswordForm()"
+        >
+          Mot de passe oublié ?
+        </a>
+      </div>
+      <div class="flex justify-evenly space-x-4">
+        <button
+          class="btn btn-primary flex-1"
+          type="submit"
+          [disabled]="loginForm.invalid"
+        >
+          <ng-container *ngIf="isSubmitted; else defaultText">
+            <spinner></spinner>
+          </ng-container>
+          <ng-template #defaultText>
+            <span>Se connecter</span>
+          </ng-template>
+        </button>
+        <button
+          class="btn btn-outline flex-1"
+          type="button"
+          (click)="closeModal()"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  </form>
+  }@else {
+  <!-- Forgot Password Form -->
+  <form
+    class="card login-form bg-background-light border border-primary rounded-lg overflow-hidden"
+    [formGroup]="forgotPasswordForm"
+    (ngSubmit)="onResetPasswordSubmit()"
+  >
+    <div class="card-body p-6">
+      <div class="title text-center mb-6">
+        <h3 class="text-2xl font-heading font-semibold text-primary mb-2">
+          Réinitialiser le mot de passe
+        </h3>
+        <p class="text-text-light font-body">
+          Entrez votre email pour réinitialiser votre mot de passe.
+        </p>
+      </div>
+      @if (errorMessage) {
+      <div
+        class="alert alert-danger bg-red-100 text-red-600 text-center mb-4 p-3 rounded"
+      >
+        {{ errorMessage }}
+      </div>
+      }
+      <div class="form-group input-group mb-5">
+        <label
+          for="reset-email"
+          class="block text-text-dark font-body font-medium mb-1"
+          >Email</label
+        >
+        <input
+          class="form-control w-full font-body"
+          type="email"
+          id="reset-email"
+          formControlName="email"
+          placeholder="Entrez votre adresse email"
+        />
+      </div>
+      <div class="flex justify-evenly space-x-4">
+        <button
+          class="btn btn-primary flex-1"
+          type="submit"
+          [disabled]="forgotPasswordForm.invalid"
+        >
+          <ng-container *ngIf="isSubmitted; else resetText">
+            <spinner></spinner>
+          </ng-container>
+          <ng-template #resetText>
+            <span>Réinitialiser</span>
+          </ng-template>
+        </button>
+        <button
+          class="btn btn-outline flex-1"
+          type="button"
+          (click)="goBackToLogin()"
+        >
+          Retour
+        </button>
+      </div>
+    </div>
+  </form>
+  }
 </div>

@@ -7,7 +7,7 @@ import {
   HttpHandlerFn,
 } from '@angular/common/http';
 import { Observable, throwError } from 'rxjs';
-import { catchError, retry, switchMap } from 'rxjs/operators';
+import { catchError } from 'rxjs/operators';
 
 import { AuthService } from '../services/auth/auth.service';
 
@@ -17,37 +17,22 @@ export const authInterceptor: HttpInterceptorFn = (
 ): Observable<HttpEvent<any>> => {
   const authService = inject(AuthService);
 
-  const access_token = authService.getTokens().access_token;
-  const refresh_token = authService.getTokens().refresh_token;
+  const token = authService.getToken();
 
-  if (access_token) {
+  if (token) {
     request = request.clone({
       setHeaders: {
-        Authorization: `Bearer ${access_token}`,
+        Authorization: `Bearer ${token}`,
       },
     });
   }
 
   return next(request).pipe(
     catchError((error: HttpErrorResponse) => {
-      if (error.status === 401 && refresh_token) {
-        return authService.refreshToken().pipe(
-          switchMap((response: any) => {
-            authService.setTokens(response);
-            request = request.clone({
-              setHeaders: {
-                Authorization: `Bearer ${response.access_token}`,
-              },
-            });
-            return next(request).pipe(retry(5));
-          }),
-          catchError(() => {
-            return throwError(error);
-          })
-        );
-      } else {
-        return throwError(error);
+      if (error.status === 401) {
+        authService.logout().subscribe();
       }
+      return throwError(() => error);
     })
   );
 };

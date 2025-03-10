@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, HostListener, OnInit } from '@angular/core';
+import { Component, HostListener, inject, OnInit, effect } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, RouterModule } from '@angular/router';
+import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
+import { LoginModalComponent } from '../../../shared/components/login-modal/login-modal.component';
+import { RegisterModalComponent } from '../../../shared/components/register-modal/register-modal.component';
+import { AuthService } from '../../services/auth/auth.service';
 
 @Component({
   selector: 'nkiapanou-header',
@@ -14,18 +18,41 @@ export class HeaderComponent implements OnInit {
   isMobileMenuOpen = false;
   isLanguageDropdownOpen = false;
   isAuthDropdownOpen = false;
-  isUserLoggedIn = false;
+  isAuthenticated = false;
+  userName = '';
   currentLanguage = 'English';
   isMobileSearchOpen = false;
+  modalService = inject(NgbModal);
+  authService = inject(AuthService);
 
-  constructor() {}
+  constructor() {
+    effect(() => {
+      this.isAuthenticated = this.authService.authStatus();
 
-  ngOnInit(): void {}
+      if (this.isAuthenticated && this.authService.currentUser()) {
+        this.userName = this.authService.currentUser()?.name || '';
+      } else {
+        this.userName = '';
+      }
+    });
+  }
 
-  // Fermer les dropdowns lorsqu'on clique ailleurs sur la page
+  ngOnInit(): void {
+    this.isAuthenticated = this.authService.isAuthenticated();
+
+    const currentUser = this.authService.getCurrentUser();
+    if (currentUser) {
+      this.userName = currentUser.name;
+    }
+
+    const savedLanguage = localStorage.getItem('currentLanguage');
+    if (savedLanguage) {
+      this.currentLanguage = savedLanguage;
+    }
+  }
+
   @HostListener('document:click', ['$event'])
   onDocumentClick(event: MouseEvent): void {
-    // Vérifier si le clic est en dehors des dropdowns
     const target = event.target as HTMLElement;
     if (!target.closest('[data-dropdown]')) {
       this.isLanguageDropdownOpen = false;
@@ -40,13 +67,12 @@ export class HeaderComponent implements OnInit {
   toggleMobileSearch() {
     this.isMobileSearchOpen = !this.isMobileSearchOpen;
     if (this.isMobileSearchOpen) {
-      this.isMobileMenuOpen = false; // Ferme le menu si la recherche est ouverte
+      this.isMobileMenuOpen = false;
     }
   }
 
   toggleLanguageDropdown(): void {
     this.isLanguageDropdownOpen = !this.isLanguageDropdownOpen;
-    // Fermer l'autre dropdown si ouvert
     if (this.isLanguageDropdownOpen) {
       this.isAuthDropdownOpen = false;
     }
@@ -54,7 +80,6 @@ export class HeaderComponent implements OnInit {
 
   toggleAuthDropdown(): void {
     this.isAuthDropdownOpen = !this.isAuthDropdownOpen;
-    // Fermer l'autre dropdown si ouvert
     if (this.isAuthDropdownOpen) {
       this.isLanguageDropdownOpen = false;
     }
@@ -63,18 +88,31 @@ export class HeaderComponent implements OnInit {
   selectLanguage(language: string, event: Event): void {
     event.preventDefault();
     this.currentLanguage = language;
-    // Enregistrer la langue sélectionnée
     localStorage.setItem('currentLanguage', language);
-    // Fermer le dropdown
     this.isLanguageDropdownOpen = false;
-
-    // Ici, vous pourriez implémenter la logique pour changer la langue de l'application
-    // Par exemple, en utilisant un service de traduction comme ngx-translate
   }
 
-  logout(event: Event): void {}
+  logout(event: Event): void {
+    event.preventDefault();
+    this.authService.logout().subscribe({
+      next: (response) => {
+        this.closeAuthDropdown();
+      },
+      error: (error) => {
+        console.error('Erreur lors de la déconnexion:', error);
+      },
+    });
+  }
 
   closeAuthDropdown(): void {
     this.isAuthDropdownOpen = false;
+  }
+
+  openLoginModal(): void {
+    this.modalService.open(LoginModalComponent);
+  }
+
+  openSignupModal(): void {
+    this.modalService.open(RegisterModalComponent);
   }
 }

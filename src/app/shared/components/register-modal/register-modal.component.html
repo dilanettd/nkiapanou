@@ -1,233 +1,295 @@
-<div class="account-login">
-  <div class="row">
-    <form class="card login-form" [formGroup]="registrationForm">
-      <div class="card-body">
-        <div class="title p-2">
-          <h3>Create Your Account</h3>
-          <p>Fill in the details below to create a new account.</p>
+<div class="row">
+  <form
+    class="card login-form bg-background-light border border-primary rounded-lg overflow-hidden"
+    [formGroup]="registrationForm"
+  >
+    <div class="card-body p-6">
+      <div class="title text-center mb-5">
+        <h3 class="text-2xl font-heading font-semibold text-primary mb-2">
+          Créer votre compte
+        </h3>
+        <p class="text-text-light font-body">
+          Complétez les champs ci-dessous pour créer un nouveau compte.
+        </p>
+      </div>
+      <div class="max-h-80 overflow-y-auto p-2">
+        <div class="social-login mb-5">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div>
+              <a
+                class="btn w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-button py-2"
+                (click)="socialLogin()"
+              >
+                <i class="lni lni-facebook-filled mr-2"></i> Connexion Facebook
+              </a>
+            </div>
+            <div>
+              <a
+                class="btn w-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-button py-2"
+                (click)="socialLogin()"
+              >
+                <i class="lni lni-google mr-2"></i> Connexion Google
+              </a>
+            </div>
+          </div>
         </div>
-        <div class="max-h-80 overflow-y-scroll p-3">
-          <!-- <div class="social-login">
-            <div class="row">
-              <div class="col-lg-6 col-md-6 col-12">
-                <a class="btn facebook-btn" (click)="signInWithFB()">
-                  <i class="lni lni-facebook-filled"></i> Facebook login
-                </a>
-              </div>
-              <div class="col-lg-6 col-md-6 col-12">
-                <a class="btn google-btn" (click)="signInWithGoogle()">
-                  <i class="lni lni-google"></i> Google login
-                </a>
-              </div>
-            </div>
-          </div>
-          <div class="alt-option">
-            <span>Or</span>
-          </div> -->
+        <div class="alt-option relative text-center mb-5">
+          <span
+            class="bg-background-light px-4 relative z-10 text-text-light font-body"
+            >Ou</span
+          >
+          <hr class="absolute top-1/2 w-full border-t border-gray-300 -z-0" />
+        </div>
 
-          @if (errorMessage) {
-          <div class="alert alert-danger">{{ errorMessage }}</div>
+        @if (errorMessage) {
+        <div
+          class="alert alert-danger bg-red-100 text-red-600 text-center mb-4 p-3 rounded"
+        >
+          {{ errorMessage }}
+        </div>
+        }
+
+        <!-- Username field -->
+        <div class="form-group input-group mb-4">
+          <label
+            for="reg-username"
+            class="block text-text-dark font-body font-medium mb-1"
+            >Nom d'utilisateur</label
+          >
+          <input
+            class="form-control w-full font-body"
+            type="text"
+            formControlName="userName"
+            placeholder="Entrez votre nom d'utilisateur"
+            [ngClass]="{
+              'input-error':
+                f.userName.errors && (f.userName.touched || f.userName.dirty),
+              'border-green-500': f.userName.valid
+            }"
+          />
+          @if (f.userName.touched && f.userName.errors?.required) {
+          <span class="text-red-600 text-sm mt-1"
+            >Le nom d'utilisateur est requis.</span
+          >
           }
+        </div>
 
-          <!-- Username field -->
-          <div class="form-group input-group">
-            <label for="reg-username">Username</label>
-            <input
-              class="form-control"
-              type="text"
-              formControlName="userName"
-              [ngClass]="{
-                'is-invalid':
-                  f.userName.errors && (f.userName.touched || f.userName.dirty),
-                'is-valid': f.userName.valid
-              }"
-            />
-            @if (f.userName.touched && f.userName.errors?.required) {
-            <span class="text-danger">Username is required.</span>
-            }
-          </div>
+        <!-- Email field -->
+        <div class="form-group input-group mb-4">
+          <label
+            for="reg-email"
+            class="block text-text-dark font-body font-medium mb-1"
+            >Email</label
+          >
+          <input
+            class="form-control w-full font-body"
+            type="email"
+            formControlName="email"
+            placeholder="Entrez votre adresse email"
+            [ngClass]="{
+              'input-error':
+                f.email.errors && (f.email.touched || f.email.dirty),
+              'border-green-500': f.email.valid
+            }"
+          />
+          @if (f.email.touched && f.email.errors?.required) {
+          <span class="text-red-600 text-sm mt-1">L'email est requis.</span>
+          } @if (f.email.errors?.hasEmail) {
+          <span class="text-red-600 text-sm mt-1"
+            >Format d'email invalide.</span
+          >
+          }
+        </div>
 
-          <!-- Email field -->
-          <div class="form-group input-group">
-            <label for="reg-email">Email</label>
-            <input
-              class="form-control"
-              type="email"
-              formControlName="email"
-              [ngClass]="{
-                'is-invalid':
-                  f.email.errors && (f.email.touched || f.email.dirty),
-                'is-valid': f.email.valid
-              }"
-            />
-            @if (f.email.touched && f.email.errors?.required) {
-            <span class="text-danger">Email is required.</span>
-            } @if (f.email.errors?.hasEmail) {
-            <span class="text-danger">Invalid email format.</span>
-            }
-          </div>
+        <!-- Password field -->
+        <div class="form-group input-group mb-2">
+          <label
+            for="reg-password"
+            class="block text-text-dark font-body font-medium mb-1"
+            >Mot de passe</label
+          >
+          <input
+            class="form-control w-full font-body"
+            type="password"
+            formControlName="password"
+            placeholder="Créez un mot de passe fort"
+            [ngClass]="{
+              'input-error':
+                f.password.errors && (f.password.touched || f.password.dirty),
+              'border-green-500': f.password.valid
+            }"
+          />
+        </div>
 
-          <!-- Password field -->
-          <div class="form-group input-group">
-            <label for="reg-password">Password</label>
-            <input
-              class="form-control"
-              type="password"
-              formControlName="password"
-              [ngClass]="{
-                'is-invalid':
-                  f.password.errors && (f.password.touched || f.password.dirty),
-                'is-valid': f.password.valid
-              }"
-            />
-          </div>
-
-          <div class="mb-1">
-            <div class="row" *ngIf="f.password.errors && f.password.dirty">
-              <div class="col-6">
-                <label
+        <div class="mb-4">
+          <div
+            class="grid grid-cols-1 md:grid-cols-2 gap-2"
+            *ngIf="f.password.errors && f.password.dirty"
+          >
+            <div>
+              <label
+                class="flex items-center text-sm"
+                [ngClass]="{
+                  'text-red-600': f.password.errors.minlength,
+                  'text-green-600': !f.password.errors.minlength
+                }"
+              >
+                <span
+                  class="mr-1"
                   [ngClass]="{
-                    'text-danger': f.password.errors.minlength,
-                    'text-success': !f.password.errors.minlength
+                    'bi bi-x-circle': f.password.errors.minlength,
+                    'bi bi-check-circle': !f.password.errors.minlength
                   }"
-                >
-                  <span
-                    [ngClass]="{
-                      'bi bi-x-circle': f.password.errors.minlength,
-                      'bi bi-check-circle': !f.password.errors.minlength
-                    }"
-                  ></span>
-                  <small> at least 8 characters</small>
-                </label>
-                <label
+                ></span>
+                <small>au moins 8 caractères</small>
+              </label>
+              <label
+                class="flex items-center text-sm"
+                [ngClass]="{
+                  'text-red-600': f.password.errors.hasSmallCase,
+                  'text-green-600': !f.password.errors.hasSmallCase
+                }"
+              >
+                <span
+                  class="mr-1"
                   [ngClass]="{
-                    'text-danger': f.password.errors.hasSmallCase,
-                    'text-success': !f.password.errors.hasSmallCase
+                    'bi bi-x-circle': f.password.errors.hasSmallCase,
+                    'bi bi-check-circle': !f.password.errors.hasSmallCase
                   }"
-                >
-                  <span
-                    [ngClass]="{
-                      'bi bi-x-circle': f.password.errors.hasSmallCase,
-                      'bi bi-check-circle': !f.password.errors.hasSmallCase
-                    }"
-                  ></span>
-                  <small> 1 lower case letter </small>
-                </label>
-                <label
-                  style="margin-left: 10px"
+                ></span>
+                <small>1 lettre minuscule</small>
+              </label>
+              <label
+                class="flex items-center text-sm"
+                [ngClass]="{
+                  'text-red-600': f.password.errors.hasNumber,
+                  'text-green-600': !f.password.errors.hasNumber
+                }"
+              >
+                <span
+                  class="mr-1"
                   [ngClass]="{
-                    'text-danger': f.password.errors.hasNumber,
-                    'text-success': !f.password.errors.hasNumber
+                    'bi bi-x-circle': f.password.errors.hasNumber,
+                    'bi bi-check-circle': !f.password.errors.hasNumber
                   }"
-                >
-                  <span
-                    class="ms-3"
-                    [ngClass]="{
-                      'bi bi-x-circle': f.password.errors.hasNumber,
-                      'bi bi-check-circle': !f.password.errors.hasNumber
-                    }"
-                  ></span>
-                  <small>1 number</small>
-                </label>
-              </div>
-              <div class="col-6">
-                <label
+                ></span>
+                <small>1 chiffre</small>
+              </label>
+            </div>
+            <div>
+              <label
+                class="flex items-center text-sm"
+                [ngClass]="{
+                  'text-red-600': f.password.errors.hasCapitalCase,
+                  'text-green-600': !f.password.errors.hasCapitalCase
+                }"
+              >
+                <span
+                  class="mr-1"
                   [ngClass]="{
-                    'text-danger': f.password.errors.hasCapitalCase,
-                    'text-success': !f.password.errors.hasCapitalCase
+                    'bi bi-x-circle': f.password.errors.hasCapitalCase,
+                    'bi bi-check-circle': !f.password.errors.hasCapitalCase
                   }"
-                >
-                  <span
-                    [ngClass]="{
-                      'bi bi-x-circle': f.password.errors.hasCapitalCase,
-                      'bi bi-check-circle': !f.password.errors.hasCapitalCase
-                    }"
-                  ></span>
-                  <small> 1 upper case letter </small>
-                </label>
-                <label
+                ></span>
+                <small>1 lettre majuscule</small>
+              </label>
+              <label
+                class="flex items-center text-sm"
+                [ngClass]="{
+                  'text-red-600': f.password.errors.hasSpecialCharacters,
+                  'text-green-600': !f.password.errors.hasSpecialCharacters
+                }"
+              >
+                <span
+                  class="mr-1"
                   [ngClass]="{
-                    'text-danger': f.password.errors.hasSpecialCharacters,
-                    'text-success': !f.password.errors.hasSpecialCharacters
+                    'bi bi-x-circle': f.password.errors.hasSpecialCharacters,
+                    'bi bi-check-circle':
+                      !f.password.errors.hasSpecialCharacters
                   }"
-                >
-                  <span
-                    [ngClass]="{
-                      'bi bi-x-circle': f.password.errors.hasSpecialCharacters,
-                      'bi bi-check-circle':
-                        !f.password.errors.hasSpecialCharacters
-                    }"
-                  ></span>
-                  <small> 1 special character </small>
-                </label>
-              </div>
+                ></span>
+                <small>1 caractère spécial</small>
+              </label>
             </div>
           </div>
+        </div>
 
-          <!-- Confirm Password field -->
-          <div class="form-group input-group">
-            <label for="reg-confirm-password">Confirm Password</label>
-            <input
-              class="form-control"
-              type="password"
-              formControlName="confirmPassword"
-              [ngClass]="{
-                'is-invalid':
-                  f.confirmPassword.errors &&
-                  (f.confirmPassword.touched || f.confirmPassword.dirty),
-                'is-valid': f.confirmPassword.valid
-              }"
-            />
-            @if ( f.confirmPassword.errors?.mustMatch) {
-            <span class="text-danger">Passwords must match.</span>
-            }
-          </div>
+        <!-- Confirm Password field -->
+        <div class="form-group input-group mb-4">
+          <label
+            for="reg-confirm-password"
+            class="block text-text-dark font-body font-medium mb-1"
+            >Confirmer le mot de passe</label
+          >
+          <input
+            class="form-control w-full font-body"
+            type="password"
+            formControlName="confirmPassword"
+            placeholder="Confirmez votre mot de passe"
+            [ngClass]="{
+              'input-error':
+                f.confirmPassword.errors &&
+                (f.confirmPassword.touched || f.confirmPassword.dirty),
+              'border-green-500': f.confirmPassword.valid
+            }"
+          />
+          @if (f.confirmPassword.errors?.mustMatch) {
+          <span class="text-red-600 text-sm mt-1"
+            >Les mots de passe doivent correspondre.</span
+          >
+          }
+        </div>
 
-          <!-- Terms and Conditions -->
-          <div class="form-check">
+        <!-- Terms and Conditions -->
+        <div class="form-check mb-2">
+          <div class="flex items-start">
             <input
               type="checkbox"
-              class="form-check-input"
+              class="form-check-input mt-1 mr-2 border-primary focus:ring-primary-focus"
               formControlName="policy"
               [ngClass]="{
-                'is-invalid': f.policy.errors && f.policy.touched
+                'input-error': f.policy.errors && f.policy.touched
               }"
             />
-            <label class="form-check-label">
-              I agree to the
-              <a routerLink="/terms-and-conditions" (click)="closeModal()"
-                >Terms and Conditions</a
+            <label class="form-check-label text-text-light font-body text-sm">
+              J'accepte les
+              <a
+                class="text-primary hover:text-primary-hover transition-colors"
+                routerLink="/terms-and-conditions"
+                (click)="closeModal()"
               >
+                Conditions Générales d'Utilisation
+              </a>
             </label>
           </div>
         </div>
-
-        <!-- Buttons -->
-        <div class="flex justify-evenly mt-8">
-          <!-- Register Button -->
-          <button
-            class="btn btn-primary"
-            type="submit"
-            [disabled]="registrationForm.invalid"
-          >
-            <ng-container *ngIf="isLoading; else defaultText">
-              <spinner></spinner>
-            </ng-container>
-            <ng-template #defaultText>
-              <span>Register</span>
-            </ng-template>
-          </button>
-
-          <!-- Cancel Button -->
-          <button
-            class="btn btn-outline-primary"
-            type="button"
-            (click)="closeModal()"
-          >
-            Cancel
-          </button>
-        </div>
       </div>
-    </form>
-  </div>
+
+      <!-- Buttons -->
+      <div class="flex justify-evenly space-x-4 mt-6">
+        <!-- Register Button -->
+        <button
+          class="btn btn-primary flex-1"
+          type="submit"
+          [disabled]="registrationForm.invalid"
+        >
+          <ng-container *ngIf="isLoading; else defaultText">
+            <spinner></spinner>
+          </ng-container>
+          <ng-template #defaultText>
+            <span>S'inscrire</span>
+          </ng-template>
+        </button>
+
+        <!-- Cancel Button -->
+        <button
+          class="btn btn-outline flex-1"
+          type="button"
+          (click)="closeModal()"
+        >
+          Annuler
+        </button>
+      </div>
+    </div>
+  </form>
 </div>

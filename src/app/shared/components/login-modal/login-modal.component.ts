@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
 import {
   FormBuilder,
@@ -6,8 +6,8 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { IUser } from '../../../core/models/auth.state.model';
-import { Unsubscribable } from 'rxjs';
+import { IUser } from '../../../core/models2/auth.state.model';
+import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastrService } from 'ngx-toastr';
 import { CommonModule } from '@angular/common';
@@ -21,20 +21,17 @@ import { ButtonSpinnerComponent } from '../button-spinner/button-spinner.compone
   styleUrls: ['./login-modal.component.scss'],
 })
 export class LoginModalComponent implements OnInit, OnDestroy {
+  private fb = inject(FormBuilder);
+  private activeModal = inject(NgbModal);
+  private authService = inject(AuthService);
+  private toastr = inject(ToastrService);
+
   loginForm!: FormGroup;
   forgotPasswordForm!: FormGroup;
   errorMessage: string | null = null;
-  isSubmitted: boolean = false;
-  isForgotPassword: boolean = false;
-  loginSubscribe!: Unsubscribable;
-  getAuthenticatedUserSubscribe!: Unsubscribable;
-
-  constructor(
-    private fb: FormBuilder,
-    private activeModal: NgbModal,
-    private authService: AuthService,
-    private toastr: ToastrService
-  ) {}
+  isSubmitted = false;
+  isForgotPassword = false;
+  loginSubscribe?: Subscription;
 
   ngOnInit() {
     this.loginForm = this.fb.group({
@@ -52,9 +49,7 @@ export class LoginModalComponent implements OnInit, OnDestroy {
     this.isForgotPassword = true;
   }
 
-  signInWithFB() {}
-
-  signInWithGoogle() {}
+  socialLogin() {}
 
   goBackToLogin() {
     this.isForgotPassword = false;
@@ -71,31 +66,25 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       const { email, password } = this.loginForm.value;
 
       this.loginSubscribe = this.authService.login(email, password).subscribe({
-        next: (tokens) => {
+        next: (response) => {
           this.isSubmitted = false;
-          this.authService.setTokens(tokens);
 
-          this.getAuthenticatedUserSubscribe = this.authService
-            .getAuthenticatedUser()
-            .subscribe({
-              next: (me: IUser) => {
-                this.authService.setUser(me);
-                this.toastr.success('You are successfully logged in.');
-                this.activeModal.dismissAll();
-              },
-              error: () => {
-                this.errorMessage = 'Something unexpected happened';
-              },
-            });
+          if (response.status === 'success' && response.user) {
+            this.toastr.success('Connexion réussie');
+            this.activeModal.dismissAll();
+          } else {
+            this.errorMessage = response.message || 'Erreur de connexion';
+          }
         },
         error: (err) => {
           this.isSubmitted = false;
           if (err.status == 401) {
-            this.errorMessage = 'Incorrect email or password';
+            this.errorMessage = 'Email ou mot de passe incorrect';
           } else if (err.status == 403) {
-            this.errorMessage = 'Your account has been blocked';
+            this.errorMessage = 'Votre compte a été bloqué';
           } else {
-            this.errorMessage = 'Something unexpected happened';
+            this.errorMessage =
+              err.message || 'Une erreur inattendue est survenue';
           }
         },
       });
@@ -107,26 +96,29 @@ export class LoginModalComponent implements OnInit, OnDestroy {
       this.isSubmitted = true;
       const { email } = this.forgotPasswordForm.value;
 
-      this.authService.sendResetPasswordEmail(email).subscribe({
-        next: () => {
+      this.authService.forgotPassword(email).subscribe({
+        next: (response) => {
           this.isSubmitted = false;
-          this.toastr.success('Reset password email sent.');
-          setTimeout(() => {
-            this.goBackToLogin();
-          }, 3000);
+          if (response.status === 'success') {
+            this.toastr.success('Email de réinitialisation envoyé.');
+            setTimeout(() => {
+              this.goBackToLogin();
+            }, 3000);
+          } else {
+            this.errorMessage =
+              response.message || "Échec de l'envoi de l'email.";
+          }
         },
-        error: () => {
+        error: (err) => {
           this.isSubmitted = false;
-          this.errorMessage = 'Failed to send reset password email.';
+          this.errorMessage =
+            err.message || "Échec de l'envoi de l'email de réinitialisation.";
         },
       });
     }
   }
 
   ngOnDestroy(): void {
-    if (this.getAuthenticatedUserSubscribe) {
-      this.getAuthenticatedUserSubscribe.unsubscribe();
-    }
     if (this.loginSubscribe) {
       this.loginSubscribe.unsubscribe();
     }

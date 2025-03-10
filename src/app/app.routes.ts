@@ -49,24 +49,15 @@ export const routes: Routes = [
     canActivate: [authGuard],
     children: [
       {
-        path: 'dashboard',
-        loadComponent: () =>
-          import(
-            './pages/account/components/dashboard/dashboard.component'
-          ).then((m) => m.DashboardComponent),
+        path: '',
+        redirectTo: 'profile',
+        pathMatch: 'full',
       },
       {
-        path: 'products',
+        path: 'profile',
         loadComponent: () =>
-          import('./pages/account/components/products/products.component').then(
-            (m) => m.ProductsComponent
-          ),
-      },
-      {
-        path: 'orders',
-        loadComponent: () =>
-          import('./pages/account/components/orders/orders.component').then(
-            (m) => m.OrdersComponent
+          import('./pages/account/components/profile/profile.component').then(
+            (m) => m.ProfileComponent
           ),
       },
       {
@@ -77,25 +68,18 @@ export const routes: Routes = [
           ).then((m) => m.PurchasesComponent),
       },
       {
-        path: 'profile',
+        path: 'address',
         loadComponent: () =>
-          import('./pages/account/components/profile/profile.component').then(
-            (m) => m.ProfileComponent
+          import('./pages/account/components/address/address.component').then(
+            (m) => m.AddressComponent
           ),
       },
       {
-        path: 'kyc',
+        path: 'wishlist',
         loadComponent: () =>
-          import('./pages/account/components/kyc/kyc.component').then(
-            (m) => m.KycComponent
+          import('./pages/account/components/wishlist/wishlist.component').then(
+            (m) => m.WishlistComponent
           ),
-      },
-      {
-        path: 'transactions',
-        loadComponent: () =>
-          import(
-            './pages/account/components/transactions/transactions.component'
-          ).then((m) => m.TransactionsComponent),
       },
       { path: '', redirectTo: 'profile', pathMatch: 'full' },
     ],

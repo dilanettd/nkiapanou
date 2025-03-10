@@ -1,117 +1,521 @@
-<div class="mx-auto mt-6">
+<div class="space-y-6">
   <div class="flex justify-between items-center mb-6">
-    <h3 class="text-xl sm:text-2xl text-gray-800 font-semibold">Mes achats</h3>
+    <h2 class="text-2xl font-heading font-semibold text-primary">Mes Achats</h2>
   </div>
-</div>
 
-<div *ngIf="isLoading" class="text-center my-6">
-  <p>Loading orders...</p>
-</div>
-
-<div
-  *ngIf="!isLoading && !error && orders.length === 0"
-  class="text-center my-6"
->
-  <div class="flex flex-col items-center justify-center text-center">
-    <img
-      src="assets/images/empty-state.jpg"
-      alt="Aucun élément trouvé"
-      class="mb-4 h-32 w-32 sm:h-48 sm:w-48 lg:h-72 lg:w-72 object-contain"
-    />
+  <!-- Loader -->
+  <div *ngIf="loading" class="flex justify-center items-center h-48">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+    ></div>
   </div>
-</div>
 
-<div
-  *ngIf="orders.length > 0"
-  class="grid grid-cols-1 md:grid-cols-1 lg:grid-cols-1 gap-6"
->
-  <div
-    *ngFor="let order of orders"
-    class="border rounded-lg shadow-xl p-6 bg-white flex flex-col md:flex-row gap-6 hover:shadow-2xl transition-shadow duration-300 ease-in-out"
-  >
-    <!-- Product Section -->
-    <div class="flex items-center gap-6 md:w-2/3">
-      <img
-        [src]="
-          order.product.images[0]?.image_url ||
-          'https://via.placeholder.com/100'
-        "
-        alt="{{ order.product.name }}"
-        class="w-28 h-28 rounded-xl object-cover border-2 border-gray-300 transition-transform duration-300 ease-in-out transform hover:scale-105"
-      />
-      <div class="w-full">
-        <h3
-          class="text-xl font-semibold text-[#0167F3] mb-2 hover:text-[#0146b1] truncate"
-          title="{{ order.product.name }}"
+  <!-- Empty State -->
+  <div *ngIf="!loading && orders.length === 0" class="text-center py-10">
+    <div class="text-6xl mb-4 opacity-30">🛒</div>
+    <h3 class="text-xl font-heading mb-2">Aucun achat pour le moment</h3>
+    <p class="text-text-light">
+      Vous n'avez pas encore effectué d'achats sur notre boutique.
+    </p>
+  </div>
+
+  <!-- Orders List (Visible when not showing details) -->
+  <div *ngIf="!loading && orders.length > 0 && !showDetails">
+    <!-- Mobile view: Card layout -->
+    <div class="md:hidden space-y-4">
+      <div
+        *ngFor="let order of orders"
+        class="border border-gray-200 rounded-lg overflow-hidden bg-background-light p-4"
+      >
+        <div class="flex justify-between items-start mb-3">
+          <div class="max-w-[60%] overflow-hidden">
+            <div class="text-sm font-medium text-primary truncate">
+              {{ order.order_number }}
+            </div>
+            <div class="text-xs text-text-light mt-1">
+              {{ formatDate(order.created_at) }}
+            </div>
+          </div>
+          <span
+            [class]="
+              'px-2 py-1 text-xs font-medium rounded-full ' +
+              getStatusClass(order.status)
+            "
+          >
+            {{
+              order.status === "pending"
+                ? "En attente"
+                : order.status === "processing"
+                ? "En traitement"
+                : order.status === "shipped"
+                ? "Expédiée"
+                : order.status === "delivered"
+                ? "Livrée"
+                : order.status === "cancelled"
+                ? "Annulée"
+                : order.status
+            }}
+          </span>
+        </div>
+
+        <div class="flex justify-between text-sm mb-3">
+          <span class="text-text-light">Montant total:</span>
+          <span class="font-medium">{{ order.total_amount.toFixed(2) }} €</span>
+        </div>
+
+        <div class="flex justify-between text-sm mb-4">
+          <span class="text-text-light">Paiement:</span>
+          <span
+            [class]="
+              'px-2 py-1 text-xs font-medium rounded-full ' +
+              getPaymentStatusClass(order.payment_status)
+            "
+          >
+            {{
+              order.payment_status === "pending"
+                ? "En attente"
+                : order.payment_status === "paid"
+                ? "Payée"
+                : order.payment_status === "failed"
+                ? "Échouée"
+                : order.payment_status === "refunded"
+                ? "Remboursée"
+                : order.payment_status
+            }}
+          </span>
+        </div>
+
+        <button
+          (click)="viewOrderDetails(order.id)"
+          class="w-full py-2 text-center text-primary border border-primary rounded-button hover:bg-primary hover:text-white transition duration-200"
         >
-          {{ order.product.name }}
-        </h3>
-        <p class="text-sm text-gray-600 mb-1">
-          Quantity: <span class="font-semibold">{{ order.quantity }}</span>
-        </p>
-        <p class="text-sm text-gray-600 mb-1">
-          Total Cost:
-          <span class="font-semibold"
-            >{{ order.total_cost | number : "1.0-0" }} XAF</span
-          >
-        </p>
-        <p class="text-sm text-gray-600 mb-1">
-          Installment:
-          <span class="font-semibold"
-            >{{ order.installment_amount | number : "1.0-0" }} XAF</span
-          >
-        </p>
+          Voir les détails
+        </button>
       </div>
     </div>
 
-    <!-- Installments Section -->
-    <div class="flex gap-4 w-full flex-wrap">
-      <div
-        *ngFor="let payment of order.order_payments"
-        class="relative flex flex-col items-center justify-between w-full sm:w-1/5 p-4 border-2 border-gray-300 rounded-lg shadow-sm transition-all duration-300 ease-in-out hover:scale-95"
-        [ngClass]="{
-          'bg-gray-200 text-white cursor-pointer': payment.status === 'pending',
-          'bg-gray-50 text-black cursor-not-allowed':
-            payment.status === 'success'
-        }"
-        (click)="payment.status === 'pending' && openPaymentModal(payment)"
+    <!-- Desktop view: Table layout with horizontal scroll -->
+    <div
+      class="hidden md:block border border-gray-200 rounded-lg overflow-hidden"
+    >
+      <div class="overflow-x-auto">
+        <table
+          class="min-w-full divide-y divide-gray-200"
+          style="table-layout: fixed; width: 100%"
+        >
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-48"
+              >
+                N° Commande
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-40"
+              >
+                Date
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Montant
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Statut
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Paiement
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28"
+              >
+                Action
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let order of orders">
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-primary truncate">
+                  {{ order.order_number }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-text-dark">
+                  {{ formatDate(order.created_at) }}
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium">
+                  {{ order.total_amount.toFixed(2) }} €
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  [class]="
+                    'px-2 py-1 text-xs font-medium rounded-full ' +
+                    getStatusClass(order.status)
+                  "
+                >
+                  {{
+                    order.status === "pending"
+                      ? "En attente"
+                      : order.status === "processing"
+                      ? "En traitement"
+                      : order.status === "shipped"
+                      ? "Expédiée"
+                      : order.status === "delivered"
+                      ? "Livrée"
+                      : order.status === "cancelled"
+                      ? "Annulée"
+                      : order.status
+                  }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  [class]="
+                    'px-2 py-1 text-xs font-medium rounded-full ' +
+                    getPaymentStatusClass(order.payment_status)
+                  "
+                >
+                  {{
+                    order.payment_status === "pending"
+                      ? "En attente"
+                      : order.payment_status === "paid"
+                      ? "Payée"
+                      : order.payment_status === "failed"
+                      ? "Échouée"
+                      : order.payment_status === "refunded"
+                      ? "Remboursée"
+                      : order.payment_status
+                  }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <button
+                  (click)="viewOrderDetails(order.id)"
+                  class="text-primary hover:text-primary-hover focus:outline-none underline text-sm"
+                >
+                  Voir détails
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- Order Details - Mobile and Desktop Responsive -->
+  <div *ngIf="!loading && showDetails && selectedOrder" class="space-y-6">
+    <div
+      class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-0"
+    >
+      <h3 class="text-xl font-heading font-semibold truncate max-w-[70%]">
+        Détails de la commande
+      </h3>
+      <button
+        (click)="closeDetails()"
+        class="btn btn-sm btn-outline w-full sm:w-auto"
       >
-        <p class="text-xs font-medium text-gray-700">
-          {{ payment.installment_number }}
-        </p>
-        <p class="text-sm font-semibold text-gray-800">
-          {{ payment.amount_paid | number : "1.0-0" }} {{ " XAF" }}
-        </p>
+        Retour aux commandes
+      </button>
+    </div>
 
-        <!-- Date Section -->
-        <p
-          class="text-xs text-gray-600 mt-2 truncate"
-          *ngIf="payment.status === 'success'"
+    <div
+      class="border border-gray-200 rounded-lg p-4 md:p-6 bg-background-light"
+    >
+      <!-- Order and Payment Info -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+        <div class="border-b pb-4 md:border-b-0 md:pb-0">
+          <h4 class="font-heading text-lg mb-3">Informations de commande</h4>
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <span class="text-text-light">N° de commande:</span>
+              <div class="font-medium max-w-[50%] truncate">
+                {{ selectedOrder.order_number }}
+              </div>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-text-light">Date:</span>
+              <span class="font-medium">{{
+                formatDate(selectedOrder.created_at)
+              }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-text-light">Statut:</span>
+              <span
+                [class]="
+                  'px-2 py-1 text-xs font-medium rounded-full ' +
+                  getStatusClass(selectedOrder.status)
+                "
+              >
+                {{
+                  selectedOrder.status === "pending"
+                    ? "En attente"
+                    : selectedOrder.status === "processing"
+                    ? "En traitement"
+                    : selectedOrder.status === "shipped"
+                    ? "Expédiée"
+                    : selectedOrder.status === "delivered"
+                    ? "Livrée"
+                    : selectedOrder.status === "cancelled"
+                    ? "Annulée"
+                    : selectedOrder.status
+                }}
+              </span>
+            </div>
+            <div
+              *ngIf="selectedOrder.tracking_number"
+              class="flex justify-between"
+            >
+              <span class="text-text-light">N° de suivi:</span>
+              <div class="font-medium max-w-[50%] truncate">
+                {{ selectedOrder.tracking_number }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-heading text-lg mb-3">Paiement</h4>
+          <div class="space-y-2">
+            <div class="flex justify-between">
+              <span class="text-text-light">Méthode:</span>
+              <span class="font-medium">{{
+                getPaymentMethodLabel(selectedOrder.payment_method)
+              }}</span>
+            </div>
+            <div class="flex justify-between">
+              <span class="text-text-light">Statut du paiement:</span>
+              <span
+                [class]="
+                  'px-2 py-1 text-xs font-medium rounded-full ' +
+                  getPaymentStatusClass(selectedOrder.payment_status)
+                "
+              >
+                {{
+                  selectedOrder.payment_status === "pending"
+                    ? "En attente"
+                    : selectedOrder.payment_status === "paid"
+                    ? "Payée"
+                    : selectedOrder.payment_status === "failed"
+                    ? "Échouée"
+                    : selectedOrder.payment_status === "refunded"
+                    ? "Remboursée"
+                    : selectedOrder.payment_status
+                }}
+              </span>
+            </div>
+            <div *ngIf="selectedOrder.payment_id" class="flex justify-between">
+              <span class="text-text-light">ID Transaction:</span>
+              <div class="font-medium max-w-[50%] truncate">
+                {{ selectedOrder.payment_id }}
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Addresses -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6 mb-6">
+        <div class="border-b pb-4 md:border-b-0 md:pb-0">
+          <h4 class="font-heading text-lg mb-3">Adresse de facturation</h4>
+          <div class="space-y-1 overflow-hidden">
+            <p class="truncate">{{ selectedOrder.billing_address }}</p>
+            <p class="truncate">
+              {{ selectedOrder.billing_city }},
+              {{ selectedOrder.billing_postal_code }}
+            </p>
+            <p class="truncate">{{ selectedOrder.billing_country }}</p>
+          </div>
+        </div>
+
+        <div>
+          <h4 class="font-heading text-lg mb-3">Adresse de livraison</h4>
+          <div class="space-y-1 overflow-hidden">
+            <p class="truncate">{{ selectedOrder.shipping_address }}</p>
+            <p class="truncate">
+              {{ selectedOrder.shipping_city }},
+              {{ selectedOrder.shipping_postal_code }}
+            </p>
+            <p class="truncate">{{ selectedOrder.shipping_country }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Products - Desktop View avec dimensions fixes et scroll horizontal -->
+      <h4 class="font-heading text-lg mb-3">Produits commandés</h4>
+      <div class="hidden md:block overflow-x-auto pb-3">
+        <table
+          class="min-w-full divide-y divide-gray-200 mb-4"
+          style="table-layout: fixed; min-width: 800px"
         >
-          Date: {{ payment.payment_date | date : "shortDate" }}
-        </p>
-        <p
-          class="text-xs text-gray-600 mt-2 truncate"
-          *ngIf="payment.status === 'pending'"
-        >
-          Due Date: {{ payment.due_date | date : "shortDate" }}
-        </p>
+          <thead class="bg-gray-50">
+            <tr>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-64"
+              >
+                Produit
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Prix unitaire
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-28"
+              >
+                Quantité
+              </th>
+              <th
+                scope="col"
+                class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider w-32"
+              >
+                Total
+              </th>
+            </tr>
+          </thead>
+          <tbody class="bg-white divide-y divide-gray-200">
+            <tr *ngFor="let item of selectedOrder.order_items">
+              <td class="px-6 py-4">
+                <div class="flex items-center">
+                  <div
+                    class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200 mr-4"
+                    *ngIf="
+                      item.product?.images && item.product!.images.length > 0
+                    "
+                  >
+                    <img
+                      [src]="item.product!.images[0].image_path"
+                      alt="{{ item.product?.name }}"
+                      class="h-full w-full object-cover object-center"
+                    />
+                  </div>
+                  <div class="overflow-hidden">
+                    <div
+                      class="text-sm font-medium text-text-dark truncate max-w-[200px]"
+                    >
+                      {{ item.product?.name }}
+                    </div>
+                    <div class="text-sm text-text-light truncate max-w-[200px]">
+                      {{ item.product?.sku }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-text-dark">
+                  {{ item.price.toFixed(2) }} €
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm text-text-dark">{{ item.quantity }}</div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="text-sm font-medium text-text-dark">
+                  {{ item.total.toFixed(2) }} €
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
 
-        <!-- Progress Bar -->
-        <span
-          class="w-full h-2 rounded-sm mt-2"
-          [ngStyle]="{
-            backgroundColor:
-              payment.status === 'success' ? '#039422' : '#ffda33'
-          }"
-        ></span>
-
-        <!-- Tooltip -->
+      <!-- Products - Mobile View avec défilement vertical si besoin -->
+      <div class="md:hidden space-y-4 mb-4 max-h-[400px] overflow-y-auto">
         <div
-          *ngIf="payment.status === 'pending'"
-          class="absolute left-1/2 transform -translate-x-1/2 mt-2 px-2 py-1 bg-gray-600 text-white text-xs rounded-md opacity-0 hover:opacity-100 transition-opacity duration-200 z-10"
+          *ngFor="let item of selectedOrder.order_items"
+          class="border border-gray-100 rounded-md p-3"
         >
-          Cliquez pour payer
+          <div class="flex gap-3 mb-2">
+            <div
+              class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200"
+              *ngIf="item.product?.images && item.product!.images.length > 0"
+            >
+              <img
+                [src]="item.product!.images[0].image_path"
+                alt="{{ item.product?.name }}"
+                class="h-full w-full object-cover object-center"
+              />
+            </div>
+            <div class="flex-1 overflow-hidden">
+              <div class="font-medium text-text-dark truncate">
+                {{ item.product?.name }}
+              </div>
+              <div class="text-xs text-text-light truncate">
+                {{ item.product?.sku }}
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2 text-sm">
+            <div>
+              <div class="text-text-light">Prix</div>
+              <div>{{ item.price.toFixed(2) }} €</div>
+            </div>
+            <div>
+              <div class="text-text-light">Quantité</div>
+              <div>{{ item.quantity }}</div>
+            </div>
+            <div>
+              <div class="text-text-light">Total</div>
+              <div class="font-medium">{{ item.total.toFixed(2) }} €</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Order Summary -->
+      <div class="mt-6 border-t pt-6">
+        <div class="space-y-2">
+          <div class="flex justify-between">
+            <span>Sous-total</span>
+            <span
+              >{{
+                (
+                  selectedOrder.total_amount -
+                  selectedOrder.shipping_fee -
+                  selectedOrder.tax_amount +
+                  selectedOrder.discount_amount
+                ).toFixed(2)
+              }}
+              €</span
+            >
+          </div>
+          <div class="flex justify-between">
+            <span>Frais de livraison</span>
+            <span>{{ selectedOrder.shipping_fee.toFixed(2) }} €</span>
+          </div>
+          <div class="flex justify-between">
+            <span>Taxes</span>
+            <span>{{ selectedOrder.tax_amount.toFixed(2) }} €</span>
+          </div>
+          <div
+            class="flex justify-between"
+            *ngIf="selectedOrder.discount_amount > 0"
+          >
+            <span>Remise</span>
+            <span>-{{ selectedOrder.discount_amount.toFixed(2) }} €</span>
+          </div>
+          <div class="flex justify-between border-t pt-2 font-medium text-lg">
+            <span>Total</span>
+            <span>{{ selectedOrder.total_amount.toFixed(2) }} €</span>
+          </div>
         </div>
       </div>
     </div>

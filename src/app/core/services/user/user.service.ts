@@ -1,49 +1,74 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
-import { catchError } from 'rxjs/operators';
+import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { handleHttpError } from '../errors';
-import { IUpdateMe } from '../../models/user.model';
+import { AuthService } from '../auth/auth.service';
+import { IUser } from '../../models2/user.model';
+
+// Interface for updating the profile
+export interface IUpdateProfile {
+  name?: string;
+  email?: string;
+  phone_number?: string;
+  address?: string;
+  city?: string;
+  postal_code?: string;
+  country?: string;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class UserService {
-  apiUrl = environment.API_URL;
+  private http = inject(HttpClient);
+  private authService = inject(AuthService);
+  private apiUrl = environment.API_URL;
 
-  constructor(private http: HttpClient) {}
-
-  updateProfile(user: IUpdateMe): Observable<any> {
+  /**
+   * Retrieves the complete profile of the user
+   */
+  getProfile(): Observable<{ status: string; user: IUser }> {
     return this.http
-      .put(`${this.apiUrl}/user/profile`, user)
+      .get<{ status: string; user: IUser }>(`${this.apiUrl}/profile`)
       .pipe(catchError(handleHttpError));
   }
 
-  updateProfilePicture(profilePic: File): Observable<any> {
-    const formData = new FormData();
-    formData.append('profilePic', profilePic);
-
+  /**
+   * Updates the user's profile
+   */
+  updateProfile(
+    userData: IUpdateProfile
+  ): Observable<{ status: string; user: IUser }> {
     return this.http
-      .post(`${this.apiUrl}/user/profile-picture`, formData)
-      .pipe(catchError(handleHttpError));
+      .put<{ status: string; user: IUser }>(`${this.apiUrl}/profile`, userData)
+      .pipe(
+        tap((response) => {
+          if (response.status === 'success' && response.user) {
+            this.authService.setUser(response.user);
+          }
+        }),
+        catchError(handleHttpError)
+      );
   }
 
-  changeRole(role: string): Observable<any> {
+  /**
+   * Changes the user's password
+   */
+  changePassword(
+    currentPassword: string,
+    newPassword: string
+  ): Observable<{ status: string; message: string }> {
     return this.http
-      .post(`${this.apiUrl}/user/profile/role`, { role })
-      .pipe(catchError(handleHttpError));
-  }
-
-  reviewProduct(reviewData: any): Observable<any> {
-    return this.http
-      .post(`${this.apiUrl}/product-review`, reviewData)
-      .pipe(catchError(handleHttpError));
-  }
-
-  reviewShop(reviewData: any): Observable<any> {
-    return this.http
-      .post(`${this.apiUrl}/shop-review`, reviewData)
+      .put<{ status: string; message: string }>(
+        `${this.apiUrl}/change-password`,
+        {
+          current_password: currentPassword,
+          password: newPassword,
+          password_confirmation: newPassword,
+        }
+      )
       .pipe(catchError(handleHttpError));
   }
 }

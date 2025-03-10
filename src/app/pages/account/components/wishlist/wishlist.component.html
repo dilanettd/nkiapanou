@@ -1,0 +1,128 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-heading font-semibold text-primary">
+      Ma Liste de Souhaits
+    </h2>
+    <button
+      *ngIf="wishlistItems.length > 0"
+      (click)="clearWishlist()"
+      class="btn btn-sm btn-outline text-red-500 border-red-500 hover:bg-red-500 hover:text-white"
+    >
+      Vider ma liste
+    </button>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading" class="flex justify-center items-center h-48">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+    ></div>
+  </div>
+
+  <!-- Empty State -->
+  <div *ngIf="!loading && wishlistItems.length === 0" class="text-center py-10">
+    <div class="text-6xl mb-4 opacity-30">❤️</div>
+    <h3 class="text-xl font-heading mb-2">Votre liste de souhaits est vide</h3>
+    <p class="text-text-light mb-6">
+      Ajoutez des articles à votre liste de souhaits en parcourant notre
+      boutique.
+    </p>
+    <a routerLink="/shop" class="btn btn-primary">Découvrir nos produits</a>
+  </div>
+
+  <!-- Wishlist Grid -->
+  <div
+    *ngIf="!loading && wishlistItems.length > 0"
+    class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6"
+  >
+    <!-- Product Card -->
+    <div
+      *ngFor="let product of wishlistItems"
+      class="border border-gray-200 rounded-lg overflow-hidden bg-background-light shadow-sm hover:shadow-md transition-shadow duration-300 cursor-pointer wishlist-card"
+      (click)="navigateToProduct(product.id)"
+    >
+      <!-- Product Image -->
+      <div class="relative h-48 overflow-hidden bg-gray-100">
+        <img
+          *ngIf="product.images && product.images.length > 0"
+          [src]="product.images[0].image_path"
+          [alt]="product.name"
+          class="w-full h-full object-cover transition-transform duration-500 hover:scale-105"
+        />
+        <div
+          *ngIf="
+            calculateDiscountPercentage(product.price, product.discount_price)
+          "
+          class="absolute top-0 left-0 bg-primary text-white px-2 py-1 text-xs font-bold m-2 rounded"
+        >
+          -{{
+            calculateDiscountPercentage(product.price, product.discount_price)
+          }}%
+        </div>
+        <button
+          (click)="removeFromWishlist(product.id, $event)"
+          class="absolute top-0 right-0 m-2 p-2 bg-white rounded-full shadow hover:bg-red-500 hover:text-white transition-colors duration-300"
+          title="Retirer de la liste de souhaits"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            class="h-5 w-5"
+            fill="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"
+            />
+          </svg>
+        </button>
+      </div>
+
+      <!-- Product Info -->
+      <div class="p-4">
+        <h3 class="font-medium text-lg mb-1 truncate">{{ product.name }}</h3>
+        <p class="text-text-light text-sm mb-2 h-10 overflow-hidden">
+          {{ product.description }}
+        </p>
+
+        <div class="flex justify-between items-center mt-4">
+          <div>
+            <div *ngIf="product.discount_price" class="flex items-center">
+              <span class="text-lg font-bold text-primary">{{
+                product.discount_price | currency : "EUR"
+              }}</span>
+              <span class="text-sm text-text-light line-through ml-2">{{
+                product.price | currency : "EUR"
+              }}</span>
+            </div>
+            <span
+              *ngIf="!product.discount_price"
+              class="text-lg font-bold text-primary"
+              >{{ product.price | currency : "EUR" }}</span
+            >
+          </div>
+
+          <div>
+            <span
+              [class]="
+                product.status === 'active'
+                  ? 'bg-green-100 text-green-800'
+                  : product.status === 'out_of_stock'
+                  ? 'bg-red-100 text-red-800'
+                  : 'bg-yellow-100 text-yellow-800'
+              "
+              class="px-2 py-1 text-xs rounded-full"
+            >
+              {{
+                product.status === "active"
+                  ? "En stock"
+                  : product.status === "inactive"
+                  ? "Indisponible"
+                  : "Rupture de stock"
+              }}
+            </span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

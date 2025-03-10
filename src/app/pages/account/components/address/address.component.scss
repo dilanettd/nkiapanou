@@ -1,0 +1,126 @@
+// Styles spécifiques pour le composant d'adresses
+
+:host {
+  .address-card {
+    transition: box-shadow 0.3s ease, transform 0.2s ease;
+
+    &:hover {
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transform: translateY(-2px);
+    }
+  }
+
+  .default-badge {
+    clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%);
+    padding-left: 16px;
+    padding-right: 12px;
+  }
+
+  // Améliorations des transitions sur les boutons
+  button {
+    transition: color 0.2s ease, background-color 0.2s ease, transform 0.1s ease;
+
+    &:active {
+      transform: scale(0.98);
+    }
+  }
+
+  // Animations pour l'apparition des formulaires
+  form {
+    animation: fade-slide-down 0.3s ease-out;
+  }
+
+  @keyframes fade-slide-down {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // Styles responsifs spécifiques
+  @media (max-width: 768px) {
+    .address-actions {
+      flex-wrap: wrap;
+      gap: 0.5rem;
+
+      button {
+        font-size: 0.875rem;
+        padding: 0.25rem 0.5rem;
+        min-height: 2rem;
+      }
+    }
+
+    // Optimisation pour les écrans tactiles
+    .address-card {
+      padding-bottom: 0.75rem;
+
+      .font-medium.w-32 {
+        width: 6rem; // Plus petit sur mobile
+      }
+    }
+
+    // Amélioration du formulaire sur mobile
+    form {
+      .grid {
+        gap: 0.75rem;
+      }
+
+      label {
+        margin-bottom: 0.25rem;
+      }
+
+      input,
+      select {
+        font-size: 16px; // Évite le zoom sur iOS
+        padding: 0.5rem;
+      }
+
+      .space-y-4 {
+        margin-bottom: 1rem;
+      }
+    }
+  }
+
+  @media (max-width: 480px) {
+    // Optimisation pour les très petits écrans
+    .address-card {
+      .font-medium.w-32 {
+        width: 5rem;
+        font-size: 0.75rem;
+      }
+
+      .mb-4.space-y-1.text-sm {
+        font-size: 0.75rem;
+      }
+    }
+
+    // Formulaire compact
+    form {
+      max-width: 100%;
+      overflow-x: hidden;
+
+      .grid {
+        gap: 0.5rem;
+      }
+    }
+  }
+
+  // Amélioration de l'accessibilité
+  input:focus,
+  select:focus {
+    outline: 2px solid rgba(235, 196, 53, 0.5);
+    outline-offset: 2px;
+  }
+
+  .input-error {
+    border-color: #e53e3e;
+
+    &:focus {
+      outline-color: rgba(229, 62, 62, 0.5);
+    }
+  }
+}

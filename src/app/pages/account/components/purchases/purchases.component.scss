@@ -1,0 +1,54 @@
+// Styles spécifiques pour le composant achats
+
+// Animation pour la transition des détails
+:host {
+  .fade-in {
+    animation: fadeIn 0.3s ease-in;
+  }
+
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  // Styles pour les statuts de commande
+  .status-badge {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 9999px;
+    padding: 0.25rem 0.75rem;
+    text-transform: capitalize;
+    font-size: 0.75rem;
+    font-weight: 500;
+  }
+
+  // Styles pour les lignes de tableau au survol
+  table tbody tr {
+    transition: background-color 0.15s ease;
+
+    &:hover {
+      background-color: rgba(235, 196, 53, 0.05);
+    }
+  }
+
+  // Style pour les informations de paiement
+  .payment-info {
+    background-color: rgba(235, 196, 53, 0.1);
+    border-radius: 0.25rem;
+    padding: 1rem;
+  }
+
+  // Responsive adjustments for mobile
+  @media (max-width: 640px) {
+    .order-details-grid {
+      grid-template-columns: 1fr;
+    }
+  }
+}

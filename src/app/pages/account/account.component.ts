@@ -1,14 +1,16 @@
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import {
-  Component,
-  ElementRef,
-  inject,
-  OnInit,
-  ViewChild,
-} from '@angular/core';
-import { Router, RouterModule, RouterOutlet } from '@angular/router';
+  Router,
+  RouterModule,
+  RouterOutlet,
+  NavigationEnd,
+} from '@angular/router';
 import { AuthService } from '../../core/services/auth/auth.service';
-import { IUser } from '../../core/models/auth.state.model';
 import { CommonModule } from '@angular/common';
+import { filter } from 'rxjs/operators';
+import { Subscription } from 'rxjs';
+import { ToastrService } from 'ngx-toastr';
+import { IUser } from '../../core/models2/user.model';
 
 @Component({
   selector: 'nkiapanou-account',
@@ -17,33 +19,99 @@ import { CommonModule } from '@angular/common';
   templateUrl: './account.component.html',
   styleUrl: './account.component.scss',
 })
-export class AccountComponent implements OnInit {
-  @ViewChild('tabContainer') tabContainer!: ElementRef;
+export class AccountComponent implements OnInit, OnDestroy {
+  user: IUser | null = null;
+  activeLink: string = 'profile';
+  loading: boolean = true;
+
+  private userSubscription: Subscription | null = null;
+  private routerSubscription: Subscription | null = null;
+
   private authService = inject(AuthService);
-  userRole: string = 'customer';
-  shopName!: string | undefined;
-  shopLogoUrl!: string | undefined;
+  private router = inject(Router);
+  private toastr = inject(ToastrService);
 
-  constructor(private router: Router) {}
-
-  scrollTabs(direction: 'left' | 'right'): void {
-    const container = this.tabContainer.nativeElement;
-    const scrollAmount = direction === 'left' ? -200 : 200;
-    container.scrollBy({ left: scrollAmount, behavior: 'smooth' });
-  }
+  constructor() {}
 
   ngOnInit(): void {
-    this.authService.getUser().subscribe((me: IUser | null) => {
-      this.userRole = me!.role;
-      if (me?.role === 'seller') {
-        const seller = me.seller;
-        this.shopName = seller.shop.name;
-        this.shopLogoUrl = seller.shop.logo_url;
-      }
-    });
+    this.getUserData();
+    this.updateActiveLink();
+
+    this.routerSubscription = this.router.events
+      .pipe(filter((event) => event instanceof NavigationEnd))
+      .subscribe(() => {
+        this.updateActiveLink();
+      });
   }
 
-  isActiveRoute(route: string): boolean {
-    return this.router.isActive(route, true);
+  ngOnDestroy(): void {
+    if (this.userSubscription) {
+      this.userSubscription.unsubscribe();
+    }
+
+    if (this.routerSubscription) {
+      this.routerSubscription.unsubscribe();
+    }
+  }
+
+  updateActiveLink(): void {
+    const urlSegments = this.router.url.split('/');
+    const currentPath = urlSegments[urlSegments.length - 1];
+
+    if (currentPath && currentPath !== 'account') {
+      this.activeLink = currentPath;
+    } else if (urlSegments.includes('profile')) {
+      this.activeLink = 'profile';
+    }
+  }
+
+  getUserData(): void {
+    this.loading = true;
+
+    const currentUser = this.authService.getCurrentUser();
+
+    if (currentUser) {
+      this.user = currentUser;
+
+      if (!this.authService.isAuthenticated()) {
+        this.toastr.error('Session expirée');
+        this.router.navigate(['/login']);
+        return;
+      }
+
+      this.userSubscription = this.authService
+        .getUser()
+        .subscribe((userData) => {
+          if (userData) {
+            this.user = userData;
+          }
+        });
+
+      this.loading = false;
+    } else {
+      this.toastr.error('Accès refusé');
+      this.router.navigate(['/login']);
+    }
+  }
+
+  navigateTo(page: string): void {
+    this.activeLink = page;
+    this.router.navigate(['/account', page]);
+  }
+
+  logout(): void {
+    this.loading = true;
+
+    this.authService.logout().subscribe({
+      next: () => {
+        this.toastr.success('Déconnexion réussie');
+        this.router.navigate(['/']);
+      },
+      error: (err) => {
+        this.toastr.error('Erreur de déconnexion');
+        this.loading = false;
+        console.error('Error during logout:', err);
+      },
+    });
   }
 }

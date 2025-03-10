@@ -1,7 +1,7 @@
 import { IProduct } from './product.model';
 
 export interface IUser {
-  id: number;
+  id?: number;
   name: string;
   email: string;
   password?: string;
@@ -15,9 +15,17 @@ export interface IUser {
   remember_token?: string;
   social_id?: string;
   social_type?: 'facebook' | 'google';
-  is_social: boolean;
+  is_social?: boolean;
   created_at: string;
   updated_at: string;
+}
+export interface IUpdateUser {
+  name: string;
+  phone_number: string;
+  address: string;
+  city: string;
+  postal_code?: string;
+  country: string;
 }
 
 export interface Testimonial {
@@ -43,7 +51,7 @@ export interface UserPreference {
   user?: IUser;
 }
 
-export interface Wishlist {
+export interface IWishlistItem {
   id: number;
   user_id: number;
   product_id: number;
@@ -53,7 +61,7 @@ export interface Wishlist {
   product?: IProduct;
 }
 
-export interface NewsletterSubscriber {
+export interface INewsletterSubscriber {
   id: number;
   email: string;
   name?: string;
@@ -62,7 +70,7 @@ export interface NewsletterSubscriber {
   updated_at: string;
 }
 
-export interface UserAddress {
+export interface IUserAddress {
   id: number;
   user_id: number;
   address_type: 'shipping' | 'billing';
@@ -78,4 +86,13 @@ export interface UserAddress {
   created_at: string;
   updated_at: string;
   user?: IUser;
+}
+
+export interface IUserPreference {
+  id: number;
+  user_id: number;
+  newsletter_subscription: boolean;
+  language: string;
+  created_at: string;
+  updated_at: string;
 }

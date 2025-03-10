@@ -50,23 +50,8 @@ export class LoginAdminComponent implements OnDestroy {
       const loginSubscription = this.authService
         .loginAdmin(email, password)
         .subscribe({
-          next: (tokens) => {
-            this.authService.setTokens(tokens);
-
-            const userSubscription = this.authService
-              .getAuthenticatedUser()
-              .subscribe({
-                next: (me: IUser) => {
-                  this.authService.setUser(me);
-                  this.toastr.success('You are successfully logged in.');
-                  this.router.navigate(['/admin/dashboard']);
-                },
-                error: () => {
-                  this.errorMessage = 'Failed to retrieve user data.';
-                },
-              });
-
-            this.subscriptions.add(userSubscription);
+          next: () => {
+            this.toastr.success('You are successfully logged in.');
           },
           error: (error) => {
             this.errorMessage =

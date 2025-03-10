@@ -20,7 +20,7 @@ export interface IProduct {
   low_stock_threshold?: number;
   created_at: string;
   updated_at: string;
-  images?: IProductImage[];
+  images: IProductImage[];
   category?: ICategory;
   reviews?: IProductReview[];
 }

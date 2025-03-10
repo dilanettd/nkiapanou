@@ -64,42 +64,48 @@
             class="text-sm flex items-center text-gray-500 hover:text-primary transition-colors duration-300 font-medium"
           >
             <i class="lni lni-user mr-1"></i>
-            <span *ngIf="isUserLoggedIn">Mon Compte</span>
-            <span *ngIf="!isUserLoggedIn">Se Connecter</span>
+            @if (isAuthenticated) {
+            <span>{{ userName }}</span>
+            } @else {
+            <span>Se Connecter</span>
+            }
             <i class="lni lni-chevron-down text-xs ml-1"></i>
           </button>
           <div
             *ngIf="isAuthDropdownOpen"
             class="absolute right-0 mt-2 w-32 shadow-lg rounded-md overflow-hidden z-50 border border-gray-100 bg-white"
           >
-            <ng-container *ngIf="isUserLoggedIn">
-              <a
-                routerLink="/account"
-                (click)="closeAuthDropdown()"
-                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
-                >Mon Compte</a
-              >
-              <a
-                href="#"
-                (click)="logout($event)"
-                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
-                >Déconnexion</a
-              >
-            </ng-container>
-            <ng-container *ngIf="!isUserLoggedIn">
-              <a
-                routerLink="/login"
-                (click)="closeAuthDropdown()"
-                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
-                >Se Connecter</a
-              >
-              <a
-                routerLink="/signup"
-                (click)="closeAuthDropdown()"
-                class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
-                >S'inscrire</a
-              >
-            </ng-container>
+            @if (isAuthenticated) {
+            <a
+              routerLink="/account"
+              (click)="closeAuthDropdown()"
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >Mon Compte</a
+            >
+            <a
+              href="#"
+              (click)="logout($event)"
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >Déconnexion</a
+            >
+            } @else {
+            <a
+              href="#"
+              (click)="
+                openLoginModal(); closeAuthDropdown(); $event.preventDefault()
+              "
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >Se Connecter</a
+            >
+            <a
+              href="#"
+              (click)="
+                openSignupModal(); closeAuthDropdown(); $event.preventDefault()
+              "
+              class="block px-4 py-2 text-sm text-gray-500 hover:bg-primary hover:text-white transition-colors duration-200"
+              >S'inscrire</a
+            >
+            }
           </div>
         </div>
       </div>
@@ -199,7 +205,7 @@
   </div>
 
   <!-- Mobile search bar - IDENTIQUE AU DESKTOP -->
-  <div class="md:hidden" [ngClass]="{ hidden: !isMobileSearchOpen }">
+  <div class="md:hidden" [class.hidden]="!isMobileSearchOpen">
     <div class="container mx-auto px-4 py-3 border-t border-gray-100">
       <div class="relative">
         <div class="flex rounded-lg transition-colors duration-300">
@@ -270,7 +276,7 @@
   <!-- Mobile menu with theme colors and improved design -->
   <div
     class="md:hidden shadow-lg rounded-b-lg bg-white"
-    [ngClass]="{ hidden: !isMobileMenuOpen }"
+    [class.hidden]="!isMobileMenuOpen"
   >
     <div class="container mx-auto px-4 py-2">
       <nav class="flex flex-col">
@@ -328,34 +334,35 @@
 
         <!-- Mobile auth buttons with consistent styling -->
         <div class="flex space-x-2">
-          <ng-container *ngIf="!isUserLoggedIn">
-            <a
-              routerLink="/login"
-              class="px-3 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors duration-300 flex items-center"
-            >
-              <i class="lni lni-enter mr-1 text-xs"></i> Se Connecter
-            </a>
-            <a
-              routerLink="/signup"
-              class="px-3 py-2 border border-primary text-primary text-sm rounded-md hover:bg-primary hover:text-white transition-colors duration-300 flex items-center"
-            >
-              <i class="lni lni-user mr-1 text-xs"></i> S'inscrire
-            </a>
-          </ng-container>
-          <ng-container *ngIf="isUserLoggedIn">
-            <a
-              routerLink="/account"
-              class="px-3 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors duration-300 flex items-center"
-            >
-              <i class="lni lni-user mr-1 text-xs"></i> Compte
-            </a>
-            <button
-              (click)="logout($event)"
-              class="px-3 py-2 border border-primary text-primary text-sm rounded-md hover:bg-primary hover:text-white transition-colors duration-300 flex items-center"
-            >
-              <i class="lni lni-exit mr-1 text-xs"></i> Déconnexion
-            </button>
-          </ng-container>
+          @if (!isAuthenticated) {
+          <a
+            href="#"
+            (click)="openLoginModal(); $event.preventDefault()"
+            class="px-3 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors duration-300 flex items-center"
+          >
+            <i class="lni lni-enter mr-1 text-xs"></i> Se Connecter
+          </a>
+          <a
+            href="#"
+            (click)="openSignupModal(); $event.preventDefault()"
+            class="px-3 py-2 border border-primary text-primary text-sm rounded-md hover:bg-primary hover:text-white transition-colors duration-300 flex items-center"
+          >
+            <i class="lni lni-user mr-1 text-xs"></i> S'inscrire
+          </a>
+          } @else {
+          <a
+            routerLink="/account"
+            class="px-3 py-2 bg-primary text-white text-sm rounded-md hover:bg-primary-hover transition-colors duration-300 flex items-center"
+          >
+            Mon Compte
+          </a>
+          <button
+            (click)="logout($event)"
+            class="px-3 py-2 border border-primary text-primary text-sm rounded-md hover:bg-primary hover:text-white transition-colors duration-300 flex items-center"
+          >
+            <i class="lni lni-exit mr-1 text-xs"></i> Déconnexion
+          </button>
+          }
         </div>
       </div>
     </div>

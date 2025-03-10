@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { IUser } from '../../../../core/models/auth.state.model';
+import { IUser } from '../../../../core/models2/user.model';
 
 @Component({
   selector: 'admin-header',

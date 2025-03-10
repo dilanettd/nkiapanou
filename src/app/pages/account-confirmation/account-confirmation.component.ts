@@ -26,7 +26,7 @@ export class AccountConfirmationComponent {
     const token = this.route.snapshot.queryParams['token'];
 
     if (token) {
-      this.authService.verifyAccountEmail(token).subscribe({
+      this.authService.verifyEmail(token).subscribe({
         next: (res) => {
           this.message = 'Your account has been successfully verified!';
           this.toastr.success(this.message);

@@ -129,7 +129,7 @@ module.exports = {
           fontFamily: theme("fontFamily.body"),
           padding: ".5rem 1rem",
           borderRadius: theme("borderRadius.button"),
-          fontWeight: "600",
+          fontWeight: "550",
           display: "inline-block",
           cursor: "pointer",
           transition:
@@ -209,7 +209,7 @@ module.exports = {
       const inputs = {
         'input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="url"], input[type="search"], textarea, select':
           {
-            borderColor: theme("colors.primary.DEFAULT"),
+            borderColor: "#D6D2B1",
             borderWidth: "1px",
             borderRadius: theme("borderRadius.button"),
             padding: ".5rem .75rem",

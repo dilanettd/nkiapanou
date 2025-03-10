@@ -1,9 +1,9 @@
-import { Component, inject } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
-  UntypedFormGroup,
+  AbstractControl,
   Validators,
 } from '@angular/forms';
 import { NgbModal } from '@ng-bootstrap/ng-bootstrap';
@@ -26,16 +26,17 @@ import { ButtonSpinnerComponent } from '../button-spinner/button-spinner.compone
   templateUrl: './register-modal.component.html',
   styleUrl: './register-modal.component.scss',
 })
-export class RegisterModalComponent {
-  registrationForm!: FormGroup;
-  isLoading: boolean = false;
-  errorMessage: string = '';
+export class RegisterModalComponent implements OnInit {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
   private modalService = inject(NgbModal);
 
-  constructor() {
+  registrationForm!: FormGroup;
+  isLoading = false;
+  errorMessage = '';
+
+  ngOnInit() {
     this.createForm();
   }
 
@@ -84,16 +85,29 @@ export class RegisterModalComponent {
     if (this.registrationForm.valid) {
       this.isLoading = true;
       const { userName, email, password } = this.registrationForm.value;
+
+      // Utiliser la méthode register de l'AuthService
       this.authService.register(userName, email, password).subscribe({
-        next: () => {
+        next: (response) => {
           this.isLoading = false;
-          this.toastr.success('Registration successful!');
-          this.modalService.dismissAll();
+
+          if (response.status === 'success') {
+            this.toastr.success(
+              'Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.'
+            );
+            this.modalService.dismissAll();
+          } else {
+            this.errorMessage =
+              response.message ||
+              "Une erreur est survenue pendant l'inscription.";
+            this.toastr.error(this.errorMessage);
+          }
         },
         error: (err) => {
           this.isLoading = false;
           this.errorMessage =
-            err.error?.message || 'An error occurred during registration.';
+            err.error?.message ||
+            "Une erreur est survenue pendant l'inscription.";
           this.toastr.error(this.errorMessage);
         },
       });
@@ -103,11 +117,9 @@ export class RegisterModalComponent {
     }
   }
 
-  signInWithFB() {}
+  socialLogin() {}
 
-  signInWithGoogle() {}
-
-  validateAllFormFields(formGroup: UntypedFormGroup) {
+  validateAllFormFields(formGroup: FormGroup) {
     Object.keys(formGroup.controls).forEach((field) => {
       const control = formGroup.get(field);
       control?.markAsTouched({ onlySelf: true });

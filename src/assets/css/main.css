@@ -1358,7 +1358,7 @@ ol {
 }
 
 .button .btn-alt:hover {
-  background-color: #0167F3 !important;
+  background-color: #ebc435 !important;
   color: #fff !important;
 }
 
@@ -1407,7 +1407,7 @@ ol {
   width: 100px;
   height: 100px;
   border-radius: 100%;
-  background: #0167F3;
+  background: #ebc435;
   -webkit-animation: preloader-fx 1.6s linear infinite;
   animation: preloader-fx 1.6s linear infinite;
 }

@@ -1,0 +1,432 @@
+<div class="space-y-6">
+  <div class="flex justify-between items-center mb-6">
+    <h2 class="text-2xl font-heading font-semibold text-primary">
+      Mes Adresses
+    </h2>
+    <button
+      *ngIf="!showAddForm && !showEditForm"
+      (click)="openAddForm()"
+      class="btn btn-primary"
+    >
+      Ajouter une adresse
+    </button>
+  </div>
+
+  <!-- Loader -->
+  <div *ngIf="loading" class="flex justify-center items-center h-48">
+    <div
+      class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+    ></div>
+  </div>
+
+  <!-- Empty State -->
+  <div
+    *ngIf="!loading && addresses.length === 0 && !showAddForm"
+    class="text-center py-10"
+  >
+    <div class="text-6xl mb-4 opacity-30">📍</div>
+    <h3 class="text-xl font-heading mb-2">Aucune adresse enregistrée</h3>
+    <p class="text-text-light mb-6">
+      Vous n'avez pas encore ajouté d'adresse à votre compte.
+    </p>
+    <button (click)="openAddForm()" class="btn btn-primary">
+      Ajouter une adresse
+    </button>
+  </div>
+
+  <!-- Address Form -->
+  <div
+    *ngIf="showAddForm || showEditForm"
+    class="border border-gray-200 rounded-lg p-6 bg-background-light mb-8"
+  >
+    <h3 class="text-xl font-heading font-semibold mb-4">
+      {{ showAddForm ? "Ajouter une nouvelle adresse" : "Modifier l'adresse" }}
+    </h3>
+
+    <form
+      [formGroup]="addressForm"
+      (ngSubmit)="saveAddress()"
+      class="space-y-4"
+    >
+      <!-- Address Type Selection -->
+      <div>
+        <label class="block text-text-light mb-1">Type d'adresse</label>
+        <div class="flex space-x-4">
+          <label class="flex items-center">
+            <input
+              type="radio"
+              formControlName="address_type"
+              value="shipping"
+              class="mr-2"
+            />
+            <span>Livraison</span>
+          </label>
+          <label class="flex items-center">
+            <input
+              type="radio"
+              formControlName="address_type"
+              value="billing"
+              class="mr-2"
+            />
+            <span>Facturation</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Is Default Checkbox -->
+      <div>
+        <label class="flex items-center">
+          <input type="checkbox" formControlName="is_default" class="mr-2" />
+          <span>Définir comme adresse par défaut</span>
+        </label>
+      </div>
+
+      <!-- Name & Address Fields -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
+        <div>
+          <label for="recipient_name" class="block text-text-light mb-1"
+            >Nom du destinataire</label
+          >
+          <input
+            type="text"
+            id="recipient_name"
+            formControlName="recipient_name"
+            class="w-full"
+            [class.input-error]="isFieldInvalid('recipient_name')"
+          />
+          <small *ngIf="isFieldInvalid('recipient_name')" class="text-red-500">
+            {{ getFieldErrorMessage("recipient_name") }}
+          </small>
+        </div>
+
+        <div>
+          <label for="phone_number" class="block text-text-light mb-1"
+            >Numéro de téléphone</label
+          >
+          <input
+            type="tel"
+            id="phone_number"
+            formControlName="phone_number"
+            class="w-full"
+            [class.input-error]="isFieldInvalid('phone_number')"
+            placeholder="+33612345678"
+          />
+          <small *ngIf="isFieldInvalid('phone_number')" class="text-red-500">
+            {{ getFieldErrorMessage("phone_number") }}
+          </small>
+        </div>
+      </div>
+
+      <div>
+        <label for="address_line1" class="block text-text-light mb-1"
+          >Adresse</label
+        >
+        <input
+          type="text"
+          id="address_line1"
+          formControlName="address_line1"
+          class="w-full"
+          [class.input-error]="isFieldInvalid('address_line1')"
+        />
+        <small *ngIf="isFieldInvalid('address_line1')" class="text-red-500">
+          {{ getFieldErrorMessage("address_line1") }}
+        </small>
+      </div>
+
+      <div>
+        <label for="address_line2" class="block text-text-light mb-1"
+          >Complément d'adresse (optionnel)</label
+        >
+        <input
+          type="text"
+          id="address_line2"
+          formControlName="address_line2"
+          class="w-full"
+        />
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div>
+          <label for="city" class="block text-text-light mb-1">Ville</label>
+          <input
+            type="text"
+            id="city"
+            formControlName="city"
+            class="w-full"
+            [class.input-error]="isFieldInvalid('city')"
+          />
+          <small *ngIf="isFieldInvalid('city')" class="text-red-500">
+            {{ getFieldErrorMessage("city") }}
+          </small>
+        </div>
+
+        <div>
+          <label for="state_province" class="block text-text-light mb-1"
+            >Région/État (optionnel)</label
+          >
+          <input
+            type="text"
+            id="state_province"
+            formControlName="state_province"
+            class="w-full"
+          />
+        </div>
+
+        <div>
+          <label for="postal_code" class="block text-text-light mb-1"
+            >Code postal</label
+          >
+          <input
+            type="text"
+            id="postal_code"
+            formControlName="postal_code"
+            class="w-full"
+            [class.input-error]="isFieldInvalid('postal_code')"
+          />
+          <small *ngIf="isFieldInvalid('postal_code')" class="text-red-500">
+            {{ getFieldErrorMessage("postal_code") }}
+          </small>
+        </div>
+      </div>
+
+      <div>
+        <label for="country" class="block text-text-light mb-1">Pays</label>
+        <select
+          id="country"
+          formControlName="country"
+          class="w-full"
+          [class.input-error]="isFieldInvalid('country')"
+        >
+          <option *ngFor="let country of countries" [value]="country">
+            {{ country }}
+          </option>
+        </select>
+        <small *ngIf="isFieldInvalid('country')" class="text-red-500">
+          {{ getFieldErrorMessage("country") }}
+        </small>
+      </div>
+
+      <div class="flex justify-end space-x-4 mt-6">
+        <button type="button" (click)="closeForm()" class="btn btn-outline">
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="formSubmitting || addressForm.invalid"
+        >
+          <span
+            *ngIf="formSubmitting"
+            class="inline-block h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"
+          ></span>
+          {{ showAddForm ? "Ajouter" : "Enregistrer" }}
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Address Lists Section -->
+  <div
+    *ngIf="!loading && addresses.length > 0 && !showAddForm && !showEditForm"
+    class="space-y-8"
+  >
+    <!-- Shipping Addresses -->
+    <div *ngIf="shippingAddresses.length > 0">
+      <h3 class="text-xl font-heading font-semibold mb-4">
+        Adresses de livraison
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          *ngFor="let address of shippingAddresses"
+          class="border border-gray-200 rounded-lg p-4 bg-background-light relative overflow-hidden address-card"
+        >
+          <!-- Default badge -->
+          <div
+            *ngIf="address.is_default"
+            class="absolute top-0 right-0 bg-primary text-white px-2 py-1 text-xs font-medium default-badge"
+          >
+            Par défaut
+          </div>
+
+          <div class="mb-4 space-y-1 text-sm">
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light"
+                >Destinataire :</span
+              >
+              <span>{{ address.recipient_name }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Adresse :</span>
+              <span>{{ address.address_line1 }}</span>
+            </div>
+            <div class="flex" *ngIf="address.address_line2">
+              <span class="font-medium w-32 text-text-light">Complément :</span>
+              <span>{{ address.address_line2 }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Ville :</span>
+              <span>{{ address.city }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light"
+                >Code postal :</span
+              >
+              <span>{{ address.postal_code }}</span>
+            </div>
+            <div class="flex" *ngIf="address.state_province">
+              <span class="font-medium w-32 text-text-light">Région :</span>
+              <span>{{ address.state_province }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Pays :</span>
+              <span>{{ address.country }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Téléphone :</span>
+              <span>{{ address.phone_number }}</span>
+            </div>
+          </div>
+
+          <div
+            class="flex space-x-2 address-actions mt-4 pt-3 border-t border-gray-100"
+          >
+            <button
+              (click)="openEditForm(address)"
+              class="text-sm text-primary hover:text-primary-hover focus:outline-none"
+            >
+              Modifier
+            </button>
+            <span class="text-gray-300">|</span>
+            <button
+              *ngIf="!address.is_default"
+              (click)="deleteAddress(address)"
+              class="text-sm text-red-500 hover:text-red-700 focus:outline-none"
+            >
+              Supprimer
+            </button>
+            <button
+              *ngIf="!address.is_default"
+              (click)="setDefaultAddress(address)"
+              class="text-sm text-primary hover:text-primary-hover focus:outline-none ml-auto"
+            >
+              Définir par défaut
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Billing Addresses -->
+    <div *ngIf="billingAddresses.length > 0">
+      <h3 class="text-xl font-heading font-semibold mb-4">
+        Adresses de facturation
+      </h3>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div
+          *ngFor="let address of billingAddresses"
+          class="border border-gray-200 rounded-lg p-4 bg-background-light relative overflow-hidden address-card"
+        >
+          <!-- Default badge -->
+          <div
+            *ngIf="address.is_default"
+            class="absolute top-0 right-0 bg-primary text-white px-2 py-1 text-xs font-medium default-badge"
+          >
+            Par défaut
+          </div>
+
+          <div class="mb-4 space-y-1 text-sm">
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light"
+                >Destinataire :</span
+              >
+              <span>{{ address.recipient_name }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Adresse :</span>
+              <span>{{ address.address_line1 }}</span>
+            </div>
+            <div class="flex" *ngIf="address.address_line2">
+              <span class="font-medium w-32 text-text-light">Complément :</span>
+              <span>{{ address.address_line2 }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Ville :</span>
+              <span>{{ address.city }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light"
+                >Code postal :</span
+              >
+              <span>{{ address.postal_code }}</span>
+            </div>
+            <div class="flex" *ngIf="address.state_province">
+              <span class="font-medium w-32 text-text-light">Région :</span>
+              <span>{{ address.state_province }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Pays :</span>
+              <span>{{ address.country }}</span>
+            </div>
+            <div class="flex">
+              <span class="font-medium w-32 text-text-light">Téléphone :</span>
+              <span>{{ address.phone_number }}</span>
+            </div>
+          </div>
+
+          <div
+            class="flex space-x-2 address-actions mt-4 pt-3 border-t border-gray-100"
+          >
+            <button
+              (click)="openEditForm(address)"
+              class="text-sm text-primary hover:text-primary-hover focus:outline-none"
+            >
+              Modifier
+            </button>
+            <span class="text-gray-300">|</span>
+            <button
+              *ngIf="!address.is_default"
+              (click)="deleteAddress(address)"
+              class="text-sm text-red-500 hover:text-red-700 focus:outline-none"
+            >
+              Supprimer
+            </button>
+            <button
+              *ngIf="!address.is_default"
+              (click)="setDefaultAddress(address)"
+              class="text-sm text-primary hover:text-primary-hover focus:outline-none ml-auto"
+            >
+              Définir par défaut
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- No addresses of a certain type message -->
+    <div
+      *ngIf="shippingAddresses.length === 0"
+      class="border border-gray-200 rounded-lg p-6 bg-gray-50 text-center"
+    >
+      <p class="text-text-light mb-4">
+        Vous n'avez pas encore ajouté d'adresse de livraison.
+      </p>
+      <button (click)="openAddForm()" class="btn btn-sm btn-primary">
+        Ajouter une adresse de livraison
+      </button>
+    </div>
+
+    <div
+      *ngIf="billingAddresses.length === 0"
+      class="border border-gray-200 rounded-lg p-6 bg-gray-50 text-center"
+    >
+      <p class="text-text-light mb-4">
+        Vous n'avez pas encore ajouté d'adresse de facturation.
+      </p>
+      <button (click)="openAddForm()" class="btn btn-sm btn-primary">
+        Ajouter une adresse de facturation
+      </button>
+    </div>
+  </div>
+</div>
