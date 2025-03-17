@@ -1,0 +1,112 @@
+// Styles spécifiques au composant utilisateurs
+.form-group {
+  margin-bottom: 1rem;
+}
+
+// Styles pour les badges de statut
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.25rem 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  border-radius: 9999px;
+  text-transform: uppercase;
+
+  &.status-admin {
+    background-color: #ebc435;
+    color: #111111;
+  }
+
+  &.status-super-admin {
+    background-color: #d4af23;
+    color: #111111;
+  }
+
+  &.status-social {
+    background-color: #6c84af;
+    color: white;
+  }
+
+  &.status-user {
+    background-color: #eeede5;
+    color: #333333;
+  }
+}
+
+// Style pour les boutons de pagination
+button.bg-primary {
+  background-color: #ebc435;
+  color: white;
+
+  &:hover {
+    background-color: #d4af23;
+  }
+}
+
+// Mise en évidence des lignes au survol
+tbody tr {
+  transition: background-color 0.2s ease;
+
+  &:hover {
+    background-color: rgba(238, 237, 229, 0.3);
+  }
+}
+
+// Style pour les boutons d'action
+.action-btn {
+  transition: all 0.2s ease;
+
+  &:hover {
+    transform: scale(1.1);
+  }
+
+  &:focus {
+    outline: none;
+  }
+}
+
+// Responsive ajustements
+@media (max-width: 768px) {
+  .container {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  th,
+  td {
+    padding-left: 0.5rem;
+    padding-right: 0.5rem;
+  }
+
+  .avatar-cell {
+    display: none;
+  }
+}
+
+// Style pour les avatars
+.avatar {
+  border-radius: 50%;
+  object-fit: cover;
+  background-color: #eeede5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  color: #333333;
+  border: 2px solid #ebc435;
+}
+
+// Animation pour le chargement
+@keyframes spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.spin {
+  animation: spin 1s linear infinite;
+}

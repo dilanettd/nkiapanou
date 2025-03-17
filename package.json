@@ -21,10 +21,12 @@
     "@ng-bootstrap/ng-bootstrap": "^17.0.1",
     "@tailwindcss/forms": "^0.5.10",
     "bootstrap-icons": "^1.11.3",
+    "chart.js": "^4.4.8",
     "ngx-image-compress": "^18.1.5",
     "ngx-toastr": "^19.0.0",
     "ngx-webstorage": "^18.0.0",
     "rxjs": "~7.8.0",
+    "swiper": "^11.2.5",
     "tslib": "^2.3.0",
     "zone.js": "~0.14.3"
   },

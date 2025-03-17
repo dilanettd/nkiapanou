@@ -10,6 +10,123 @@
     ></div>
   </div>
 
+  <!-- Profile Image Section -->
+  <div
+    *ngIf="!loading && user"
+    class="border border-gray-200 rounded-lg p-6 shadow-sm bg-background-light mb-6"
+  >
+    <div class="flex justify-between mb-4">
+      <h3 class="text-xl font-heading font-semibold">Photo de profil</h3>
+      <button
+        *ngIf="!isEditingImage"
+        (click)="toggleEditImage()"
+        class="btn btn-sm btn-primary"
+      >
+        Modifier
+      </button>
+    </div>
+
+    <!-- View Mode -->
+    <div *ngIf="!isEditingImage" class="flex items-center">
+      <div class="mr-6">
+        <div *ngIf="user.profile_image; else noProfileImage" class="relative">
+          <img
+            [src]="user.profile_image"
+            alt="Photo de profil"
+            class="w-24 h-24 rounded-full object-cover"
+          />
+        </div>
+        <ng-template #noProfileImage>
+          <div
+            class="w-24 h-24 rounded-full flex items-center justify-center text-xl font-semibold bg-primary/20"
+          >
+            <span class="text-2xl font-heading font-bold text-primary">
+              {{ getUserInitials(user.name || "Utilisateur") }}
+            </span>
+          </div>
+        </ng-template>
+      </div>
+      <div>
+        <p class="text-text-light">
+          Votre photo de profil est visible par les autres utilisateurs.
+        </p>
+        <p *ngIf="!user.profile_image" class="text-text-light italic mt-2">
+          Aucune photo de profil définie
+        </p>
+      </div>
+    </div>
+
+    <!-- Edit Mode -->
+    <div *ngIf="isEditingImage" class="space-y-4">
+      <div class="flex items-center mb-4">
+        <div class="mr-6">
+          <div
+            *ngIf="imagePreview || user.profile_image; else editNoProfileImage"
+            class="relative"
+          >
+            <img
+              [src]="imagePreview || user.profile_image"
+              alt="Photo de profil"
+              class="w-24 h-24 rounded-full object-cover"
+            />
+          </div>
+          <ng-template #editNoProfileImage>
+            <div
+              class="w-24 h-24 rounded-full flex items-center justify-center text-xl font-semibold bg-primary/20"
+            >
+              <span class="text-2xl font-heading font-bold text-primary">
+                {{ getUserInitials(user.name || "Utilisateur") }}
+              </span>
+            </div>
+          </ng-template>
+        </div>
+        <div>
+          <label for="profileImage" class="btn btn-sm btn-outline mb-2">
+            Choisir une image
+          </label>
+          <input
+            type="file"
+            id="profileImage"
+            accept="image/*"
+            (change)="onFileSelected($event)"
+            class="hidden"
+          />
+          <p class="text-text-light text-sm">
+            Formats acceptés : JPG, PNG. Taille maximale : 2 Mo
+          </p>
+          <p *ngIf="imagePreview" class="text-green-600 text-sm mt-2">
+            Image sélectionnée
+          </p>
+          <p *ngIf="imageError" class="text-red-500 text-sm mt-2">
+            {{ imageError }}
+          </p>
+        </div>
+      </div>
+
+      <div class="flex justify-end space-x-4">
+        <button
+          type="button"
+          (click)="toggleEditImage()"
+          class="btn btn-outline"
+        >
+          Annuler
+        </button>
+        <button
+          type="button"
+          (click)="uploadProfileImage()"
+          class="btn btn-primary"
+          [disabled]="updating || !selectedFile"
+        >
+          @if (updating) {
+          <span
+            class="inline-block h-4 w-4 border-2 border-t-transparent border-white rounded-full animate-spin mr-2"
+          ></span>
+          } Enregistrer
+        </button>
+      </div>
+    </div>
+  </div>
+
   <!-- Profile Information Section -->
   <div
     *ngIf="!loading && user"

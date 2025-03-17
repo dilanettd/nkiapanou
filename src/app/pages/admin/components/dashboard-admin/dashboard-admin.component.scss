@@ -1,5 +1,6 @@
-// dashboard-admin.component.scss
-// Si vous voulez personnaliser l'animation du spinner
+// Styles pour le tableau de bord
+
+// Animation pour le loader
 @keyframes spin {
   from {
     transform: rotate(0deg);
@@ -11,4 +12,90 @@
 
 .animate-spin {
   animation: spin 1s linear infinite;
+}
+
+// Styles pour les graphiques
+.chart-container {
+  position: relative;
+  height: 16rem;
+}
+
+// Transition pour les barres de graphique
+.chart-bar {
+  transition: height 0.3s ease;
+}
+
+// Styles pour les cartes de KPI
+.kpi-card {
+  transition: transform 0.2s, box-shadow 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 12px rgba(0, 0, 0, 0.05);
+  }
+}
+
+// Style pour les valeurs positives et négatives
+.text-green-600 {
+  color: #10b981;
+}
+
+.text-red-600 {
+  color: #ef4444;
+}
+
+.text-yellow-600 {
+  color: #f59e0b;
+}
+
+// Couleurs pour les badges d'alerte
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.125rem 0.375rem;
+  border-radius: 9999px;
+  font-size: 0.675rem;
+  font-weight: 600;
+
+  &-red {
+    background-color: rgba(239, 68, 68, 0.1);
+    color: #ef4444;
+  }
+
+  &-yellow {
+    background-color: rgba(245, 158, 11, 0.1);
+    color: #f59e0b;
+  }
+
+  &-green {
+    background-color: rgba(16, 185, 129, 0.1);
+    color: #10b981;
+  }
+
+  &-blue {
+    background-color: rgba(59, 130, 246, 0.1);
+    color: #3b82f6;
+  }
+}
+
+// Style pour les liens
+a.underline {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+
+  &:hover {
+    text-decoration: none;
+  }
+}
+
+// Media queries pour responsive
+@media (max-width: 768px) {
+  .chart-container {
+    height: 12rem;
+  }
+}
+
+// Pipe personnalisé pour les graphiques
+::ng-deep .max-pipe {
+  height: 100%;
 }

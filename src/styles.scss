@@ -3,6 +3,11 @@
 @import "tailwindcss/components";
 @import "tailwindcss/utilities";
 
+/* swiper CSS */
+@import "swiper/css";
+@import "swiper/css/navigation";
+@import "swiper/css/pagination";
+
 /* Additional CSS files */
 @import "./assets/css/LineIcons.3.0.css";
 @import "./assets/css/glightbox.min.css";

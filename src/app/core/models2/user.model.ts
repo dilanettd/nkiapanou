@@ -18,6 +18,8 @@ export interface IUser {
   is_social?: boolean;
   created_at: string;
   updated_at: string;
+  admin_role?: string;
+  admin?: boolean;
 }
 export interface IUpdateUser {
   name: string;
@@ -26,17 +28,6 @@ export interface IUpdateUser {
   city: string;
   postal_code?: string;
   country: string;
-}
-
-export interface Testimonial {
-  id: number;
-  user_id: number;
-  content: string;
-  rating: number;
-  status: 'published' | 'pending' | 'rejected';
-  created_at: string;
-  updated_at: string;
-  user?: IUser;
 }
 
 export interface UserPreference {
@@ -95,4 +86,38 @@ export interface IUserPreference {
   language: string;
   created_at: string;
   updated_at: string;
+}
+
+export interface INewsletterSubscriber {
+  id: number;
+  email: string;
+  name?: string;
+  status: 'active' | 'unsubscribed';
+  created_at: string;
+  updated_at: string;
+}
+
+export interface INewsletterSubscriberResponse {
+  status: string;
+  data: {
+    subscribers: INewsletterSubscriber[];
+    pagination: {
+      current_page: number;
+      per_page: number;
+      total: number;
+      last_page: number;
+    };
+  };
+}
+
+export interface INewsletterSubscriberCreate {
+  email: string;
+  name?: string;
+  status?: 'active' | 'unsubscribed';
+}
+
+export interface INewsletterSubscriberUpdate {
+  email?: string;
+  name?: string;
+  status?: 'active' | 'unsubscribed';
 }

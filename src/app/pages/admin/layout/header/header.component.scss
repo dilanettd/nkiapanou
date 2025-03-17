@@ -1,0 +1,93 @@
+// Styles spécifiques pour le header
+
+// Ajouter une transition douce pour le menu avatar
+:host {
+  display: block;
+}
+
+// Animation pour l'élément de notification
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  transform-origin: center;
+}
+
+// Animation pour le logo au survol
+h1.text-primary {
+  transition: transform 0.3s ease;
+
+  &:hover {
+    transform: scale(1.02);
+  }
+}
+
+// Style amélioré pour le portrait de l'utilisateur
+.rounded-full.bg-primary {
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 10px rgba(235, 196, 53, 0.3);
+
+  &:hover {
+    transform: scale(1.05);
+    box-shadow: 0 4px 12px rgba(235, 196, 53, 0.5);
+  }
+}
+
+// Animation pour le menu déroulant
+.menu-container {
+  transform-origin: top right;
+}
+
+// Style pour les éléments du menu
+.menu-item {
+  position: relative;
+  transition: background-color 0.2s ease;
+
+  &::after {
+    content: "";
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 0;
+    height: 2px;
+    background-color: #ebc435;
+    transition: width 0.2s ease;
+  }
+
+  &:hover::after {
+    width: 100%;
+  }
+}
+
+// Animation pour l'icône de notification
+@keyframes pulse {
+  0% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.1);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s infinite;
+}
+
+// Style pour l'overlay du menu sur mobile
+@media (max-width: 768px) {
+  .menu-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: rgba(0, 0, 0, 0.2);
+    z-index: 40;
+  }
+}

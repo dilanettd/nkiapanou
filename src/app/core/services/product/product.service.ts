@@ -1,136 +1,344 @@
-import { Injectable } from '@angular/core';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { BehaviorSubject, forkJoin, Observable, of } from 'rxjs';
+import { tap, catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import {
-  IProduct,
-  IProductImage,
-  IProductReview,
-  IShopReview,
-} from '../../models/product.model';
-import { catchError, Observable } from 'rxjs';
-import { HttpClient } from '@angular/common/http';
+import { IProduct, IProductImage } from '../../models2/product.model';
+import { WishlistService } from '../wishlist/wishlist.service';
 import { handleHttpError } from '../errors';
+
+export interface ProductSearchParams {
+  page?: number;
+  limit?: number;
+  search?: string;
+  category_id?: number;
+  sort_by?: string;
+  sort_direction?: 'asc' | 'desc';
+  min_price?: number;
+  max_price?: number;
+  status?: 'active' | 'inactive' | 'out_of_stock' | 'all';
+  featured?: boolean;
+}
+
+export interface ProductsResponse {
+  status: string;
+  data: {
+    products: IProduct[];
+    current_page: number;
+    per_page: number;
+    total: number;
+    last_page: number;
+  };
+}
+
+export interface ProductImageData {
+  url: string;
+  isPrimary: boolean;
+}
+
+export interface SingleProductResponse {
+  status: string;
+  data: IProduct;
+}
 
 @Injectable({
   providedIn: 'root',
 })
 export class ProductService {
-  apiUrl = environment.API_URL;
+  private http = inject(HttpClient);
+  private wishlistService = inject(WishlistService);
 
-  constructor(private http: HttpClient) {}
+  private apiUrl = environment.API_URL;
+  private productsSubject = new BehaviorSubject<IProduct[]>([]);
 
-  // Add a new product
-  public addProduct(product: FormData): Observable<IProduct> {
+  public products$ = this.productsSubject.asObservable();
+
+  constructor() {}
+
+  /**
+   * Récupère les produits selon les critères de recherche
+   */
+  getProducts(params: ProductSearchParams = {}): Observable<ProductsResponse> {
     return this.http
-      .post<IProduct>(`${this.apiUrl}/product`, product)
+      .get<ProductsResponse>(`${this.apiUrl}/products`, {
+        params: this.buildParams(params),
+      })
+      .pipe(
+        tap((response) => {
+          if (response.status === 'success') {
+            this.productsSubject.next(response.data.products);
+          }
+        }),
+        catchError(handleHttpError)
+      );
+  }
+
+  /**
+   * Récupère un produit par son ID
+   */
+  getProductById(id: number): Observable<IProduct | null> {
+    return this.http
+      .get<SingleProductResponse>(`${this.apiUrl}/products/${id}`)
+      .pipe(
+        map((response) =>
+          response.status === 'success' ? response.data : null
+        ),
+        catchError((error) => {
+          handleHttpError(error);
+          return [];
+        })
+      );
+  }
+
+  /**
+   * Récupère un produit par son slug
+   */
+  getProductBySlug(slug: string): Observable<IProduct | null> {
+    return this.http
+      .get<SingleProductResponse>(`${this.apiUrl}/products/slug/${slug}`)
+      .pipe(
+        map((response) =>
+          response.status === 'success' ? response.data : null
+        ),
+        catchError((error) => {
+          handleHttpError(error);
+          return [];
+        })
+      );
+  }
+
+  /**
+   * Crée un nouveau produit
+   */
+  createProduct(
+    productData: Partial<IProduct>,
+    productImages: ProductImageData[] = []
+  ): Observable<SingleProductResponse> {
+    return this.http
+      .post<SingleProductResponse>(`${this.apiUrl}/products`, productData)
+      .pipe(
+        switchMap((response) => {
+          if (response.status === 'success' && productImages.length > 0) {
+            const productId = response.data.id;
+            const imageRequests = productImages.map((img) =>
+              this.addProductImage(productId, img.url, img.isPrimary)
+            );
+
+            return forkJoin(imageRequests).pipe(
+              map(() => response),
+              catchError((error) => {
+                console.error(
+                  "Erreur lors de l'ajout des images au produit:",
+                  error
+                );
+                return of(response);
+              })
+            );
+          }
+
+          return of(response);
+        }),
+        catchError(handleHttpError)
+      );
+  }
+
+  /**
+   * Met à jour un produit existant
+   */
+  updateProduct(
+    id: number,
+    productData: Partial<IProduct>
+  ): Observable<SingleProductResponse> {
+    return this.http
+      .put<SingleProductResponse>(`${this.apiUrl}/products/${id}`, productData)
       .pipe(catchError(handleHttpError));
   }
 
-  // Add images to a specific product
-  public addImageToProduct(
+  /**
+   * Supprime un produit
+   */
+  deleteProduct(id: number): Observable<{ status: string; message: string }> {
+    return this.http
+      .delete<{ status: string; message: string }>(
+        `${this.apiUrl}/products/${id}`
+      )
+      .pipe(catchError(handleHttpError));
+  }
+
+  /**
+   * Change le statut d'un produit (active/inactive/out_of_stock)
+   */
+  updateProductStatus(
+    id: number,
+    status: 'active' | 'inactive' | 'out_of_stock'
+  ): Observable<SingleProductResponse> {
+    return this.http
+      .patch<SingleProductResponse>(`${this.apiUrl}/products/${id}/status`, {
+        status,
+      })
+      .pipe(catchError(handleHttpError));
+  }
+
+  /**
+   * Change la valeur featured d'un produit
+   */
+  toggleProductFeatured(id: number): Observable<SingleProductResponse> {
+    return this.http
+      .patch<SingleProductResponse>(
+        `${this.apiUrl}/products/${id}/featured`,
+        {}
+      )
+      .pipe(catchError(handleHttpError));
+  }
+
+  /**
+   * Télécharge une image de produit
+   */
+  uploadProductImage(file: File): Observable<{ status: string; url: string }> {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    return this.http
+      .post<{ status: string; url: string }>(
+        `${this.apiUrl}/upload/product`,
+        formData
+      )
+      .pipe(catchError(handleHttpError));
+  }
+
+  /**
+   * Ajoute une image à un produit
+   */
+  addProductImage(
     productId: number,
-    image: FormData
+    imageUrl: string,
+    isPrimary: boolean = false
   ): Observable<IProductImage> {
     return this.http
-      .post<IProductImage>(`${this.apiUrl}/product-images`, image)
+      .post<{ status: string; data: IProductImage }>(
+        `${this.apiUrl}/products/${productId}/images`,
+        {
+          image_path: imageUrl,
+          is_primary: isPrimary,
+        }
+      )
+      .pipe(
+        map((response) => response.data),
+        catchError(handleHttpError)
+      );
+  }
+
+  /**
+   * Définit une image comme image principale du produit
+   */
+  setProductImageAsPrimary(
+    productId: number,
+    imageId: number
+  ): Observable<{ status: string; message: string }> {
+    return this.http
+      .patch<{ status: string; message: string }>(
+        `${this.apiUrl}/products/${productId}/images/${imageId}/primary`,
+        {}
+      )
       .pipe(catchError(handleHttpError));
   }
 
-  // Retrieve all products for a specific user
-  public getUserProducts(): Observable<IProduct[]> {
+  /**
+   * Met à jour une image de produit
+   */
+  updateProductImage(
+    productId: number,
+    imageId: number,
+    isPrimary: boolean
+  ): Observable<{ status: string; message: string }> {
     return this.http
-      .get<IProduct[]>(`${this.apiUrl}/products`)
+      .patch<{ status: string; message: string }>(
+        `${this.apiUrl}/products/${productId}/images/${imageId}`,
+        { is_primary: isPrimary }
+      )
       .pipe(catchError(handleHttpError));
   }
 
-  // Search products with query parameters for keyword, category, page, and limit
-  public searchProducts(params: {
-    keyword?: string;
-    page?: number;
-    limit?: number;
-    category?: string;
-  }): Observable<any> {
+  /**
+   * Supprime une image de produit
+   */
+  deleteProductImage(
+    productId: number,
+    imageId: number
+  ): Observable<{ status: string; message: string }> {
     return this.http
-      .get<any>(`${this.apiUrl}/products/search`, { params })
+      .delete<{ status: string; message: string }>(
+        `${this.apiUrl}/products/${productId}/images/${imageId}`
+      )
       .pipe(catchError(handleHttpError));
   }
 
-  // Retrieve a specific product by ID
-  public getProductById(id: number): Observable<IProduct> {
+  /**
+   * Ajoute un produit au panier
+   */
+  addToCart(productId: number, quantity: number = 1): Observable<any> {
+    // Cette méthode devrait faire appel au CartService
     return this.http
-      .get<IProduct>(`${this.apiUrl}/product/${id}`)
+      .post<any>(`${this.apiUrl}/cart/add`, { product_id: productId, quantity })
       .pipe(catchError(handleHttpError));
   }
 
-  // Delete a product by ID
-  public deleteProductById(id: number): Observable<{}> {
-    return this.http
-      .delete<{}>(`${this.apiUrl}/product/${id}`)
-      .pipe(catchError(handleHttpError));
+  /**
+   * Obtient une image placeholder pour un produit
+   */
+  getPlaceholderImage(productName: string = 'Produit'): string {
+    return `https://placehold.co/600x600/eeede5/333333?text=${encodeURIComponent(
+      productName
+    )}`;
   }
 
-  // Increment views for a product
-  public incrementViewsProduct(productId: number): Observable<number> {
-    return this.http
-      .post<number>(`${this.apiUrl}/products/${productId}/increment-views`, {})
-      .pipe(catchError(handleHttpError));
-  }
+  /**
+   * Construit les paramètres de requête HTTP à partir des paramètres de recherche
+   * @private
+   */
+  private buildParams(params: ProductSearchParams): HttpParams {
+    let httpParams = new HttpParams();
 
-  // Get recent products
-  public getRecentProducts(): Observable<IProduct[]> {
-    return this.http
-      .get<IProduct[]>(`${this.apiUrl}/products/recent`)
-      .pipe(catchError(handleHttpError));
-  }
+    if (params.page !== undefined) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
 
-  // Get related products by ID
-  public getRelatedProducts(productId: number): Observable<IProduct[]> {
-    return this.http
-      .get<IProduct[]>(`${this.apiUrl}/products/${productId}/related`)
-      .pipe(catchError(handleHttpError));
-  }
+    if (params.limit !== undefined) {
+      httpParams = httpParams.set('limit', params.limit.toString());
+    }
 
-  // Retrieve all products for a specific shop by shopId
-  public getProductsByShopId(shopId: number): Observable<IProduct[]> {
-    return this.http
-      .get<IProduct[]>(`${this.apiUrl}/shops/${shopId}/products`)
-      .pipe(catchError(handleHttpError));
-  }
+    if (params.search !== undefined && params.search.trim() !== '') {
+      httpParams = httpParams.set('search', params.search);
+    }
 
-  // Retrieve all reviews for a specific product by productId
-  public getProductReviews(productId: number): Observable<IProductReview[]> {
-    return this.http
-      .get<IProductReview[]>(`${this.apiUrl}/product-reviews/${productId}`)
-      .pipe(catchError(handleHttpError));
-  }
+    if (params.category_id !== undefined) {
+      httpParams = httpParams.set('category_id', params.category_id.toString());
+    }
 
-  // Retrieve all reviews for a specific shop by shopId
-  public getShopReviews(shopId: number): Observable<IShopReview[]> {
-    return this.http
-      .get<IShopReview[]>(`${this.apiUrl}/shop-reviews/${shopId}`)
-      .pipe(catchError(handleHttpError));
-  }
+    if (params.sort_by !== undefined) {
+      httpParams = httpParams.set('sort_by', params.sort_by);
+    }
 
-  // Increment views for a shop
-  public incrementShopVisit(shopId: number): Observable<any> {
-    return this.http
-      .post<any>(`${this.apiUrl}/shop/${shopId}/increment-visit`, {})
-      .pipe(catchError(handleHttpError));
-  }
+    if (params.sort_direction !== undefined) {
+      httpParams = httpParams.set('sort_direction', params.sort_direction);
+    }
 
-  // Retrieve products for admin with filtering
-  public getAdminProducts(filters: {
-    search?: string;
-    page: number;
-    pageSize: number;
-  }): Observable<any> {
-    return this.http
-      .get<any>(`${this.apiUrl}/admin/products`, { params: filters })
-      .pipe(catchError(handleHttpError));
-  }
+    if (params.min_price !== undefined) {
+      httpParams = httpParams.set('min_price', params.min_price.toString());
+    }
 
-  public toggleProductActive(productId: number): Observable<any> {
-    return this.http
-      .post<any>(`${this.apiUrl}/admin/products/${productId}/toggle`, {})
-      .pipe(catchError(handleHttpError));
+    if (params.max_price !== undefined) {
+      httpParams = httpParams.set('max_price', params.max_price.toString());
+    }
+
+    if (params.status !== undefined) {
+      httpParams = httpParams.set('status', params.status);
+    }
+
+    if (params.featured !== undefined) {
+      httpParams = httpParams.set('featured', params.featured.toString());
+    }
+
+    return httpParams;
   }
 }

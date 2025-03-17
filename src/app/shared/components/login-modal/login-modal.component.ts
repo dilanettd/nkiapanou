@@ -6,7 +6,6 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { IUser } from '../../../core/models2/auth.state.model';
 import { Subscription } from 'rxjs';
 import { AuthService } from '../../../core/services/auth/auth.service';
 import { ToastrService } from 'ngx-toastr';

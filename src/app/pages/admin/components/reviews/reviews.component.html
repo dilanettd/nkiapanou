@@ -1,0 +1,629 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-heading font-bold text-primary">
+      Gestion des avis clients
+    </h1>
+  </div>
+
+  <!-- Filtres -->
+  <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-semibold mb-3">Filtres</h3>
+
+    <form
+      [formGroup]="filterForm"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-4"
+    >
+      <!-- Recherche -->
+      <div class="form-group">
+        <label
+          for="search"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Recherche</label
+        >
+        <input
+          type="text"
+          id="search"
+          formControlName="search"
+          class="w-full"
+          placeholder="Commentaire, utilisateur, produit..."
+        />
+      </div>
+
+      <!-- Tri -->
+      <div class="form-group">
+        <label for="sort" class="block text-sm font-medium text-text-dark mb-1"
+          >Trier par</label
+        >
+        <select id="sort" formControlName="sort" class="w-full">
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtre par statut -->
+      <div class="form-group">
+        <label
+          for="status"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Statut</label
+        >
+        <select id="status" formControlName="status" class="w-full">
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtre par produit -->
+      <div class="form-group">
+        <label
+          for="product_id"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Produit</label
+        >
+        <select id="product_id" formControlName="product_id" class="w-full">
+          <option value="">Tous les produits</option>
+          <option *ngFor="let product of products" [value]="product.id">
+            {{ product.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtre par note -->
+      <div class="form-group">
+        <label
+          for="rating"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Note</label
+        >
+        <select id="rating" formControlName="rating" class="w-full">
+          <option *ngFor="let option of ratingOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+    </form>
+
+    <div class="flex justify-end mt-4">
+      <button (click)="resetFilters()" class="btn btn-outline">
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Liste des avis -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-neutral">
+        <thead class="bg-neutral/30">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              ID
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Utilisateur
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Produit
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Note
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Commentaire
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Statut
+            </th>
+            <th
+              class="px-6 py-3 text-right text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-neutral">
+          <ng-container *ngIf="!loading && reviews.length > 0; else noReviews">
+            <tr
+              *ngFor="let review of reviews"
+              class="hover:bg-neutral/10 transition-colors"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ review.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-8 w-8">
+                    <img
+                      class="h-8 w-8 rounded-full object-cover"
+                      [src]="getAvatarUrl(review)"
+                      alt="{{ review.user?.name }}"
+                    />
+                  </div>
+                  <div class="ml-3">
+                    <div class="text-sm font-medium text-text-dark">
+                      {{ review.user?.name || "Utilisateur inconnu" }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ getProductName(review.product_id) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <span class="text-yellow-500 text-lg">{{
+                    getRatingStars(review.rating)
+                  }}</span>
+                  <span class="ml-1 text-xs text-text-light"
+                    >({{ review.rating }})</span
+                  >
+                </div>
+              </td>
+              <td class="px-6 py-4 text-sm text-text">
+                <div class="max-w-xs">
+                  {{ truncateComment(review.comment) }}
+                  <button
+                    *ngIf="review.comment.length > 100"
+                    (click)="openDetailModal(review)"
+                    class="text-primary ml-1 text-xs hover:underline"
+                  >
+                    Voir plus
+                  </button>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ formatDate(review.created_at) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'status-badge ' + getStatusClass(review.status)">
+                  {{ getStatusLabel(review.status) }}
+                </span>
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+              >
+                <div class="flex items-center justify-end space-x-2">
+                  <!-- Voir détails -->
+                  <button
+                    (click)="openDetailModal(review)"
+                    class="text-blue-600 hover:text-blue-900 action-btn"
+                    title="Voir les détails"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Publier/Rejeter/Mettre en attente (menu déroulant) -->
+                  <div class="relative inline-block text-left">
+                    <div>
+                      <button
+                        type="button"
+                        class="status-action-btn"
+                        [class]="getStatusClass(review.status)"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="status-dropdown">
+                      <div class="py-1">
+                        <button
+                          *ngIf="review.status !== 'published'"
+                          (click)="updateReviewStatus(review, 'published')"
+                          class="status-dropdown-item text-green-700 hover:bg-green-100"
+                        >
+                          Publier
+                        </button>
+                        <button
+                          *ngIf="review.status !== 'pending'"
+                          (click)="updateReviewStatus(review, 'pending')"
+                          class="status-dropdown-item text-yellow-700 hover:bg-yellow-100"
+                        >
+                          Mettre en attente
+                        </button>
+                        <button
+                          *ngIf="review.status !== 'rejected'"
+                          (click)="updateReviewStatus(review, 'rejected')"
+                          class="status-dropdown-item text-red-700 hover:bg-red-100"
+                        >
+                          Rejeter
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Supprimer -->
+                  <button
+                    (click)="deleteReview(review)"
+                    class="text-red-600 hover:text-red-900 action-btn"
+                    title="Supprimer l'avis"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <ng-template #noReviews>
+            <tr>
+              <td colspan="8" class="px-6 py-8 text-center text-text-light">
+                <div *ngIf="loading">
+                  <svg
+                    class="animate-spin h-6 w-6 mx-auto mb-2 text-primary"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <p>Chargement des avis...</p>
+                </div>
+                <div *ngIf="!loading">
+                  <svg
+                    class="h-12 w-12 mx-auto mb-2 text-neutral"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M8 10h.01M12 10h.01M16 10h.01M9 16H5a2 2 0 01-2-2V6a2 2 0 012-2h14a2 2 0 012 2v8a2 2 0 01-2 2h-5l-5 5v-5z"
+                    />
+                  </svg>
+                  <p>Aucun avis trouvé</p>
+                  <p class="text-sm mt-1">
+                    Ajustez les filtres pour voir plus de résultats
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-6 py-4 bg-neutral/10">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-sm text-text-light">
+          Affichage de {{ reviews.length }} sur {{ totalItems }} avis
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Page size selector -->
+          <div class="flex items-center">
+            <label for="pageSize" class="text-sm text-text mr-2"
+              >Afficher:</label
+            >
+            <select
+              id="pageSize"
+              class="text-sm border rounded px-2 py-1"
+              [value]="pageSize"
+              (change)="changePageSize($event)"
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <!-- Pagination controls -->
+          <div class="flex items-center space-x-1">
+            <!-- Previous button -->
+            <button
+              class="px-3 py-1 rounded border text-sm"
+              [disabled]="currentPage === 1"
+              [class.opacity-50]="currentPage === 1"
+              [class.cursor-not-allowed]="currentPage === 1"
+              (click)="onPageChange(currentPage - 1)"
+            >
+              <span class="sr-only">Précédent</span>
+              &lt;
+            </button>
+
+            <!-- Page buttons -->
+            <ng-container *ngFor="let page of pages">
+              <ng-container *ngIf="page !== -1; else ellipsis">
+                <button
+                  class="px-3 py-1 rounded border text-sm"
+                  [class.bg-primary]="page === currentPage"
+                  [class.text-white]="page === currentPage"
+                  (click)="onPageChange(page)"
+                >
+                  {{ page }}
+                </button>
+              </ng-container>
+              <ng-template #ellipsis>
+                <span class="px-2">...</span>
+              </ng-template>
+            </ng-container>
+
+            <!-- Next button -->
+            <button
+              class="px-3 py-1 rounded border text-sm"
+              [disabled]="currentPage >= totalPages"
+              [class.opacity-50]="currentPage >= totalPages"
+              [class.cursor-not-allowed]="currentPage >= totalPages"
+              (click)="onPageChange(currentPage + 1)"
+            >
+              <span class="sr-only">Suivant</span>
+              &gt;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de détail -->
+  <div
+    *ngIf="isDetailModalOpen && selectedReview"
+    class="fixed inset-0 z-50 overflow-y-auto"
+    aria-labelledby="modal-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+    >
+      <!-- Background overlay -->
+      <div
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+        aria-hidden="true"
+        (click)="closeDetailModal()"
+      ></div>
+
+      <!-- Modal panel -->
+      <div
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+      >
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <!-- Modal header -->
+          <div
+            class="flex justify-between items-start pb-3 border-b border-neutral/20"
+          >
+            <h3
+              class="text-lg font-medium leading-6 text-text-dark"
+              id="modal-title"
+            >
+              Détails de l'avis #{{ selectedReview.id }}
+            </h3>
+            <button
+              type="button"
+              class="bg-white rounded-md text-gray-400 hover:text-gray-500"
+              (click)="closeDetailModal()"
+            >
+              <span class="sr-only">Fermer</span>
+              <svg
+                class="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="mt-4">
+            <!-- Utilisateur -->
+            <div class="mb-4">
+              <h4 class="text-sm font-medium text-text-light mb-2">Client</h4>
+              <div class="flex items-center">
+                <img
+                  class="h-10 w-10 rounded-full object-cover mr-3"
+                  [src]="getAvatarUrl(selectedReview)"
+                  alt="{{ selectedReview.user?.name }}"
+                />
+                <div>
+                  <div class="text-sm font-medium text-text-dark">
+                    {{ selectedReview.user?.name || "Utilisateur inconnu" }}
+                  </div>
+                  <div class="text-xs text-text-light">
+                    {{ selectedReview.user?.email }}
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Produit -->
+            <div class="mb-4">
+              <h4 class="text-sm font-medium text-text-light mb-2">Produit</h4>
+              <div class="bg-neutral/10 p-3 rounded">
+                <div class="text-sm font-medium text-text-dark">
+                  {{ getProductName(selectedReview.product_id) }}
+                </div>
+                <div class="text-xs text-text-light mt-1">
+                  Référence: {{ selectedReview.product?.sku || "-" }}
+                </div>
+              </div>
+            </div>
+
+            <!-- Note -->
+            <div class="mb-4">
+              <h4 class="text-sm font-medium text-text-light mb-2">Note</h4>
+              <div class="flex items-center">
+                <span class="text-yellow-500 text-xl">{{
+                  getRatingStars(selectedReview.rating)
+                }}</span>
+                <span
+                  class="ml-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+                  [class]="getRatingColor(selectedReview.rating)"
+                >
+                  {{ selectedReview.rating }}/5
+                </span>
+              </div>
+            </div>
+
+            <!-- Commentaire -->
+            <div class="mb-4">
+              <h4 class="text-sm font-medium text-text-light mb-2">
+                Commentaire
+              </h4>
+              <div class="bg-neutral/10 p-3 rounded">
+                <p class="text-sm text-text">{{ selectedReview.comment }}</p>
+              </div>
+            </div>
+
+            <!-- Meta informations -->
+            <div class="grid grid-cols-2 gap-4 mb-4">
+              <div>
+                <h4 class="text-xs font-medium text-text-light mb-1">
+                  Date de l'avis
+                </h4>
+                <p class="text-sm text-text">
+                  {{ formatDate(selectedReview.created_at) }}
+                </p>
+              </div>
+              <div>
+                <h4 class="text-xs font-medium text-text-light mb-1">
+                  Dernière mise à jour
+                </h4>
+                <p class="text-sm text-text">
+                  {{ formatDate(selectedReview.updated_at) }}
+                </p>
+              </div>
+            </div>
+
+            <!-- Statut -->
+            <div class="mb-4">
+              <h4 class="text-sm font-medium text-text-light mb-2">
+                Statut actuel
+              </h4>
+              <span
+                [class]="
+                  'status-badge ' + getStatusClass(selectedReview.status)
+                "
+              >
+                {{ getStatusLabel(selectedReview.status) }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div
+          class="bg-neutral/20 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
+        >
+          <!-- Actions de modification de statut -->
+          <button
+            *ngIf="selectedReview.status !== 'published'"
+            type="button"
+            class="btn btn-primary ml-2"
+            (click)="updateReviewStatus(selectedReview, 'published')"
+          >
+            Publier
+          </button>
+          <button
+            *ngIf="selectedReview.status !== 'pending'"
+            type="button"
+            class="btn btn-secondary ml-2"
+            (click)="updateReviewStatus(selectedReview, 'pending')"
+          >
+            Mettre en attente
+          </button>
+          <button
+            *ngIf="selectedReview.status !== 'rejected'"
+            type="button"
+            class="btn btn-accent ml-2"
+            (click)="updateReviewStatus(selectedReview, 'rejected')"
+          >
+            Rejeter
+          </button>
+
+          <!-- Action de suppression -->
+          <button
+            type="button"
+            class="btn btn-outline"
+            (click)="deleteReview(selectedReview)"
+          >
+            Supprimer
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

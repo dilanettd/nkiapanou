@@ -1,5 +1,5 @@
-import { IUser } from './auth.state.model';
 import { IProduct } from './product.model';
+import { IUser } from './user.model';
 
 export interface Order {
   id: number;
@@ -27,7 +27,6 @@ export interface Order {
   updated_at: string;
   user?: IUser;
   order_items?: IOrderItem[];
-  transactions?: ITransaction[];
 }
 
 export interface IOrderItem {
@@ -80,8 +79,101 @@ export interface ITransaction {
   payment_method: string;
   payment_id: string;
   amount: number;
+  currency: string;
   status: string;
+  transaction_type: string;
+  reference_number?: string;
+  fee_amount?: number;
+  billing_email?: string;
+  billing_name?: string;
+  payment_method_details?: string;
+  parent_transaction_id?: number;
+  notes?: string;
+  payment_response?: any;
   created_at: string;
   updated_at: string;
-  order?: Order;
+  // Relations
+  order?: any; // Vous pouvez remplacer "any" par l'interface IOrder si vous en avez une
+}
+
+export interface ITransactionStatistics {
+  period: {
+    start_date: string;
+    end_date: string;
+  };
+  successful_transactions: number;
+  total_payments: number;
+  total_refunds: number;
+  net_revenue: number;
+  total_fees: number;
+  payment_methods: {
+    payment_method: string;
+    count: number;
+    total: number;
+  }[];
+}
+
+export interface IRefundRequest {
+  parent_transaction_id: number;
+  amount: number;
+  reason?: string;
+}
+
+// Constants pour les méthodes de paiement, statuts et types
+export const PAYMENT_METHODS = {
+  STRIPE: 'stripe',
+  PAYPAL: 'paypal',
+  BANK_TRANSFER: 'bank_transfer',
+};
+
+export const TRANSACTION_STATUS = {
+  PENDING: 'pending',
+  COMPLETED: 'completed',
+  FAILED: 'failed',
+  REFUNDED: 'refunded',
+  PARTIALLY_REFUNDED: 'partially_refunded',
+};
+
+export const TRANSACTION_TYPES = {
+  PAYMENT: 'payment',
+  REFUND: 'refund',
+  PARTIAL_REFUND: 'partial_refund',
+};
+
+export interface IShippingFormula {
+  id: number;
+  country_code: string;
+  country_name: string;
+  base_fee: number;
+  price_per_kg: number;
+  price_per_cubic_meter: number | null;
+  min_shipping_fee: number;
+  max_weight: number | null;
+  currency: string;
+  handling_fee_percentage: number;
+  is_active: boolean;
+  notes: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface IShippingCalculationResult {
+  shipping_cost: number;
+  currency: string;
+  country_code: string;
+  country_name: string;
+  weight: number;
+  volume: number | null;
+  calculation_details: {
+    base_fee: number;
+    weight_cost: number;
+    volume_cost: number;
+    handling_fee: number;
+    min_shipping_fee: number;
+  };
+}
+
+export interface IShippingCalculationRequest {
+  cart_id: number;
+  country_code: string;
 }

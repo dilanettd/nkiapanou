@@ -23,6 +23,25 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'about-us',
+    loadComponent: () =>
+      import('./pages/about-us/about-us.component').then(
+        (m) => m.AboutUsComponent
+      ),
+  },
+  {
+    path: 'payment-delivery',
+    loadComponent: () =>
+      import('./pages/payment-delivery/payment-delivery.component').then(
+        (m) => m.PaymentDeliveryComponent
+      ),
+  },
+  {
+    path: 'cart',
+    loadComponent: () =>
+      import('./pages/cart/cart.component').then((m) => m.CartComponent),
+  },
+  {
     path: 'contact',
     loadComponent: () =>
       import('./pages/contact-us/contact-us.component').then(
@@ -99,19 +118,13 @@ export const routes: Routes = [
       ).then((m) => m.TermsAndConditionsComponent),
   },
   {
-    path: 'product/:id',
+    path: 'product/:idOrSlug',
     loadComponent: () =>
       import('./pages/product-detail/product-detail.component').then(
         (m) => m.ProductDetailComponent
       ),
   },
-  {
-    path: 'shop/:id',
-    loadComponent: () =>
-      import('./pages/seller-details/seller-details.component').then(
-        (m) => m.SellerDetailsComponent
-      ),
-  },
+
   {
     path: 'admin',
     component: AdminLayoutComponent,
@@ -132,11 +145,18 @@ export const routes: Routes = [
           ).then((m) => m.ProductsAdminComponent),
       },
       {
-        path: 'product/:id',
+        path: 'inventory',
         loadComponent: () =>
           import(
-            './pages/admin/components/product-details-admin/product-details-admin.component'
-          ).then((m) => m.ProductDetailsAdminComponent),
+            './pages/admin/components/inventory-movement/inventory-movement.component'
+          ).then((c) => c.InventoryMovementComponent),
+      },
+      {
+        path: 'reviews',
+        loadComponent: () =>
+          import('./pages/admin/components/reviews/reviews.component').then(
+            (c) => c.ReviewsComponent
+          ),
       },
       {
         path: 'users',
@@ -156,8 +176,22 @@ export const routes: Routes = [
         path: 'transactions',
         loadComponent: () =>
           import(
-            './pages/admin/components/transactions-admin/transactions-admin.component'
-          ).then((m) => m.TransactionsAdminComponent),
+            './pages/admin/components/transactions/transactions.component'
+          ).then((m) => m.TransactionsComponent),
+      },
+      {
+        path: 'shipping',
+        loadComponent: () =>
+          import('./pages/admin/components/shipping/shipping.component').then(
+            (m) => m.ShippingComponent
+          ),
+      },
+      {
+        path: 'newsletter',
+        loadComponent: () =>
+          import(
+            './pages/admin/components/newsletter/newsletter.component'
+          ).then((m) => m.NewsletterComponent),
       },
       {
         path: 'settings',

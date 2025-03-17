@@ -1,6 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { RouterLink } from '@angular/router';
+import { RouterLink, RouterModule } from '@angular/router';
 import { CarouselComponent } from '../../shared/components/carousel/carousel/carousel.component';
 import {
   FormGroup,
@@ -9,25 +9,41 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { animate, style, transition, trigger } from '@angular/animations';
+import { ToastrService } from 'ngx-toastr';
+import { finalize, catchError, of, Observable } from 'rxjs';
+import { ICategory } from '../../core/models2/category.model';
+import { IProduct, IProductReview } from '../../core/models2/product.model';
+import { CategoryService } from '../../core/services/category/category.service';
+import { ProductService } from '../../core/services/product/product.service';
+import { ReviewService } from '../../core/services/review/review.service';
+import { NewsletterService } from '../../core/services/testimonial/newsletter.service';
+import { TestimonialCarouselComponent } from './shared/components/testimonial-carousel/testimonial-carousel.component';
+import { WishlistService } from '../../core/services/wishlist/wishlist.service';
+import { CartService } from '../../core/services/cart/cart.service';
 
 @Component({
   selector: 'nkiapanou-home',
   standalone: true,
-  imports: [CommonModule, RouterLink, CarouselComponent, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    RouterModule,
+    ReactiveFormsModule,
+    TestimonialCarouselComponent,
+    CarouselComponent,
+  ],
   templateUrl: './home.component.html',
-  styleUrl: './home.component.scss',
   animations: [
     trigger('fadeIn', [
       transition(':enter', [
         style({ opacity: 0 }),
-        animate('600ms ease-out', style({ opacity: 1 })),
+        animate('300ms ease-in', style({ opacity: 1 })),
       ]),
     ]),
     trigger('fadeInUp', [
       transition(':enter', [
         style({ opacity: 0, transform: 'translateY(20px)' }),
         animate(
-          '600ms ease-out',
+          '500ms ease-out',
           style({ opacity: 1, transform: 'translateY(0)' })
         ),
       ]),
@@ -35,401 +51,282 @@ import { animate, style, transition, trigger } from '@angular/animations';
   ],
 })
 export class HomeComponent implements OnInit {
-  activeTab: string = 'all';
-
-  // Newsletter form
-  newsletterForm!: FormGroup;
-  isSubmitting: boolean = false;
-
-  // Produits par catégorie
-  allProducts: any[] = [];
-
-  // Avis clients
-  customerReviews: any[] = [];
+  // Produits tendance
+  trendingProducts: IProduct[] = [];
 
   // Catégories
-  categories: any[] = [];
-  trendingProducts: any[] = [];
+  categories: ICategory[] = [];
+  productCategories: ICategory[] = [];
+  selectedCategory: string = '';
+  selectedCategoryId: number | null = null;
 
-  // Section Produits par Catégorie
-  productCategories: any[] = [];
-  selectedCategory: string = 'decoration';
-  categoryProducts: any = {};
+  // Produits par catégorie
+  productsByCategory: IProduct[] = [];
 
-  constructor(private fb: FormBuilder) {}
+  // Témoignages clients
+  customerReviews: IProductReview[] = [];
 
-  ngOnInit(): void {
-    this.initializeForm();
-    this.loadProducts();
-    this.loadReviews();
-    this.loadCategories();
-    this.loadCategoryProducts();
-  }
+  // Newsletter
+  newsletterForm: FormGroup;
+  isSubmitting: boolean = false;
 
-  initializeForm(): void {
-    this.newsletterForm = this.fb.group({
+  // Indicateurs de chargement
+  isLoadingTrending: boolean = false;
+  isLoadingCategories: boolean = false;
+  isLoadingCategoryProducts: boolean = false;
+  isLoadingReviews: boolean = false;
+
+  constructor(
+    public productService: ProductService,
+    private categoryService: CategoryService,
+    private reviewService: ReviewService,
+    private newsletterService: NewsletterService,
+    private wishlistService: WishlistService,
+    private cartService: CartService,
+    private formBuilder: FormBuilder,
+    private toastr: ToastrService
+  ) {
+    // Initialisation du formulaire de newsletter
+    this.newsletterForm = this.formBuilder.group({
       email: ['', [Validators.required, Validators.email]],
     });
   }
 
-  selectCategory(category: string): void {
-    this.selectedCategory = category;
+  ngOnInit(): void {
+    this.loadCategories();
+    this.loadTrendingProducts();
+    this.loadCustomerReviews();
   }
 
-  getProductsByCategory(): any[] {
-    return this.categoryProducts[this.selectedCategory] || [];
+  /**
+   * Chargement des catégories
+   */
+  loadCategories(): void {
+    this.isLoadingCategories = true;
+    this.categoryService
+      .getCategories()
+      .pipe(
+        finalize(() => (this.isLoadingCategories = false)),
+        catchError((error) => {
+          this.toastr.error('Erreur lors du chargement des catégories');
+          // Retourner une réponse avec une structure cohérente, même en cas d'erreur
+          return of({ data: { categories: [] } });
+        })
+      )
+      .subscribe((res) => {
+        // Accès sécurisé à la propriété 'data'
+        const categories = res.data.categories || [];
+        this.categories = categories;
+        this.productCategories = categories;
+
+        // Sélectionner la première catégorie par défaut
+        if (categories.length > 0) {
+          this.selectedCategory = categories[0].slug;
+          this.loadProductsByCategory(categories[0].id);
+        }
+      });
   }
 
-  setActiveTab(tab: string): void {
-    this.activeTab = tab;
+  /**
+   * Chargement des produits tendance (featured = true, limité à 8)
+   */
+  loadTrendingProducts(): void {
+    this.isLoadingTrending = true;
+    this.productService
+      .getProducts({
+        page: 1,
+        limit: 8,
+        sort_by: 'created_at',
+        sort_direction: 'desc',
+      })
+      .pipe(
+        finalize(() => (this.isLoadingTrending = false)),
+        catchError((error) => {
+          this.toastr.error('Erreur lors du chargement des produits tendance');
+          return of({
+            status: 'error',
+            data: {
+              products: [],
+              current_page: 1,
+              per_page: 8,
+              total: 0,
+              last_page: 1,
+            },
+          });
+        })
+      )
+      .subscribe((response) => {
+        if (response.status === 'success') {
+          // Filtrer pour ne garder que les produits mis en avant (featured)
+          this.trendingProducts = response.data.products
+            .filter((product) => product.featured)
+            .slice(0, 8);
+        }
+      });
   }
 
-  getFilteredProducts(): any[] {
-    if (this.activeTab === 'all') {
-      return this.allProducts;
+  /**
+   * Chargement des produits par catégorie
+   */
+  loadProductsByCategory(categoryId: number): void {
+    this.isLoadingCategoryProducts = true;
+    this.productService
+      .getProducts({
+        page: 1,
+        limit: 100,
+        category_id: categoryId,
+      })
+      .pipe(
+        finalize(() => (this.isLoadingCategoryProducts = false)),
+        catchError((error) => {
+          this.toastr.error(
+            'Erreur lors du chargement des produits par catégorie'
+          );
+          return of({
+            status: 'error',
+            data: {
+              products: [],
+              current_page: 1,
+              per_page: 100,
+              total: 0,
+              last_page: 1,
+            },
+          });
+        })
+      )
+      .subscribe((response) => {
+        if (response.status === 'success') {
+          this.productsByCategory = response.data.products.slice(0, 8);
+        }
+      });
+  }
+
+  /**
+   * Sélection d'une catégorie
+   */
+  selectCategory(id: any): void {
+    this.selectedCategory = id;
+    const category = this.categories.find((cat) => cat.id === id);
+    if (category) {
+      this.loadProductsByCategory(category.id);
     }
-    return this.allProducts.filter(
-      (product) => product.categorySlug === this.activeTab
-    );
   }
 
-  getStarClass(rating: number, index: number): string {
-    if (index < Math.floor(rating)) {
-      return 'lni lni-star-filled';
-    } else if (index < rating) {
-      return 'lni lni-star-half';
-    } else {
-      return 'lni lni-star';
-    }
+  /**
+   * Récupération des produits par catégorie sélectionnée
+   */
+  getProductsByCategory(): IProduct[] {
+    return this.productsByCategory;
   }
 
+  /**
+   * Chargement des témoignages clients
+   */
+  loadCustomerReviews(): void {
+    this.isLoadingReviews = true;
+    this.reviewService
+      .getTopReviews(8)
+      .pipe(
+        finalize(() => (this.isLoadingReviews = false)),
+        catchError((error) => {
+          this.toastr.error('Erreur lors du chargement des témoignages');
+          return of([]);
+        })
+      )
+      .subscribe((reviews) => {
+        this.customerReviews = reviews;
+      });
+  }
+
+  /**
+   * Soumission du formulaire de newsletter
+   */
   onSubmitNewsletter(): void {
     if (this.newsletterForm.invalid) {
       return;
     }
 
     this.isSubmitting = true;
+    const email = this.newsletterForm.get('email')?.value;
+    const name = this.newsletterForm.get('name')?.value || undefined;
 
-    // Simuler un appel API
-    setTimeout(() => {
-      console.log('Email soumis:', this.newsletterForm.value.email);
-      this.isSubmitting = false;
-      this.newsletterForm.reset();
-      // Ajouter une notification de succès ici
-    }, 1500);
+    this.newsletterService
+      .subscribe(email, name)
+      .pipe(
+        finalize(() => (this.isSubmitting = false)),
+        catchError((error) => {
+          if (error.status === 422 && error.error?.errors?.email) {
+            this.toastr.info(
+              'Cette adresse email est déjà inscrite à notre newsletter.'
+            );
+
+            return of(null);
+          }
+
+          this.toastr.error("Erreur lors de l'inscription à la newsletter");
+          return of(null);
+        })
+      )
+      .subscribe((response) => {
+        if (response && response.status === 'success') {
+          this.toastr.success(
+            response.message ||
+              'Merci pour votre inscription à notre newsletter !'
+          );
+          this.newsletterForm.reset();
+        } else if (
+          response &&
+          response.status === 'error' &&
+          response.message
+        ) {
+          this.toastr.error(response.message);
+        }
+      });
   }
 
-  // Méthodes pour charger les données (à remplacer par vos appels API réels)
-  private loadProducts(): void {
-    // Ces données devraient venir de votre API
-    this.allProducts = [
-      {
-        id: 1,
-        name: 'Masque décoratif traditionnel Dogon',
-        category: 'Décoration',
-        categorySlug: 'decoration',
-        price: '35,99',
-        rating: 4.0,
-        imageUrl: 'assets/images/products/masque-decoratif.jpg',
-        badge: 'Nouveau',
-      },
-      {
-        id: 2,
-        name: "Mélange d'épices authentiques africaines",
-        category: 'Épicerie',
-        categorySlug: 'epicerie',
-        price: '12,50',
-        rating: 4.9,
-        imageUrl: 'assets/images/products/epices-melange.jpg',
-      },
-      {
-        id: 3,
-        name: 'Robe élégante en tissu wax multicolore',
-        category: 'Mode',
-        categorySlug: 'mode',
-        price: '49,99',
-        rating: 4.5,
-        imageUrl: 'assets/images/products/robe-wax.jpg',
-        badge: 'Soldes',
-      },
-      {
-        id: 4,
-        name: 'Bracelet en perles colorées fait main',
-        category: 'Bijoux',
-        categorySlug: 'bijoux',
-        price: '18,75',
-        rating: 4.2,
-        imageUrl: 'assets/images/products/bracelet-perles.jpg',
-      },
-      {
-        id: 5,
-        name: "Statuette en bois d'ébène sculpté à la main",
-        category: 'Décoration',
-        categorySlug: 'decoration',
-        price: '65,00',
-        rating: 5.0,
-        imageUrl: 'assets/images/products/statue-bois.jpg',
-        badge: 'Bestseller',
-      },
-    ];
-
-    // Définir les produits tendance (les 4 premiers produits)
-    this.trendingProducts = this.allProducts.slice(0, 4);
+  /**
+   * Retourne la classe CSS pour les étoiles des avis
+   */
+  getStarClass(rating: number, index: number): string {
+    return index < rating ? 'lni lni-star-filled' : 'lni lni-star';
   }
 
-  private loadReviews(): void {
-    // Ces données devraient venir de votre API
-    this.customerReviews = [
-      {
-        userName: 'Sophie L.',
-        userImage: 'assets/images/testimonials/user-1.jpg',
-        rating: 5,
-        comment:
-          "J'ai acheté plusieurs bijoux et une robe en wax, la qualité est exceptionnelle ! Les couleurs sont vibrantes et l'artisanat est magnifique. Livraison rapide et emballage soigné. Je recommande vivement !",
-        productName: 'Robe wax multicolore',
-      },
-      {
-        userName: 'Marc D.',
-        userImage: 'assets/images/testimonials/user-2.jpg',
-        rating: 4,
-        comment:
-          "Les épices que j'ai commandées ont transformé ma cuisine ! L'authenticité des saveurs est incroyable. Le parfum qui s'en dégage est envoûtant. Service client très réactif quand j'ai eu une question.",
-        productName: "Mélange d'épices africaines",
-      },
-      {
-        userName: 'Amélie T.',
-        userImage: 'assets/images/testimonials/user-3.jpg',
-        rating: 4.5,
-        comment:
-          "Ma statuette en bois d'ébène est devenue la pièce maîtresse de mon salon. Le travail artisanal est impressionnant, on sent tout le savoir-faire derrière. Très heureuse de mon achat !",
-        productName: "Statuette en bois d'ébène",
-      },
-    ];
+  /**
+   * Vérifie si un produit est dans la liste des favoris
+   */
+  isInWishlist(productId: number): Observable<boolean> {
+    return this.wishlistService.isInWishlist(productId);
   }
 
-  private loadCategories(): void {
-    // Ces données devraient venir de votre API
-    this.categories = [
-      {
-        name: 'Décorations',
-        description:
-          "Masques, statues et objets d'art pour embellir votre intérieur",
-        imageUrl: 'assets/images/categories/decorations.jpg',
-        link: '/decorations',
-      },
-      {
-        name: 'Épicerie',
-        description: 'Épices, thés et produits alimentaires authentiques',
-        imageUrl: 'assets/images/categories/epicerie.jpg',
-        link: '/groceries',
-      },
-      {
-        name: 'Mode',
-        description: 'Vêtements et accessoires en wax et tissus traditionnels',
-        imageUrl: 'assets/images/categories/mode.jpg',
-        link: '/fashion',
-      },
-      {
-        name: 'Bijoux',
-        description:
-          'Bijoux artisanaux en perles, métaux et matériaux naturels',
-        imageUrl: 'assets/images/categories/bijoux.jpg',
-        link: '/jewelry',
-      },
-    ];
+  /**
+   * Ajoute ou retire un produit des favoris
+   */
+  toggleWishlist(product: IProduct, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
+
+    this.isInWishlist(product.id).subscribe((isInWishlist) => {
+      if (isInWishlist) {
+        this.wishlistService.removeFromWishlist(product.id).subscribe(() => {
+          this.toastr.success(`${product.name} a été retiré de vos favoris`);
+        });
+      } else {
+        this.wishlistService.addToWishlist(product).subscribe(() => {
+          this.toastr.success(`${product.name} a été ajouté à vos favoris`);
+        });
+      }
+    });
   }
 
-  private loadCategoryProducts(): void {
-    // Définir les catégories de produits
-    this.productCategories = [
-      { name: 'Décorations', slug: 'decoration' },
-      { name: 'Épicerie', slug: 'epicerie' },
-      { name: 'Mode', slug: 'mode' },
-      { name: 'Bijoux', slug: 'bijoux' },
-    ];
+  /**
+   * Ajoute un produit au panier
+   */
+  addToCart(product: IProduct, event: Event): void {
+    event.preventDefault();
+    event.stopPropagation();
 
-    // Produits par catégorie (à remplacer par vos appels API)
-    this.categoryProducts = {
-      decoration: [
-        {
-          id: 5,
-          name: 'Masque décoratif traditionnel Dogon',
-          category: 'Décoration',
-          price: '35,99',
-          rating: 4.0,
-          imageUrl: 'assets/images/products/masque-decoratif.jpg',
-          badge: 'Nouveau',
-        },
-        {
-          id: 6,
-          name: "Statuette en bois d'ébène sculpté à la main",
-          category: 'Décoration',
-          price: '65,00',
-          rating: 5.0,
-          imageUrl: 'assets/images/products/statue-bois.jpg',
-          badge: 'Bestseller',
-        },
-        {
-          id: 7,
-          name: 'Tableau peinture acrylique motifs africains',
-          category: 'Décoration',
-          price: '89,90',
-          rating: 4.8,
-          // Utilisez un chemin d'image qui existe certainement dans votre projet
-          imageUrl: 'assets/images/products/masque-decoratif.jpg',
-        },
-        {
-          id: 8,
-          name: 'Vase en terre cuite peint à la main',
-          category: 'Décoration',
-          price: '42,50',
-          rating: 4.3,
-          // Utilisez un chemin d'image qui existe certainement dans votre projet
-          imageUrl: 'assets/images/products/statue-bois.jpg',
-        },
-        {
-          id: 9,
-          name: 'Coussin décoratif en tissu wax',
-          category: 'Décoration',
-          price: '24,99',
-          rating: 4.7,
-          // Utilisez un chemin d'image qui existe certainement dans votre projet
-          imageUrl: 'assets/images/products/masque-decoratif.jpg',
-          badge: 'Promo',
-        },
-      ],
-      epicerie: [
-        {
-          id: 10,
-          name: "Mélange d'épices africaines authentiques",
-          category: 'Épicerie',
-          price: '12,50',
-          rating: 4.9,
-          imageUrl: 'assets/images/products/epices-melange.jpg',
-        },
-        {
-          id: 11,
-          name: 'Thé vert à la menthe du Maroc',
-          category: 'Épicerie',
-          price: '8,75',
-          rating: 4.6,
-          imageUrl: 'assets/images/products/epices-melange.jpg',
-        },
-        {
-          id: 12,
-          name: 'Poudre de baobab bio 200g',
-          category: 'Épicerie',
-          price: '15,90',
-          rating: 4.5,
-          imageUrl: 'assets/images/products/epices-melange.jpg',
-          badge: 'Bio',
-        },
-        {
-          id: 13,
-          name: "Chocolat artisanal cacao d'Afrique",
-          category: 'Épicerie',
-          price: '6,50',
-          rating: 4.8,
-          imageUrl: 'assets/images/products/epices-melange.jpg',
-        },
-        {
-          id: 14,
-          name: "Coffret dégustation saveurs d'Afrique",
-          category: 'Épicerie',
-          price: '45,00',
-          rating: 4.9,
-          imageUrl: 'assets/images/products/epices-melange.jpg',
-          badge: 'Nouveau',
-        },
-      ],
-      mode: [
-        {
-          id: 15,
-          name: 'Robe élégante en tissu wax multicolore',
-          category: 'Mode',
-          price: '49,99',
-          rating: 4.5,
-          imageUrl: 'assets/images/products/robe-wax.jpg',
-          badge: 'Soldes',
-        },
-        {
-          id: 16,
-          name: 'Chemise homme en coton motifs africains',
-          category: 'Mode',
-          price: '38,75',
-          rating: 4.4,
-          imageUrl: 'assets/images/products/robe-wax.jpg',
-        },
-        {
-          id: 17,
-          name: 'Foulard en soie motifs Kente',
-          category: 'Mode',
-          price: '22,90',
-          rating: 4.6,
-          imageUrl: 'assets/images/products/robe-wax.jpg',
-        },
-        {
-          id: 18,
-          name: 'Sac à main en tissu wax doublé coton',
-          category: 'Mode',
-          price: '29,95',
-          rating: 4.7,
-          imageUrl: 'assets/images/products/robe-wax.jpg',
-          badge: 'Nouveau',
-        },
-        {
-          id: 19,
-          name: 'Sandales en cuir tressé fait main',
-          category: 'Mode',
-          price: '59,90',
-          rating: 4.3,
-          imageUrl: 'assets/images/products/robe-wax.jpg',
-        },
-      ],
-      bijoux: [
-        {
-          id: 20,
-          name: 'Bracelet en perles colorées fait main',
-          category: 'Bijoux',
-          price: '18,75',
-          rating: 4.2,
-          imageUrl: 'assets/images/products/bracelet-perles.jpg',
-        },
-        {
-          id: 21,
-          name: 'Collier en perles de bois et pierre naturelle',
-          category: 'Bijoux',
-          price: '35,50',
-          rating: 4.7,
-          imageUrl: 'assets/images/products/bracelet-perles.jpg',
-          badge: 'Exclusif',
-        },
-        {
-          id: 22,
-          name: "Boucles d'oreilles en bronze motif tribal",
-          category: 'Bijoux',
-          price: '24,90',
-          rating: 4.8,
-          imageUrl: 'assets/images/products/bracelet-perles.jpg',
-        },
-        {
-          id: 23,
-          name: 'Bague ajustable en laiton motif éléphant',
-          category: 'Bijoux',
-          price: '19,95',
-          rating: 4.4,
-          imageUrl: 'assets/images/products/bracelet-perles.jpg',
-        },
-        {
-          id: 24,
-          name: 'Parure complète en perles de verre recyclé',
-          category: 'Bijoux',
-          price: '65,00',
-          rating: 4.9,
-          imageUrl: 'assets/images/products/bracelet-perles.jpg',
-          badge: 'Artisanal',
-        },
-      ],
-    };
+    this.cartService.addToCart(product.id, 1).subscribe(() => {
+      this.toastr.success(`${product.name} a été ajouté au panier`);
+    });
   }
 }

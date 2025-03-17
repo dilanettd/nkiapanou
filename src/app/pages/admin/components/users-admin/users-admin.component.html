@@ -1,1 +1,397 @@
-<p>users-admin works!</p>
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-heading font-bold text-primary">
+      Gestion des utilisateurs
+    </h1>
+  </div>
+
+  <!-- Filtres -->
+  <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-semibold mb-3">Filtres</h3>
+
+    <form
+      [formGroup]="filterForm"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+    >
+      <!-- Recherche -->
+      <div class="form-group">
+        <label
+          for="search"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Recherche</label
+        >
+        <input
+          type="text"
+          id="search"
+          formControlName="search"
+          class="w-full"
+          placeholder="Nom, email, téléphone..."
+        />
+      </div>
+
+      <!-- Tri -->
+      <div class="form-group">
+        <label for="sort" class="block text-sm font-medium text-text-dark mb-1"
+          >Trier par</label
+        >
+        <select id="sort" formControlName="sort" class="w-full">
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtre Admin -->
+      <div class="form-group">
+        <label for="admin" class="block text-sm font-medium text-text-dark mb-1"
+          >Statut Admin</label
+        >
+        <select id="admin" formControlName="admin" class="w-full">
+          <option value="">Tous</option>
+          <option value="true">Administrateurs</option>
+          <option value="false">Utilisateurs</option>
+        </select>
+      </div>
+
+      <!-- Filtre Compte Social -->
+      <div class="form-group">
+        <label
+          for="is_social"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Type de compte</label
+        >
+        <select id="is_social" formControlName="is_social" class="w-full">
+          <option value="">Tous</option>
+          <option value="true">Comptes sociaux</option>
+          <option value="false">Comptes email</option>
+        </select>
+      </div>
+    </form>
+
+    <div class="flex justify-end mt-4">
+      <button (click)="resetFilters()" class="btn btn-outline">
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Liste des utilisateurs -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-neutral">
+        <thead class="bg-neutral/30">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              ID
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Utilisateur
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Email
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Inscription
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Statut
+            </th>
+            <th
+              class="px-6 py-3 text-right text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-neutral">
+          <ng-container *ngIf="!loading && users.length > 0; else noUsers">
+            <tr
+              *ngFor="let user of users"
+              class="hover:bg-neutral/10 transition-colors"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ user.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex items-center">
+                  <div class="flex-shrink-0 h-10 w-10">
+                    <img
+                      class="h-10 w-10 rounded-full object-cover"
+                      [src]="getAvatarUrl(user)"
+                      alt="{{ user.name }}"
+                    />
+                  </div>
+                  <div class="ml-4">
+                    <div class="text-sm font-medium text-text-dark">
+                      {{ user.name }}
+                    </div>
+                    <div
+                      class="text-sm text-text-light"
+                      *ngIf="user.phone_number"
+                    >
+                      {{ user.phone_number }}
+                    </div>
+                  </div>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ user.email }}
+                <div
+                  class="text-xs text-text-light mt-1"
+                  *ngIf="user.email_verified_at"
+                >
+                  <span class="inline-block">Vérifié</span>
+                  <svg
+                    class="w-4 h-4 inline-block ml-1 text-green-600"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ formatDate(user.created_at) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span [class]="'status-badge ' + getUserStatusClass(user)">
+                  {{ getUserStatusLabel(user) }}
+                </span>
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+              >
+                <div class="flex items-center justify-end space-x-2">
+                  <!-- Convertir compte social -->
+                  <button
+                    *ngIf="user.is_social"
+                    (click)="convertSocialAccount(user)"
+                    class="text-blue-600 hover:text-blue-900 action-btn"
+                    title="Convertir en compte par email"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M7 16V4m0 0L3 8m4-4l4 4m6 0v12m0 0l4-4m-4 4l-4-4"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Promouvoir/rétrograder admin -->
+                  <button
+                    (click)="toggleAdminStatus(user)"
+                    [class]="
+                      user.admin
+                        ? 'text-red-600 hover:text-red-900 action-btn'
+                        : 'text-green-600 hover:text-green-900 action-btn'
+                    "
+                    [title]="
+                      user.admin
+                        ? 'Rétrograder au statut d\'utilisateur'
+                        : 'Promouvoir administrateur'
+                    "
+                  >
+                    <svg
+                      *ngIf="!user.admin"
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <svg
+                      *ngIf="user.admin"
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Supprimer -->
+                  <button
+                    (click)="deleteUser(user)"
+                    class="text-red-600 hover:text-red-900 action-btn"
+                    title="Supprimer l'utilisateur"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
+                      />
+                    </svg>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <ng-template #noUsers>
+            <tr>
+              <td colspan="6" class="px-6 py-8 text-center text-text-light">
+                <div *ngIf="loading">
+                  <svg
+                    class="animate-spin h-6 w-6 mx-auto mb-2 text-primary"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <p>Chargement des utilisateurs...</p>
+                </div>
+                <div *ngIf="!loading">
+                  <svg
+                    class="h-12 w-12 mx-auto mb-2 text-neutral"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                    ></path>
+                  </svg>
+                  <p>Aucun utilisateur trouvé</p>
+                  <p class="text-sm mt-1">
+                    Ajustez les filtres pour voir plus de résultats
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-6 py-4 bg-neutral/10">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-sm text-text-light">
+          Affichage de {{ users.length }} sur {{ totalItems }} utilisateurs
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Page size selector -->
+          <div class="flex items-center">
+            <label for="pageSize" class="text-sm text-text mr-2"
+              >Afficher:</label
+            >
+            <select
+              id="pageSize"
+              class="text-sm border rounded px-2 py-1 w-14"
+              [value]="pageSize"
+              (change)="changePageSize($event)"
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <!-- Pagination controls -->
+          <div class="flex items-center space-x-1">
+            <!-- Previous button -->
+            <button
+              class="px-3 py-1 rounded border text-sm"
+              [disabled]="currentPage === 1"
+              [class.opacity-50]="currentPage === 1"
+              [class.cursor-not-allowed]="currentPage === 1"
+              (click)="onPageChange(currentPage - 1)"
+            >
+              <span class="sr-only">Précédent</span>
+              &lt;
+            </button>
+
+            <!-- Page buttons -->
+            <ng-container *ngFor="let page of pages">
+              <ng-container *ngIf="page !== -1; else ellipsis">
+                <button
+                  class="px-3 py-1 rounded border text-sm"
+                  [class.bg-primary]="page === currentPage"
+                  [class.text-white]="page === currentPage"
+                  (click)="onPageChange(page)"
+                >
+                  {{ page }}
+                </button>
+              </ng-container>
+              <ng-template #ellipsis>
+                <span class="px-2">...</span>
+              </ng-template>
+            </ng-container>
+
+            <!-- Next button -->
+            <button
+              class="px-3 py-1 rounded border text-sm"
+              [disabled]="currentPage >= totalPages"
+              [class.opacity-50]="currentPage >= totalPages"
+              [class.cursor-not-allowed]="currentPage >= totalPages"
+              (click)="onPageChange(currentPage + 1)"
+            >
+              <span class="sr-only">Suivant</span>
+              &gt;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

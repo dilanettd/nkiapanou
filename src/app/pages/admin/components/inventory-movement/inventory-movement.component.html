@@ -1,0 +1,389 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-heading font-bold text-primary">
+      Mouvements d'inventaire
+    </h1>
+    <button (click)="toggleNewMovementForm()" class="btn btn-primary">
+      {{ showNewMovementForm ? "Annuler" : "Ajouter un mouvement" }}
+    </button>
+  </div>
+
+  <!-- Formulaire d'ajout de mouvement -->
+  <div
+    *ngIf="showNewMovementForm"
+    class="bg-white p-6 rounded-lg shadow-md mb-6"
+  >
+    <h2 class="text-xl font-heading font-semibold mb-4">
+      Nouveau mouvement d'inventaire
+    </h2>
+
+    <form
+      [formGroup]="newMovementForm"
+      (ngSubmit)="addMovement()"
+      class="grid grid-cols-1 md:grid-cols-2 gap-4"
+    >
+      <!-- Produit -->
+      <div class="form-group">
+        <label
+          for="product_id"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Produit*</label
+        >
+        <select
+          id="product_id"
+          formControlName="product_id"
+          class="w-full"
+          [ngClass]="{
+            'input-error':
+              newMovementForm.get('product_id')?.invalid &&
+              newMovementForm.get('product_id')?.touched
+          }"
+        >
+          <option value="">Sélectionner un produit</option>
+          <option *ngFor="let product of products" [value]="product.id">
+            {{ product.name }} ({{ product.sku }}) - Stock:
+            {{ product.quantity }}
+          </option>
+        </select>
+        <div
+          *ngIf="
+            newMovementForm.get('product_id')?.invalid &&
+            newMovementForm.get('product_id')?.touched
+          "
+          class="text-red-600 text-sm mt-1"
+        >
+          Veuillez sélectionner un produit
+        </div>
+      </div>
+
+      <!-- Quantité -->
+      <div class="form-group">
+        <label
+          for="quantity"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Quantité*</label
+        >
+        <input
+          type="number"
+          id="quantity"
+          formControlName="quantity"
+          class="w-full"
+          placeholder="Entrer une quantité (+ pour ajouter, - pour retirer)"
+          [ngClass]="{
+            'input-error':
+              newMovementForm.get('quantity')?.invalid &&
+              newMovementForm.get('quantity')?.touched
+          }"
+        />
+        <div
+          *ngIf="
+            newMovementForm.get('quantity')?.invalid &&
+            newMovementForm.get('quantity')?.touched
+          "
+          class="text-red-600 text-sm mt-1"
+        >
+          Veuillez entrer une quantité valide
+        </div>
+      </div>
+
+      <!-- Type de référence -->
+      <div class="form-group">
+        <label
+          for="reference_type"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Type de mouvement*</label
+        >
+        <select
+          id="reference_type"
+          formControlName="reference_type"
+          class="w-full"
+        >
+          <option value="manual">Manuel</option>
+          <option value="adjustment">Ajustement d'inventaire</option>
+          <option value="initial">Stock initial</option>
+          <option value="order">Commande</option>
+          <option value="return">Retour</option>
+        </select>
+      </div>
+
+      <!-- ID de référence (pour les commandes et retours) -->
+      <div
+        class="form-group"
+        *ngIf="
+          newMovementForm.get('reference_type')?.value === 'order' ||
+          newMovementForm.get('reference_type')?.value === 'return'
+        "
+      >
+        <label
+          for="reference_id"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Numéro de référence*</label
+        >
+        <input
+          type="number"
+          id="reference_id"
+          formControlName="reference_id"
+          class="w-full"
+          placeholder="Ex: 12345"
+          [ngClass]="{
+            'input-error':
+              newMovementForm.get('reference_id')?.invalid &&
+              newMovementForm.get('reference_id')?.touched
+          }"
+        />
+        <div
+          *ngIf="
+            newMovementForm.get('reference_id')?.invalid &&
+            newMovementForm.get('reference_id')?.touched
+          "
+          class="text-red-600 text-sm mt-1"
+        >
+          Veuillez entrer un numéro de référence
+        </div>
+      </div>
+
+      <!-- Notes -->
+      <div class="form-group col-span-full">
+        <label for="notes" class="block text-sm font-medium text-text-dark mb-1"
+          >Notes</label
+        >
+        <textarea
+          id="notes"
+          formControlName="notes"
+          class="w-full"
+          rows="3"
+          placeholder="Entrer des notes (optionnel)"
+        ></textarea>
+      </div>
+
+      <!-- Actions -->
+      <div class="col-span-full flex justify-end mt-4">
+        <button
+          type="button"
+          (click)="toggleNewMovementForm()"
+          class="btn btn-outline mr-2"
+        >
+          Annuler
+        </button>
+        <button
+          type="submit"
+          class="btn btn-primary"
+          [disabled]="newMovementForm.invalid"
+        >
+          Enregistrer
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Filtres -->
+  <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-semibold mb-3">Filtres</h3>
+
+    <form
+      [formGroup]="filterForm"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4"
+    >
+      <!-- Produit -->
+      <div class="form-group">
+        <label
+          for="filter_product"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Produit</label
+        >
+        <select id="filter_product" formControlName="product_id" class="w-full">
+          <option value="">Tous les produits</option>
+          <option *ngFor="let product of products" [value]="product.id">
+            {{ product.name }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Type de référence -->
+      <div class="form-group">
+        <label
+          for="filter_type"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Type de mouvement</label
+        >
+        <select
+          id="filter_type"
+          formControlName="reference_type"
+          class="w-full"
+        >
+          <option *ngFor="let type of referenceTypes" [value]="type.value">
+            {{ type.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Date de début -->
+      <div class="form-group">
+        <label
+          for="start_date"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Date de début</label
+        >
+        <input
+          type="date"
+          id="start_date"
+          formControlName="start_date"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Date de fin -->
+      <div class="form-group">
+        <label
+          for="end_date"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Date de fin</label
+        >
+        <input
+          type="date"
+          id="end_date"
+          formControlName="end_date"
+          class="w-full"
+        />
+      </div>
+    </form>
+
+    <div class="flex justify-end mt-4">
+      <button (click)="resetFilters()" class="btn btn-outline">
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Liste des mouvements -->
+  <div class="bg-white rounded-lg shadow-md">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-neutral">
+        <thead class="bg-neutral/30">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              ID
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Produit
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Quantité
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Type
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Référence
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Notes
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-neutral">
+          <ng-container
+            *ngIf="!loading && movements.length > 0; else noMovements"
+          >
+            <tr *ngFor="let movement of movements">
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ movement.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ formatDate(movement.created_at) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ getProductName(movement.product_id) }}
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-sm"
+                [ngClass]="getQuantityClass(movement.quantity)"
+              >
+                {{ movement.quantity > 0 ? "+" : "" }}{{ movement.quantity }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ getTypeLabel(movement.reference_type) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                <span *ngIf="movement.reference_id">{{
+                  movement.reference_id
+                }}</span>
+                <span *ngIf="!movement.reference_id">-</span>
+              </td>
+              <td class="px-6 py-4 text-sm text-text">
+                <span *ngIf="movement.notes">{{ movement.notes }}</span>
+                <span *ngIf="!movement.notes">-</span>
+              </td>
+            </tr>
+          </ng-container>
+
+          <ng-template #noMovements>
+            <tr>
+              <td colspan="7" class="px-6 py-8 text-center text-text-light">
+                <div *ngIf="loading">
+                  <svg
+                    class="animate-spin h-6 w-6 mx-auto mb-2 text-primary"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <p>Chargement des mouvements d'inventaire...</p>
+                </div>
+                <div *ngIf="!loading">
+                  <svg
+                    class="h-12 w-12 mx-auto mb-2 text-neutral"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4"
+                    ></path>
+                  </svg>
+                  <p>Aucun mouvement d'inventaire trouvé</p>
+                  <p class="text-sm mt-1">
+                    Ajustez les filtres ou ajoutez un nouveau mouvement
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>

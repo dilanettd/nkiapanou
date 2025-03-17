@@ -1,1 +1,1028 @@
-<p>orders-admin works!</p>
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-2xl font-heading font-bold text-text-dark">
+      Gestion des commandes
+    </h1>
+  </div>
+
+  <!-- Filtres -->
+  <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-semibold mb-3">Filtres</h3>
+
+    <form
+      [formGroup]="filterForm"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-6 gap-4"
+    >
+      <!-- Recherche -->
+      <div class="form-group md:col-span-2">
+        <label
+          for="search"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Recherche</label
+        >
+        <input
+          type="text"
+          id="search"
+          formControlName="search"
+          class="w-full"
+          placeholder="Numéro de commande, nom du client..."
+        />
+      </div>
+
+      <!-- Tri -->
+      <div class="form-group">
+        <label for="sort" class="block text-sm font-medium text-text-dark mb-1"
+          >Trier par</label
+        >
+        <select id="sort" formControlName="sort" class="w-full">
+          <option *ngFor="let option of sortOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtre par statut -->
+      <div class="form-group">
+        <label
+          for="status"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Statut</label
+        >
+        <select id="status" formControlName="status" class="w-full">
+          <option *ngFor="let option of statusOptions" [value]="option.value">
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Filtre par statut de paiement -->
+      <div class="form-group">
+        <label
+          for="payment_status"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Paiement</label
+        >
+        <select
+          id="payment_status"
+          formControlName="payment_status"
+          class="w-full"
+        >
+          <option
+            *ngFor="let option of paymentStatusOptions"
+            [value]="option.value"
+          >
+            {{ option.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Période -->
+      <div class="form-group md:col-span-2 grid grid-cols-2 gap-2">
+        <div>
+          <label
+            for="start_date"
+            class="block text-sm font-medium text-text-dark mb-1"
+            >Date de début</label
+          >
+          <input
+            type="date"
+            id="start_date"
+            formControlName="start_date"
+            class="w-full"
+          />
+        </div>
+        <div>
+          <label
+            for="end_date"
+            class="block text-sm font-medium text-text-dark mb-1"
+            >Date de fin</label
+          >
+          <input
+            type="date"
+            id="end_date"
+            formControlName="end_date"
+            class="w-full"
+          />
+        </div>
+      </div>
+    </form>
+
+    <div class="flex justify-end mt-4">
+      <button (click)="resetFilters()" class="btn btn-outline">
+        Réinitialiser
+      </button>
+    </div>
+  </div>
+
+  <!-- Liste des commandes -->
+  <div class="bg-white rounded-lg shadow-md overflow-hidden">
+    <div class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-neutral">
+        <thead class="bg-neutral/30">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              #
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Commande
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Client
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Total
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Statut
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Paiement
+            </th>
+            <th
+              class="px-6 py-3 text-center text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-neutral">
+          <ng-container *ngIf="!loading && orders.length > 0; else noOrders">
+            <tr
+              *ngFor="let order of orders"
+              class="hover:bg-neutral/10 transition-colors"
+            >
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ order.id }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-text-dark">{{
+                    order.order_number
+                  }}</span>
+                  <span class="text-xs text-text-light">
+                    {{ getTotalItems(order) }} article(s)
+                  </span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <div class="flex flex-col">
+                  <span class="text-sm font-medium text-text-dark">{{
+                    order.user?.name || "Client inconnu"
+                  }}</span>
+                  <span class="text-xs text-text-light">{{
+                    order.user?.email
+                  }}</span>
+                </div>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+                {{ formatDate(order.created_at) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                {{ formatPrice(order.total_amount) }}
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  [class]="'status-badge ' + getOrderStatusClass(order.status)"
+                >
+                  {{ getOrderStatusLabel(order.status) }}
+                </span>
+              </td>
+              <td class="px-6 py-4 whitespace-nowrap">
+                <span
+                  [class]="
+                    'status-badge ' +
+                    getPaymentStatusClass(order.payment_status)
+                  "
+                >
+                  {{ getPaymentStatusLabel(order.payment_status) }}
+                </span>
+              </td>
+              <td
+                class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
+              >
+                <div class="flex items-center justify-center space-x-2">
+                  <!-- Voir détails -->
+                  <button
+                    (click)="openDetailModal(order)"
+                    class="text-blue-600 hover:text-blue-900 action-btn"
+                    title="Voir les détails"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Numéro de suivi -->
+                  <button
+                    *ngIf="
+                      order.status === 'shipped' ||
+                      order.status === 'processing'
+                    "
+                    (click)="openTrackingModal(order)"
+                    class="text-indigo-600 hover:text-indigo-900 action-btn"
+                    title="Gérer le numéro de suivi"
+                  >
+                    <svg
+                      class="w-5 h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                        stroke-width="2"
+                        d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"
+                      />
+                    </svg>
+                  </button>
+
+                  <!-- Menu statut commande (dropdown) -->
+                  <div class="relative inline-block text-left">
+                    <div>
+                      <button
+                        type="button"
+                        class="status-action-btn"
+                        [class]="getOrderStatusClass(order.status)"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M19 9l-7 7-7-7"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="status-dropdown">
+                      <div class="py-1">
+                        <button
+                          *ngIf="order.status !== 'pending'"
+                          (click)="updateOrderStatus(order, 'pending')"
+                          class="status-dropdown-item status-pending-text"
+                        >
+                          En attente
+                        </button>
+                        <button
+                          *ngIf="order.status !== 'processing'"
+                          (click)="updateOrderStatus(order, 'processing')"
+                          class="status-dropdown-item status-processing-text"
+                        >
+                          En traitement
+                        </button>
+                        <button
+                          *ngIf="order.status !== 'shipped'"
+                          (click)="updateOrderStatus(order, 'shipped')"
+                          class="status-dropdown-item status-shipped-text"
+                        >
+                          Expédiée
+                        </button>
+                        <button
+                          *ngIf="order.status !== 'delivered'"
+                          (click)="updateOrderStatus(order, 'delivered')"
+                          class="status-dropdown-item status-delivered-text"
+                        >
+                          Livrée
+                        </button>
+                        <button
+                          *ngIf="order.status !== 'cancelled'"
+                          (click)="updateOrderStatus(order, 'cancelled')"
+                          class="status-dropdown-item status-cancelled-text"
+                        >
+                          Annulée
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Menu statut paiement (dropdown) -->
+                  <div class="relative inline-block text-left">
+                    <div>
+                      <button
+                        type="button"
+                        class="status-action-btn"
+                        [class]="getPaymentStatusClass(order.payment_status)"
+                      >
+                        <svg
+                          class="w-5 h-5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            stroke-linecap="round"
+                            stroke-linejoin="round"
+                            stroke-width="2"
+                            d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                          />
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="status-dropdown">
+                      <div class="py-1">
+                        <button
+                          *ngIf="order.payment_status !== 'paid'"
+                          (click)="updatePaymentStatus(order, 'paid')"
+                          class="status-dropdown-item status-paid-text"
+                        >
+                          Payée
+                        </button>
+                        <button
+                          *ngIf="order.payment_status !== 'pending'"
+                          (click)="updatePaymentStatus(order, 'pending')"
+                          class="status-dropdown-item status-payment-pending-text"
+                        >
+                          En attente
+                        </button>
+                        <button
+                          *ngIf="order.payment_status !== 'failed'"
+                          (click)="updatePaymentStatus(order, 'failed')"
+                          class="status-dropdown-item status-failed-text"
+                        >
+                          Échoué
+                        </button>
+                        <button
+                          *ngIf="order.payment_status !== 'refunded'"
+                          (click)="updatePaymentStatus(order, 'refunded')"
+                          class="status-dropdown-item status-refunded-text"
+                        >
+                          Remboursée
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </td>
+            </tr>
+          </ng-container>
+
+          <ng-template #noOrders>
+            <tr>
+              <td colspan="8" class="px-6 py-8 text-center text-text-light">
+                <div *ngIf="loading">
+                  <svg
+                    class="animate-spin h-6 w-6 mx-auto mb-2 text-primary"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                  >
+                    <circle
+                      class="opacity-25"
+                      cx="12"
+                      cy="12"
+                      r="10"
+                      stroke="currentColor"
+                      stroke-width="4"
+                    ></circle>
+                    <path
+                      class="opacity-75"
+                      fill="currentColor"
+                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                    ></path>
+                  </svg>
+                  <p>Chargement des commandes...</p>
+                </div>
+                <div *ngIf="!loading">
+                  <svg
+                    class="h-12 w-12 mx-auto mb-2 text-neutral"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M3 3h2l.4 2M7 13h10l4-8H5.4M7 13L5.4 5M7 13l-2.293 2.293c-.63.63-.184 1.707.707 1.707H17m0 0a2 2 0 100 4 2 2 0 000-4zm-8 2a2 2 0 11-4 0 2 2 0 014 0z"
+                    />
+                  </svg>
+                  <p>Aucune commande trouvée</p>
+                  <p class="text-sm mt-1">
+                    Ajustez les filtres pour voir plus de résultats
+                  </p>
+                </div>
+              </td>
+            </tr>
+          </ng-template>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Pagination -->
+    <div class="px-6 py-4 bg-neutral/10">
+      <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div class="text-sm text-text-light">
+          Affichage de {{ orders.length }} sur {{ totalItems }} commandes
+        </div>
+
+        <div class="flex items-center gap-4">
+          <!-- Page size selector -->
+          <div class="flex items-center">
+            <label for="pageSize" class="text-sm text-text mr-2"
+              >Afficher:</label
+            >
+            <select
+              id="pageSize"
+              class="text-sm border rounded px-2 py-1"
+              [value]="pageSize"
+              (change)="changePageSize($event)"
+            >
+              <option value="5">5</option>
+              <option value="10">10</option>
+              <option value="25">25</option>
+              <option value="50">50</option>
+            </select>
+          </div>
+
+          <!-- Pagination controls -->
+          <div class="flex items-center space-x-1">
+            <!-- Previous button -->
+            <button
+              class="px-3 py-1 rounded border text-sm"
+              [disabled]="currentPage === 1"
+              [class.opacity-50]="currentPage === 1"
+              [class.cursor-not-allowed]="currentPage === 1"
+              (click)="onPageChange(currentPage - 1)"
+            >
+              <span class="sr-only">Précédent</span>
+              &lt;
+            </button>
+
+            <!-- Page buttons -->
+            <ng-container *ngFor="let page of pages">
+              <ng-container *ngIf="page !== -1; else ellipsis">
+                <button
+                  class="px-3 py-1 rounded border text-sm"
+                  [class.bg-primary]="page === currentPage"
+                  [class.text-white]="page === currentPage"
+                  (click)="onPageChange(page)"
+                >
+                  {{ page }}
+                </button>
+              </ng-container>
+              <ng-template #ellipsis>
+                <span class="px-2">...</span>
+              </ng-template>
+            </ng-container>
+
+            <!-- Next button -->
+            <button
+              class="px-3 py-1 rounded border text-sm"
+              [disabled]="currentPage >= totalPages"
+              [class.opacity-50]="currentPage >= totalPages"
+              [class.cursor-not-allowed]="currentPage >= totalPages"
+              (click)="onPageChange(currentPage + 1)"
+            >
+              <span class="sr-only">Suivant</span>
+              &gt;
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal de détail de commande -->
+  <div
+    *ngIf="isDetailModalOpen && selectedOrder"
+    class="fixed inset-0 z-50 overflow-y-auto"
+    aria-labelledby="modal-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+    >
+      <!-- Background overlay -->
+      <div
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+        aria-hidden="true"
+        (click)="closeDetailModal()"
+      ></div>
+
+      <!-- Modal panel -->
+      <div
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-2xl sm:w-full"
+      >
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <!-- Modal header -->
+          <div
+            class="flex justify-between items-start pb-3 border-b border-neutral/20"
+          >
+            <h3
+              class="text-lg font-medium leading-6 text-text-dark"
+              id="modal-title"
+            >
+              Commande {{ selectedOrder.order_number }}
+            </h3>
+            <button
+              type="button"
+              class="bg-white rounded-md text-gray-400 hover:text-gray-500"
+              (click)="closeDetailModal()"
+            >
+              <span class="sr-only">Fermer</span>
+              <svg
+                class="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="mt-4">
+            <!-- Informations sur la commande -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <!-- Colonne de gauche -->
+              <div>
+                <!-- Client -->
+                <div class="mb-4">
+                  <h4 class="text-sm font-medium text-text-light mb-2">
+                    Client
+                  </h4>
+                  <div class="bg-neutral/10 p-3 rounded">
+                    <div class="text-sm font-medium text-text-dark">
+                      {{ selectedOrder.user?.name || "Client inconnu" }}
+                    </div>
+                    <div class="text-xs text-text-light mt-1">
+                      {{ selectedOrder.user?.email }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Adresse de facturation -->
+                <div class="mb-4">
+                  <h4 class="text-sm font-medium text-text-light mb-2">
+                    Adresse de facturation
+                  </h4>
+                  <div class="bg-neutral/10 p-3 rounded">
+                    <div class="text-sm text-text">
+                      <div>{{ selectedOrder.billing_address }}</div>
+                      <div>
+                        {{ selectedOrder.billing_city }},
+                        {{ selectedOrder.billing_postal_code }}
+                      </div>
+                      <div>{{ selectedOrder.billing_country }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Mode de paiement -->
+                <div class="mb-4">
+                  <h4 class="text-sm font-medium text-text-light mb-2">
+                    Paiement
+                  </h4>
+                  <div class="bg-neutral/10 p-3 rounded">
+                    <div class="text-sm text-text">
+                      <div>
+                        Méthode:
+                        {{
+                          getPaymentMethodLabel(selectedOrder.payment_method)
+                        }}
+                      </div>
+                      <div *ngIf="selectedOrder.payment_id">
+                        ID: {{ selectedOrder.payment_id }}
+                      </div>
+                      <div class="mt-2">
+                        <span
+                          [class]="
+                            'status-badge-sm ' +
+                            getPaymentStatusClass(selectedOrder.payment_status)
+                          "
+                        >
+                          {{
+                            getPaymentStatusLabel(selectedOrder.payment_status)
+                          }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Colonne de droite -->
+              <div>
+                <!-- Dates -->
+                <div class="mb-4">
+                  <h4 class="text-sm font-medium text-text-light mb-2">
+                    Dates
+                  </h4>
+                  <div class="bg-neutral/10 p-3 rounded">
+                    <div class="text-sm text-text">
+                      <div>
+                        Créée le: {{ formatDate(selectedOrder.created_at) }}
+                      </div>
+                      <div>
+                        Mise à jour: {{ formatDate(selectedOrder.updated_at) }}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Adresse de livraison -->
+                <div class="mb-4">
+                  <h4 class="text-sm font-medium text-text-light mb-2">
+                    Adresse de livraison
+                  </h4>
+                  <div class="bg-neutral/10 p-3 rounded">
+                    <div class="text-sm text-text">
+                      <div>{{ selectedOrder.shipping_address }}</div>
+                      <div>
+                        {{ selectedOrder.shipping_city }},
+                        {{ selectedOrder.shipping_postal_code }}
+                      </div>
+                      <div>{{ selectedOrder.shipping_country }}</div>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Statut et suivi -->
+                <div class="mb-4">
+                  <h4 class="text-sm font-medium text-text-light mb-2">
+                    Statut
+                  </h4>
+                  <div class="bg-neutral/10 p-3 rounded">
+                    <div class="text-sm text-text">
+                      <div class="mb-2">
+                        <span
+                          [class]="
+                            'status-badge ' +
+                            getOrderStatusClass(selectedOrder.status)
+                          "
+                        >
+                          {{ getOrderStatusLabel(selectedOrder.status) }}
+                        </span>
+                      </div>
+                      <div *ngIf="selectedOrder.tracking_number">
+                        <span class="text-xs text-text-light"
+                          >Numéro de suivi:</span
+                        >
+                        <span class="text-sm font-medium text-primary">{{
+                          selectedOrder.tracking_number
+                        }}</span>
+                      </div>
+                      <div *ngIf="selectedOrder.notes" class="mt-2">
+                        <span class="text-xs text-text-light">Notes:</span>
+                        <p class="text-sm text-text">
+                          {{ selectedOrder.notes }}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Articles de la commande -->
+            <div class="mt-4">
+              <h4 class="text-sm font-medium text-text-light mb-2">
+                Articles ({{ getTotalItems(selectedOrder) }})
+              </h4>
+              <div class="bg-neutral/10 rounded overflow-hidden">
+                <table class="min-w-full divide-y divide-neutral/30">
+                  <thead class="bg-neutral/20">
+                    <tr>
+                      <th
+                        class="px-4 py-2 text-left text-xs font-medium text-text-dark"
+                      >
+                        Produit
+                      </th>
+                      <th
+                        class="px-4 py-2 text-right text-xs font-medium text-text-dark"
+                      >
+                        Prix unitaire
+                      </th>
+                      <th
+                        class="px-4 py-2 text-center text-xs font-medium text-text-dark"
+                      >
+                        Qté
+                      </th>
+                      <th
+                        class="px-4 py-2 text-right text-xs font-medium text-text-dark"
+                      >
+                        Total
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody class="divide-y divide-neutral/30">
+                    <tr *ngFor="let item of selectedOrder.order_items">
+                      <td class="px-4 py-3 text-sm">
+                        <div class="flex flex-col">
+                          <span class="font-medium text-text-dark">{{
+                            item.product?.name || "Produit #" + item.product_id
+                          }}</span>
+                          <span class="text-xs text-text-light"
+                            >SKU: {{ item.product?.sku || "N/A" }}</span
+                          >
+                        </div>
+                      </td>
+                      <td class="px-4 py-3 text-sm text-right">
+                        {{ formatPrice(item.price) }}
+                      </td>
+                      <td class="px-4 py-3 text-sm text-center">
+                        {{ item.quantity }}
+                      </td>
+                      <td class="px-4 py-3 text-sm text-right font-medium">
+                        {{ formatPrice(item.total) }}
+                      </td>
+                    </tr>
+                  </tbody>
+                  <tfoot class="bg-neutral/20">
+                    <tr>
+                      <td
+                        colspan="3"
+                        class="px-4 py-2 text-sm text-right font-medium"
+                      >
+                        Sous-total:
+                      </td>
+                      <td class="px-4 py-2 text-sm text-right font-medium">
+                        {{
+                          formatPrice(
+                            selectedOrder.total_amount -
+                              selectedOrder.shipping_fee -
+                              selectedOrder.tax_amount +
+                              selectedOrder.discount_amount
+                          )
+                        }}
+                      </td>
+                    </tr>
+                    <tr *ngIf="selectedOrder.discount_amount > 0">
+                      <td
+                        colspan="3"
+                        class="px-4 py-2 text-sm text-right font-medium"
+                      >
+                        Remise:
+                      </td>
+                      <td
+                        class="px-4 py-2 text-sm text-right font-medium text-green-600"
+                      >
+                        -{{ formatPrice(selectedOrder.discount_amount) }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        colspan="3"
+                        class="px-4 py-2 text-sm text-right font-medium"
+                      >
+                        Frais de livraison:
+                      </td>
+                      <td class="px-4 py-2 text-sm text-right font-medium">
+                        {{ formatPrice(selectedOrder.shipping_fee) }}
+                      </td>
+                    </tr>
+                    <tr>
+                      <td
+                        colspan="3"
+                        class="px-4 py-2 text-sm text-right font-medium"
+                      >
+                        Taxes:
+                      </td>
+                      <td class="px-4 py-2 text-sm text-right font-medium">
+                        {{ formatPrice(selectedOrder.tax_amount) }}
+                      </td>
+                    </tr>
+                    <tr class="bg-neutral/40">
+                      <td
+                        colspan="3"
+                        class="px-4 py-2 text-sm text-right font-bold"
+                      >
+                        Total:
+                      </td>
+                      <td class="px-4 py-2 text-right font-bold">
+                        {{ formatPrice(selectedOrder.total_amount) }}
+                      </td>
+                    </tr>
+                  </tfoot>
+                </table>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div
+          class="bg-neutral/20 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
+        >
+          <!-- Actions -->
+          <div class="flex flex-wrap justify-end gap-2">
+            <button
+              *ngIf="selectedOrder.status !== 'cancelled'"
+              type="button"
+              class="btn btn-sm btn-outline mr-2"
+              (click)="updateOrderStatus(selectedOrder, 'cancelled')"
+            >
+              Annuler la commande
+            </button>
+            <button
+              *ngIf="selectedOrder.status === 'pending'"
+              type="button"
+              class="btn btn-sm btn-secondary"
+              (click)="updateOrderStatus(selectedOrder, 'processing')"
+            >
+              Passer en traitement
+            </button>
+            <button
+              *ngIf="selectedOrder.status === 'processing'"
+              type="button"
+              class="btn btn-sm btn-secondary"
+              (click)="updateOrderStatus(selectedOrder, 'shipped')"
+            >
+              Marquer comme expédiée
+            </button>
+            <button
+              *ngIf="selectedOrder.status === 'shipped'"
+              type="button"
+              class="btn btn-sm btn-primary"
+              (click)="updateOrderStatus(selectedOrder, 'delivered')"
+            >
+              Marquer comme livrée
+            </button>
+            <button
+              *ngIf="
+                selectedOrder.status === 'shipped' ||
+                selectedOrder.status === 'processing'
+              "
+              type="button"
+              class="btn btn-sm btn-primary ml-2"
+              (click)="openTrackingModal(selectedOrder); closeDetailModal()"
+            >
+              {{
+                selectedOrder.tracking_number
+                  ? "Modifier le suivi"
+                  : "Ajouter un suivi"
+              }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal pour le numéro de suivi -->
+  <div
+    *ngIf="isTrackingModalOpen && selectedOrder"
+    class="fixed inset-0 z-50 overflow-y-auto"
+    aria-labelledby="tracking-modal-title"
+    role="dialog"
+    aria-modal="true"
+  >
+    <div
+      class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0"
+    >
+      <!-- Background overlay -->
+      <div
+        class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity"
+        aria-hidden="true"
+        (click)="closeTrackingModal()"
+      ></div>
+
+      <!-- Modal panel -->
+      <div
+        class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full"
+      >
+        <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+          <!-- Modal header -->
+          <div
+            class="flex justify-between items-start pb-3 border-b border-neutral/20"
+          >
+            <h3
+              class="text-lg font-medium leading-6 text-text-dark"
+              id="tracking-modal-title"
+            >
+              {{
+                selectedOrder.tracking_number
+                  ? "Modifier le numéro de suivi"
+                  : "Ajouter un numéro de suivi"
+              }}
+            </h3>
+            <button
+              type="button"
+              class="bg-white rounded-md text-gray-400 hover:text-gray-500"
+              (click)="closeTrackingModal()"
+            >
+              <span class="sr-only">Fermer</span>
+              <svg
+                class="h-6 w-6"
+                xmlns="http://www.w3.org/2000/svg"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  stroke-width="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+          </div>
+
+          <!-- Modal body -->
+          <div class="mt-4">
+            <div class="mb-3">
+              <p class="text-sm text-text-light mb-2">
+                Commande
+                <span class="font-medium text-text-dark">{{
+                  selectedOrder.order_number
+                }}</span>
+                pour
+                <span class="font-medium text-text-dark">{{
+                  selectedOrder.user?.name || "Client inconnu"
+                }}</span>
+              </p>
+            </div>
+
+            <div class="form-group">
+              <label
+                for="tracking_number"
+                class="block text-sm font-medium text-text-dark mb-1"
+                >Numéro de suivi</label
+              >
+              <input
+                type="text"
+                id="tracking_number"
+                [(ngModel)]="trackingNumber"
+                class="w-full"
+                placeholder="Entrez le numéro de suivi (ex: TR123456789FR)"
+              />
+              <p class="text-xs text-text-light mt-1">
+                Ce numéro sera visible par le client pour suivre sa commande.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Modal footer -->
+        <div
+          class="bg-neutral/20 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse"
+        >
+          <button
+            type="button"
+            class="btn btn-primary ml-2"
+            (click)="saveTrackingNumber()"
+          >
+            Enregistrer
+          </button>
+          <button
+            type="button"
+            class="btn btn-outline"
+            (click)="closeTrackingModal()"
+          >
+            Annuler
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

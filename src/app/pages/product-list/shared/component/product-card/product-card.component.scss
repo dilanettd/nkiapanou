@@ -1,0 +1,23 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+/* Animation du coeur lors du clic */
+.lni-heart,
+.lni-heart-filled {
+  transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+button:active .lni-heart,
+button:active .lni-heart-filled {
+  transform: scale(1.5);
+}
+
+/* Style pour le hover sur l'image */
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}

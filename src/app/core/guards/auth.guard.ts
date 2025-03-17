@@ -10,7 +10,7 @@ export const authGuard: CanActivateFn = (route, state) => {
   const modalService = inject(NgbModal);
   const toastr = inject(ToastrService);
 
-  if (authService.isAuthenticated()) {
+  if (authService.isAuthenticatedValue()) {
     return true;
   } else {
     toastr.error('You must be logged in to access this section.');

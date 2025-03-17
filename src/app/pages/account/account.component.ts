@@ -7,10 +7,22 @@ import {
 } from '@angular/router';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { CommonModule } from '@angular/common';
-import { filter } from 'rxjs/operators';
-import { Subscription } from 'rxjs';
+import {
+  filter,
+  takeUntil,
+  finalize,
+  catchError,
+  distinctUntilChanged,
+} from 'rxjs/operators';
+import { Subject, of } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { IUser } from '../../core/models2/user.model';
+
+interface LoadingStates {
+  initial: boolean;
+  profile: boolean;
+  logout: boolean;
+}
 
 @Component({
   selector: 'nkiapanou-account',
@@ -22,10 +34,16 @@ import { IUser } from '../../core/models2/user.model';
 export class AccountComponent implements OnInit, OnDestroy {
   user: IUser | null = null;
   activeLink: string = 'profile';
-  loading: boolean = true;
 
-  private userSubscription: Subscription | null = null;
-  private routerSubscription: Subscription | null = null;
+  isLoading: LoadingStates = {
+    initial: true,
+    profile: false,
+    logout: false,
+  };
+
+  isAuthenticated: boolean = false;
+
+  private destroy$ = new Subject<void>();
 
   private authService = inject(AuthService);
   private router = inject(Router);
@@ -34,24 +52,57 @@ export class AccountComponent implements OnInit, OnDestroy {
   constructor() {}
 
   ngOnInit(): void {
+    this.authService
+      .isAuthenticated()
+      .pipe(takeUntil(this.destroy$))
+      .subscribe((isAuth) => {
+        this.isAuthenticated = isAuth;
+
+        if (!isAuth && this.user) {
+          this.toastr.error('Session expirée');
+          this.router.navigate(['/login']);
+        }
+      });
+
     this.getUserData();
+    this.subscribeToUserChanges();
     this.updateActiveLink();
 
-    this.routerSubscription = this.router.events
-      .pipe(filter((event) => event instanceof NavigationEnd))
+    this.router.events
+      .pipe(
+        filter((event) => event instanceof NavigationEnd),
+        takeUntil(this.destroy$)
+      )
       .subscribe(() => {
         this.updateActiveLink();
       });
   }
 
   ngOnDestroy(): void {
-    if (this.userSubscription) {
-      this.userSubscription.unsubscribe();
-    }
+    this.destroy$.next();
+    this.destroy$.complete();
+  }
 
-    if (this.routerSubscription) {
-      this.routerSubscription.unsubscribe();
-    }
+  subscribeToUserChanges(): void {
+    this.authService
+      .getUser()
+      .pipe(
+        takeUntil(this.destroy$),
+        distinctUntilChanged((prev, curr) => {
+          if (!prev && !curr) return true;
+          if (!prev || !curr) return false;
+
+          return JSON.stringify(prev) === JSON.stringify(curr);
+        })
+      )
+      .subscribe((user) => {
+        if (user) {
+          this.user = user;
+          console.log(
+            'AccountComponent: User data updated from external change'
+          );
+        }
+      });
   }
 
   updateActiveLink(): void {
@@ -65,33 +116,80 @@ export class AccountComponent implements OnInit, OnDestroy {
     }
   }
 
+  private resetAllLoadingStates(): void {
+    this.isLoading.initial = false;
+    this.isLoading.profile = false;
+    this.isLoading.logout = false;
+  }
+
   getUserData(): void {
-    this.loading = true;
+    this.isLoading.initial = true;
 
-    const currentUser = this.authService.getCurrentUser();
-
-    if (currentUser) {
-      this.user = currentUser;
-
-      if (!this.authService.isAuthenticated()) {
-        this.toastr.error('Session expirée');
-        this.router.navigate(['/login']);
-        return;
-      }
-
-      this.userSubscription = this.authService
-        .getUser()
-        .subscribe((userData) => {
-          if (userData) {
-            this.user = userData;
+    this.authService
+      .isAuthenticated()
+      .pipe(
+        takeUntil(this.destroy$),
+        finalize(() => {
+          if (!this.isAuthenticated) {
+            this.resetAllLoadingStates();
           }
-        });
+        })
+      )
+      .subscribe({
+        next: (isAuth) => {
+          if (!isAuth) {
+            this.toastr.error('Accès refusé - Veuillez vous connecter');
+            this.router.navigate(['/login']);
+            this.isLoading.initial = false;
+            return;
+          }
 
-      this.loading = false;
-    } else {
-      this.toastr.error('Accès refusé');
-      this.router.navigate(['/login']);
-    }
+          const currentUser = this.authService.getCurrentUser();
+          if (currentUser) {
+            this.user = currentUser;
+
+            this.isLoading.initial = false;
+
+            this.isLoading.profile = true;
+
+            this.authService
+              .getUser()
+              .pipe(
+                takeUntil(this.destroy$),
+                catchError((err) => {
+                  this.toastr.error(
+                    'Erreur lors de la récupération des données utilisateur'
+                  );
+                  console.error('Error fetching user data:', err);
+                  this.isLoading.profile = false;
+                  return of(null);
+                }),
+                finalize(() => {
+                  this.isLoading.profile = false;
+                })
+              )
+              .subscribe({
+                next: (userData) => {
+                  if (userData) {
+                    this.user = userData;
+                  }
+                },
+              });
+          } else {
+            this.toastr.error(
+              'Impossible de récupérer les données utilisateur'
+            );
+            this.router.navigate(['/login']);
+            this.resetAllLoadingStates();
+          }
+        },
+        error: (err) => {
+          console.error('Authentication check error:', err);
+          this.toastr.error("Erreur de vérification d'authentification");
+          this.router.navigate(['/login']);
+          this.resetAllLoadingStates();
+        },
+      });
   }
 
   navigateTo(page: string): void {
@@ -100,18 +198,35 @@ export class AccountComponent implements OnInit, OnDestroy {
   }
 
   logout(): void {
-    this.loading = true;
+    this.isLoading.logout = true;
 
-    this.authService.logout().subscribe({
-      next: () => {
-        this.toastr.success('Déconnexion réussie');
-        this.router.navigate(['/']);
-      },
-      error: (err) => {
-        this.toastr.error('Erreur de déconnexion');
-        this.loading = false;
-        console.error('Error during logout:', err);
-      },
-    });
+    this.authService
+      .logout()
+      .pipe(
+        takeUntil(this.destroy$),
+        catchError((err) => {
+          this.toastr.error('Erreur de déconnexion');
+          console.error('Error during logout:', err);
+          this.isLoading.logout = false;
+          return of(null);
+        }),
+        finalize(() => {
+          this.isLoading.logout = false;
+        })
+      )
+      .subscribe({
+        next: (result) => {
+          if (result !== null) {
+            this.toastr.success('Déconnexion réussie');
+            this.router.navigate(['/']);
+          }
+        },
+      });
+  }
+
+  get isAnyLoading(): boolean {
+    return (
+      this.isLoading.initial || this.isLoading.profile || this.isLoading.logout
+    );
   }
 }

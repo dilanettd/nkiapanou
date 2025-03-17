@@ -9,7 +9,7 @@ export interface AuthStateModel {
 }
 
 export interface IUser {
-  id: string;
+  id?: number;
   facebookId?: string;
   googleId?: string;
   name: string;

@@ -1,0 +1,120 @@
+:host {
+  display: block;
+  transition: width 0.3s ease;
+
+  &.collapsed {
+    width: 80px !important;
+
+    // Ajuster les styles en mode réduit
+    .sidebar-text,
+    .px-3,
+    input[type="text"],
+    .min-w-0 p:not(:first-child) {
+      display: none;
+    }
+
+    .nav-indicator {
+      opacity: 0;
+    }
+
+    .icon-container {
+      margin-right: 0;
+    }
+
+    // Centrer les icônes
+    .nav-link {
+      justify-content: center;
+
+      .icon-container {
+        margin-right: 0;
+      }
+    }
+
+    // Ajuster le profil résumé
+    .p-3.rounded-lg {
+      padding: 0.5rem;
+      justify-content: center;
+
+      .w-10.h-10 {
+        width: 2.5rem;
+        height: 2.5rem;
+        margin: 0 auto;
+      }
+    }
+  }
+}
+
+.nav-link {
+  @apply flex items-center px-3 py-3 rounded-lg text-text transition-all relative;
+
+  &:hover {
+    @apply bg-neutral;
+  }
+
+  // Indicateur latéral (barre verticale)
+  .nav-indicator {
+    @apply absolute left-0 top-1/2 h-6 w-0.5 -translate-y-1/2 rounded-r-full bg-primary opacity-0 transition-opacity;
+  }
+
+  // Style pour l'icône
+  .icon-container {
+    @apply mr-3 flex items-center justify-center;
+  }
+
+  // Effet de survol
+  &:hover .nav-indicator {
+    @apply opacity-50;
+  }
+
+  // Lien actif
+  &.active-link {
+    @apply bg-primary/10 text-primary;
+
+    .nav-indicator {
+      @apply opacity-100;
+    }
+  }
+}
+
+// Effet de transition pour les éléments
+.sidebar-text,
+.icon-container,
+.nav-indicator,
+.nav-link {
+  transition: all 0.2s ease;
+}
+
+// Animation pour le bouton de recherche
+input[type="text"]:focus + svg {
+  @apply text-primary;
+}
+
+// Style pour les en-têtes de section
+.text-xs.font-semibold.uppercase {
+  transition: opacity 0.3s ease;
+  letter-spacing: 0.05em;
+}
+
+// Amélioration du scroll de la navigation
+nav.overflow-y-auto {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(0, 0, 0, 0.2) transparent;
+
+  &::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  &::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  &::-webkit-scrollbar-thumb {
+    background-color: rgba(0, 0, 0, 0.2);
+    border-radius: 20px;
+  }
+}
+
+// Animation pour le bouton de réduction
+button[title="Réduire le menu"] svg {
+  transition: transform 0.3s ease;
+}

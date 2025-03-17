@@ -4,10 +4,22 @@
       Mon Compte
     </h1>
 
-    <div class="flex flex-col md:flex-row gap-8">
+    <!-- Chargement initial (plein écran) -->
+    <div
+      *ngIf="isLoading.initial"
+      class="flex justify-center items-center h-96"
+    >
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-2 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- Contenu principal (affiché uniquement quand le chargement initial est terminé) -->
+    <div *ngIf="!isLoading.initial" class="flex flex-col md:flex-row gap-8">
       <!-- Sidebar Navigation -->
       <div class="w-full md:w-1/4">
         <div class="bg-background-light rounded-lg shadow p-6">
+          <!-- Information utilisateur -->
           <div class="flex items-center mb-6">
             <div
               class="w-16 h-16 rounded-full bg-primary/20 flex items-center justify-center overflow-hidden"
@@ -18,14 +30,15 @@
             </div>
             <div class="ml-4">
               <h2 class="font-heading font-semibold text-lg">
-                {{ user?.name || "Chargement..." }}
+                {{ user?.name || "Utilisateur" }}
               </h2>
               <p class="text-text-light text-sm">
-                {{ user?.email || "Chargement..." }}
+                {{ user?.email || "email@exemple.com" }}
               </p>
             </div>
           </div>
 
+          <!-- Navigation -->
           <nav class="space-y-2">
             <a
               [routerLink]="['/account/profile']"
@@ -67,24 +80,37 @@
           </nav>
 
           <div class="mt-8 pt-6 border-t border-neutral">
-            <button (click)="logout()" class="w-full btn btn-outline font-body">
-              Déconnexion
+            <button
+              (click)="logout()"
+              class="w-full btn btn-outline font-body"
+              [disabled]="isLoading.logout"
+            >
+              <span *ngIf="!isLoading.logout">Déconnexion</span>
+              <span
+                *ngIf="isLoading.logout"
+                class="inline-block w-5 h-5 border-t-2 border-b-2 border-current rounded-full animate-spin"
+              ></span>
             </button>
           </div>
         </div>
       </div>
 
       <!-- Main Content Area -->
-      <div class="w-full md:w-3/4 bg-background-light rounded-lg shadow p-6">
-        <div *ngIf="loading" class="flex justify-center items-center h-64">
+      <div
+        class="w-full md:w-3/4 bg-background-light rounded-lg shadow p-6 relative"
+      >
+        <!-- Indicateur de chargement pour les mises à jour de profil -->
+        <div
+          *ngIf="!isLoading.profile"
+          class="absolute inset-0 bg-white/70 flex items-center justify-center z-10"
+        >
           <div
             class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
           ></div>
         </div>
 
-        <div *ngIf="!loading">
-          <router-outlet></router-outlet>
-        </div>
+        <!-- Contenu du routeur -->
+        <router-outlet></router-outlet>
       </div>
     </div>
   </div>

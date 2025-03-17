@@ -1,0 +1,664 @@
+<section class="bg-neutral py-6">
+  <div class="container mx-auto px-4">
+    <!-- Loading spinner -->
+    <div *ngIf="isLoading" class="flex justify-center my-12">
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- Message d'erreur -->
+    <div
+      *ngIf="!isLoading && errorMessage"
+      class="bg-red-100 border border-red-200 text-red-700 px-4 py-3 rounded mb-4"
+    >
+      {{ errorMessage }}
+    </div>
+
+    <!-- Contenu principal -->
+    <div *ngIf="!isLoading && product" class="mb-12">
+      <!-- Breadcrumb -->
+      <div class="mb-6">
+        <nav class="text-sm">
+          <ol class="list-none p-0 inline-flex">
+            <li class="flex items-center">
+              <a routerLink="/" class="text-primary hover:text-primary-hover"
+                >Accueil</a
+              >
+              <i class="lni lni-chevron-right mx-2 text-gray-400 text-xs"></i>
+            </li>
+            <li class="flex items-center">
+              <a
+                [routerLink]="['/products']"
+                [queryParams]="{ category: product.category_id }"
+                class="text-primary hover:text-primary-hover"
+              >
+                {{ product.category?.name || "Catégorie" }}
+              </a>
+              <i class="lni lni-chevron-right mx-2 text-gray-400 text-xs"></i>
+            </li>
+            <li class="flex items-center text-text-light truncate max-w-xs">
+              {{ product.name }}
+            </li>
+          </ol>
+        </nav>
+      </div>
+
+      <!-- Product details top section -->
+      <div
+        class="flex flex-col lg:flex-row bg-white rounded-lg shadow-sm overflow-hidden mb-8"
+      >
+        <!-- Gauche - Galerie d'images améliorée -->
+        <div class="w-full lg:w-2/5 p-4">
+          <!-- Image principale -->
+          <div
+            class="relative pb-[100%] mb-4 rounded-lg overflow-hidden bg-gray-100"
+          >
+            <img
+              [src]="
+                product.images && product.images.length > 0
+                  ? product.images[activeImageIndex].image_path
+                  : getPlaceholderImage(product.name)
+              "
+              [alt]="product.name"
+              class="absolute inset-0 w-full h-full object-contain"
+            />
+            <!-- Badge de réduction -->
+            <div
+              *ngIf="product.discount_price"
+              class="absolute top-2 left-2 bg-primary text-white text-sm font-bold px-3 py-1 rounded-md shadow-md"
+            >
+              -{{
+                (
+                  ((product.price - product.discount_price) / product.price) *
+                  100
+                ).toFixed(0)
+              }}%
+            </div>
+          </div>
+
+          <!-- Galerie d'images avec scroll horizontal -->
+          <div
+            *ngIf="product.images && product.images.length > 0"
+            class="relative"
+          >
+            <!-- Boutons de navigation -->
+            <button
+              *ngIf="product.images.length > 4"
+              class="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full shadow-md w-8 h-8 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              (click)="scrollGalleryLeft()"
+              [disabled]="galleryScrollPosition <= 0"
+            >
+              <i class="lni lni-chevron-left"></i>
+            </button>
+
+            <div
+              class="flex overflow-x-auto hide-scrollbar space-x-2 pb-2 relative"
+              #galleryScroll
+            >
+              <button
+                *ngFor="let image of product.images; let i = index"
+                class="relative flex-shrink-0 w-20 h-20 rounded-md overflow-hidden transition-all duration-200 transform hover:scale-105"
+                [ngClass]="{
+                  'ring-2 ring-primary': activeImageIndex === i,
+                  'hover:ring-1 hover:ring-gray-300': activeImageIndex !== i
+                }"
+                (click)="setActiveImage(i)"
+              >
+                <img
+                  [src]="image.image_path"
+                  [alt]="product.name + ' ' + (i + 1)"
+                  class="w-full h-full object-cover"
+                />
+                <div
+                  *ngIf="activeImageIndex === i"
+                  class="absolute inset-0 bg-primary bg-opacity-20"
+                ></div>
+              </button>
+            </div>
+
+            <button
+              *ngIf="product.images.length > 4"
+              class="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-white rounded-full shadow-md w-8 h-8 flex items-center justify-center hover:bg-gray-100 disabled:opacity-30 disabled:cursor-not-allowed"
+              (click)="scrollGalleryRight()"
+              [disabled]="galleryScrollPosition >= galleryMaxScroll"
+            >
+              <i class="lni lni-chevron-right"></i>
+            </button>
+          </div>
+
+          <!-- Message quand aucune image n'est disponible -->
+          <div
+            *ngIf="!product.images || product.images.length === 0"
+            class="text-center text-gray-500 text-sm mt-2"
+          >
+            Aucune image supplémentaire disponible
+          </div>
+        </div>
+
+        <!-- Droite - Informations produit -->
+        <div class="w-full lg:w-3/5 p-4 lg:border-l border-gray-200">
+          <h1 class="text-2xl lg:text-3xl font-bold text-text-dark mb-2">
+            {{ product.name }}
+          </h1>
+
+          <!-- Rating -->
+          <div class="flex items-center mb-3">
+            <div class="flex">
+              <i
+                *ngFor="let star of [1, 2, 3, 4, 5]"
+                class="lni"
+                [ngClass]="{
+                  'lni-star-filled text-yellow-400': star <= getAverageRating(),
+                  'lni-star text-gray-300': star > getAverageRating()
+                }"
+              ></i>
+            </div>
+            <span class="ml-2 text-text-light">
+              {{ product.reviews?.length || 0 }} avis
+            </span>
+          </div>
+
+          <!-- Prix -->
+          <div class="flex items-baseline mb-4">
+            <span class="text-2xl font-bold text-primary mr-3">
+              {{ product.discount_price || product.price }} €
+            </span>
+            <span
+              *ngIf="product.discount_price"
+              class="text-lg text-gray-400 line-through"
+            >
+              {{ product.price }} €
+            </span>
+          </div>
+
+          <!-- Disponibilité -->
+          <div class="mb-4 flex items-center">
+            <span class="font-medium mr-2">Disponibilité :</span>
+            <span
+              class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium"
+              [ngClass]="{
+                'bg-green-100 text-green-800':
+                  product.status === 'active' && product.quantity > 0,
+                'bg-red-100 text-red-800':
+                  product.status !== 'active' || product.quantity <= 0
+              }"
+            >
+              <span
+                class="w-2 h-2 mr-1 rounded-full"
+                [ngClass]="{
+                  'bg-green-500':
+                    product.status === 'active' && product.quantity > 0,
+                  'bg-red-500':
+                    product.status !== 'active' || product.quantity <= 0
+                }"
+              ></span>
+              {{
+                product.status === "active" && product.quantity > 0
+                  ? "En stock"
+                  : product.status === "out_of_stock" || product.quantity <= 0
+                  ? "Rupture de stock"
+                  : "Indisponible"
+              }}
+              <span
+                *ngIf="product.status === 'active' && product.quantity > 0"
+                class="ml-1"
+                >({{ product.quantity }} disponibles)</span
+              >
+            </span>
+          </div>
+
+          <!-- Description courte -->
+          <div *ngIf="product.description" class="mb-6">
+            <div class="text-text-light line-clamp-3">
+              {{ product.description }}
+            </div>
+          </div>
+
+          <!-- Sélecteur de quantité -->
+          <div class="mb-6">
+            <label class="block text-text-dark font-medium mb-2"
+              >Quantité</label
+            >
+            <div class="flex items-center">
+              <button
+                class="w-10 h-10 bg-gray-100 rounded-l-md flex items-center justify-center border border-gray-300 hover:bg-gray-200 transition-colors"
+                (click)="decrementQuantity()"
+                [disabled]="quantity <= 1"
+                [ngClass]="{ 'opacity-50 cursor-not-allowed': quantity <= 1 }"
+              >
+                <i class="lni lni-minus"></i>
+              </button>
+              <input
+                type="number"
+                [(ngModel)]="quantity"
+                min="1"
+                [max]="product.quantity"
+                class="h-10 w-16 text-center border-t border-b border-gray-300"
+              />
+              <button
+                class="w-10 h-10 bg-gray-100 rounded-r-md flex items-center justify-center border border-gray-300 hover:bg-gray-200 transition-colors"
+                (click)="incrementQuantity()"
+                [disabled]="quantity >= product.quantity"
+                [ngClass]="{
+                  'opacity-50 cursor-not-allowed': quantity >= product.quantity
+                }"
+              >
+                <i class="lni lni-plus"></i>
+              </button>
+            </div>
+          </div>
+
+          <!-- Boutons d'action -->
+          <div
+            class="flex flex-col sm:flex-row space-y-3 sm:space-y-0 sm:space-x-3 mb-6"
+          >
+            <button
+              class="w-full sm:w-1/2 py-3 bg-primary text-white font-medium rounded-md hover:bg-primary-hover transition-colors flex items-center justify-center"
+              (click)="addToCart()"
+              [disabled]="product.status !== 'active' || product.quantity <= 0"
+              [ngClass]="{
+                'opacity-50 cursor-not-allowed':
+                  product.status !== 'active' || product.quantity <= 0
+              }"
+            >
+              <i class="lni lni-cart mr-2"></i>
+              Ajouter au panier
+            </button>
+            <button
+              class="w-full sm:w-1/2 py-3 bg-secondary text-white font-medium rounded-md hover:bg-secondary-hover transition-colors flex items-center justify-center"
+              (click)="proceedToCheckout()"
+              [disabled]="product.status !== 'active' || product.quantity <= 0"
+              [ngClass]="{
+                'opacity-50 cursor-not-allowed':
+                  product.status !== 'active' || product.quantity <= 0
+              }"
+            >
+              <i class="lni lni-credit-cards mr-2"></i>
+              Acheter maintenant
+            </button>
+          </div>
+
+          <!-- Favoris et partage -->
+          <div class="flex flex-wrap items-center space-x-4">
+            <button
+              class="flex items-center text-text-light hover:text-primary transition-colors mb-2"
+              (click)="toggleWishlist()"
+            >
+              <i
+                class="lni mr-1 text-xl"
+                [ngClass]="{
+                  'lni-heart-filled text-primary': isInWishlist,
+                  'lni-heart': !isInWishlist
+                }"
+              ></i>
+              <span>{{
+                isInWishlist ? "Retirer des favoris" : "Ajouter aux favoris"
+              }}</span>
+            </button>
+
+            <!-- Partage social -->
+            <div class="relative group mb-2">
+              <button
+                class="flex items-center text-text-light hover:text-primary transition-colors"
+              >
+                <i class="lni lni-share mr-1 text-xl"></i>
+                <span>Partager</span>
+              </button>
+              <div
+                class="absolute z-10 left-0 mt-2 w-auto invisible group-hover:visible opacity-0 group-hover:opacity-100 transition-all duration-300"
+              >
+                <div
+                  class="bg-white shadow-lg rounded-md p-2 flex space-x-2 border border-gray-200"
+                >
+                  <button
+                    *ngFor="let option of shareOptions"
+                    class="w-8 h-8 rounded-full text-white flex items-center justify-center shadow-sm hover:shadow-md transition-all"
+                    [ngClass]="option.color"
+                    [title]="'Partager sur ' + option.name"
+                    (click)="shareProduct(option)"
+                  >
+                    <i [class]="option.icon"></i>
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Détails produit -->
+          <div class="mt-6 border-t border-gray-200 pt-4">
+            <div *ngIf="product.sku" class="flex items-center text-sm mb-2">
+              <span class="text-text-light mr-2">Référence:</span>
+              <span class="text-text-dark">{{ product.sku }}</span>
+            </div>
+            <div
+              *ngIf="product.origin_country"
+              class="flex items-center text-sm mb-2"
+            >
+              <span class="text-text-light mr-2">Origine:</span>
+              <span class="text-text-dark">{{ product.origin_country }}</span>
+            </div>
+            <div *ngIf="product.weight" class="flex items-center text-sm mb-2">
+              <span class="text-text-light mr-2">Poids:</span>
+              <span class="text-text-dark">{{ product.weight }} g</span>
+            </div>
+            <div
+              *ngIf="product.dimensions"
+              class="flex items-center text-sm mb-2"
+            >
+              <span class="text-text-light mr-2">Dimensions:</span>
+              <span class="text-text-dark">{{ product.dimensions }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Onglets -->
+      <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-8">
+        <!-- En-têtes d'onglets -->
+        <div class="flex border-b border-gray-200">
+          <button
+            class="px-6 py-4 text-text-dark font-medium focus:outline-none transition-colors"
+            [ngClass]="{
+              'border-b-2 border-primary text-primary':
+                activeTab === 'description',
+              'hover:text-primary': activeTab !== 'description'
+            }"
+            (click)="setActiveTab('description')"
+          >
+            Description
+          </button>
+          <button
+            class="px-6 py-4 text-text-dark font-medium focus:outline-none transition-colors"
+            [ngClass]="{
+              'border-b-2 border-primary text-primary': activeTab === 'reviews',
+              'hover:text-primary': activeTab !== 'reviews'
+            }"
+            (click)="setActiveTab('reviews')"
+          >
+            Avis ({{ product.reviews?.length || 0 }})
+          </button>
+        </div>
+
+        <!-- Contenu des onglets -->
+        <div class="p-6">
+          <!-- Onglet Description -->
+          <div *ngIf="activeTab === 'description'">
+            <div *ngIf="product.description" class="prose max-w-none">
+              <p>{{ product.description }}</p>
+            </div>
+            <div *ngIf="!product.description" class="text-gray-500 italic">
+              Aucune description disponible pour ce produit.
+            </div>
+          </div>
+
+          <!-- Onglet Avis -->
+          <div *ngIf="activeTab === 'reviews'">
+            <!-- En-tête avec résumé des avis -->
+            <div class="mb-8">
+              <div
+                class="flex flex-col md:flex-row items-start md:items-center justify-between"
+              >
+                <div>
+                  <h3 class="text-xl font-semibold text-gray-900">
+                    Avis des clients
+                  </h3>
+                  <div class="flex items-center mt-2">
+                    <div class="flex">
+                      <i
+                        *ngFor="let star of [1, 2, 3, 4, 5]"
+                        class="lni text-lg"
+                        [ngClass]="{
+                          'lni-star-filled text-yellow-400':
+                            star <= getAverageRating(),
+                          'lni-star text-gray-300': star > getAverageRating()
+                        }"
+                      ></i>
+                    </div>
+                    <span class="ml-2 text-sm font-medium text-gray-700">
+                      {{ getAverageRating().toFixed(1) }} sur 5 ({{
+                        product.reviews?.length || 0
+                      }}
+                      avis)
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  *ngIf="!isReviewFormVisible"
+                  class="mt-4 md:mt-0 px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors shadow-sm flex items-center"
+                  (click)="showReviewForm()"
+                >
+                  <i class="lni lni-pencil-alt mr-2"></i>
+                  Rédiger un avis
+                </button>
+              </div>
+            </div>
+
+            <!-- Formulaire d'avis -->
+            <div
+              *ngIf="isReviewFormVisible"
+              class="bg-white border border-gray-200 p-6 rounded-lg shadow-sm mb-8 transition-all duration-300 ease-in-out"
+            >
+              <div class="flex items-center justify-between mb-5">
+                <h4 class="text-lg font-semibold text-gray-900">Votre avis</h4>
+                <button
+                  (click)="isReviewFormVisible = false"
+                  class="text-gray-400 hover:text-gray-600"
+                >
+                  <i class="lni lni-close text-lg"></i>
+                </button>
+              </div>
+
+              <form (submit)="submitReview()">
+                <!-- Note -->
+                <div class="mb-6">
+                  <label class="block text-gray-700 font-medium mb-2"
+                    >Votre note</label
+                  >
+                  <div class="flex space-x-3">
+                    <button
+                      type="button"
+                      *ngFor="let star of [1, 2, 3, 4, 5]"
+                      class="text-3xl focus:outline-none transition-colors duration-200"
+                      [ngClass]="{
+                        'text-yellow-400 transform scale-110':
+                          star <= newReview.rating,
+                        'text-gray-300 hover:text-yellow-300':
+                          star > newReview.rating
+                      }"
+                      (click)="newReview.rating = star"
+                    >
+                      <i class="lni lni-star-filled"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Commentaire -->
+                <div class="mb-6">
+                  <label
+                    for="comment"
+                    class="block text-gray-700 font-medium mb-2"
+                    >Votre commentaire</label
+                  >
+                  <textarea
+                    id="comment"
+                    [(ngModel)]="newReview.comment"
+                    name="comment"
+                    rows="4"
+                    class="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-primary focus:border-primary transition-colors"
+                    placeholder="Partagez votre expérience avec ce produit. Qu'avez-vous apprécié ? Que pourrait-on améliorer ?"
+                    required
+                  ></textarea>
+                  <p class="mt-1 text-sm text-gray-500">
+                    Minimum 10 caractères requis
+                  </p>
+                </div>
+
+                <!-- Actions du formulaire -->
+                <div class="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    class="px-5 py-2.5 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+                    (click)="isReviewFormVisible = false"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="submit"
+                    class="px-5 py-2.5 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
+                  >
+                    Publier
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- Liste des avis -->
+            <div
+              *ngIf="product.reviews && product.reviews.length > 0"
+              class="space-y-6"
+            >
+              <div
+                *ngFor="let review of product.reviews"
+                class="bg-white border border-gray-200 rounded-lg p-5 transition-shadow duration-300 hover:shadow-md"
+              >
+                <div class="flex items-start mb-4">
+                  <!-- Avatar de l'utilisateur -->
+                  <div class="mr-4 flex-shrink-0">
+                    <!-- Si l'utilisateur a une photo de profil -->
+                    <img
+                      *ngIf="review.user?.profile_image"
+                      [src]="review.user!.profile_image"
+                      [alt]="review.user?.name || 'Utilisateur'"
+                      class="w-12 h-12 rounded-full object-cover border-2 border-white shadow"
+                    />
+                    <!-- Sinon, utiliser le composant RoundedAvatar -->
+                    <rounded-avatar
+                      *ngIf="!review.user?.profile_image"
+                      [fullName]="review.user?.name || 'Utilisateur anonyme'"
+                      size="3"
+                    ></rounded-avatar>
+                  </div>
+
+                  <div class="flex-1">
+                    <div
+                      class="flex flex-col sm:flex-row sm:justify-between sm:items-start"
+                    >
+                      <div>
+                        <h5 class="font-bold text-gray-900">
+                          {{ review.user?.name || "Utilisateur anonyme" }}
+                        </h5>
+                        <div class="text-gray-500 text-sm">
+                          {{ formatDate(review.created_at) }}
+                        </div>
+                      </div>
+
+                      <div class="flex mt-2 sm:mt-0">
+                        <i
+                          *ngFor="let star of [1, 2, 3, 4, 5]"
+                          class="lni text-lg"
+                          [ngClass]="{
+                            'lni-star-filled text-yellow-400':
+                              star <= review.rating,
+                            'lni-star text-gray-300': star > review.rating
+                          }"
+                        ></i>
+                      </div>
+                    </div>
+
+                    <!-- Badge de statut (si applicable) -->
+                    <div
+                      *ngIf="review.status === 'pending'"
+                      class="mt-2 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800"
+                    >
+                      En attente d'approbation
+                    </div>
+
+                    <!-- Commentaire -->
+                    <div class="mt-3 text-gray-700 whitespace-pre-line">
+                      {{ review.comment }}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Pagination (optionnelle) -->
+            <div
+              *ngIf="product.reviews && product.reviews.length > 5"
+              class="flex justify-center mt-8"
+            >
+              <nav class="inline-flex">
+                <button
+                  class="px-3 py-1 rounded-l-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                >
+                  <i class="lni lni-chevron-left"></i>
+                </button>
+                <button
+                  class="px-3 py-1 border-t border-b border-gray-300 bg-primary text-white"
+                >
+                  1
+                </button>
+                <button
+                  class="px-3 py-1 border-t border-b border-gray-300 bg-white text-gray-700 hover:bg-gray-50"
+                >
+                  2
+                </button>
+                <button
+                  class="px-3 py-1 rounded-r-md border border-gray-300 bg-white text-gray-500 hover:bg-gray-50"
+                >
+                  <i class="lni lni-chevron-right"></i>
+                </button>
+              </nav>
+            </div>
+
+            <!-- Message si aucun avis -->
+            <div
+              *ngIf="!product.reviews || product.reviews.length === 0"
+              class="bg-white border border-gray-200 rounded-lg p-10 text-center"
+            >
+              <div class="text-gray-400 mb-4">
+                <i class="lni lni-comments-alt text-5xl"></i>
+              </div>
+              <h4 class="text-xl font-semibold text-gray-900 mb-2">
+                Aucun avis pour le moment
+              </h4>
+              <p class="text-gray-600 mb-6 max-w-md mx-auto">
+                Ce produit n'a pas encore reçu d'avis. Partagez votre expérience
+                et aidez d'autres acheteurs à faire leur choix !
+              </p>
+              <button
+                class="px-6 py-3 bg-primary text-white rounded-lg hover:bg-primary-hover transition-colors shadow-sm"
+                (click)="showReviewForm()"
+              >
+                <i class="lni lni-pencil-alt mr-2"></i>
+                Soyez le premier à donner votre avis
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Produits similaires -->
+      <div *ngIf="relatedProducts && relatedProducts.length > 0" class="mb-12">
+        <h2 class="text-2xl font-bold text-text-dark mb-6">
+          Produits similaires
+        </h2>
+
+        <div
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+        >
+          <nkiapanou-product-card
+            *ngFor="let relatedProduct of relatedProducts"
+            [product]="relatedProduct"
+            [isInWishlist]="isProductInWishlist(relatedProduct.id)"
+            (addToWishlistEvent)="addToWishlist(relatedProduct)"
+            (removeFromWishlistEvent)="removeFromWishlist($event)"
+            (addToCartEvent)="addToCart()"
+          ></nkiapanou-product-card>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

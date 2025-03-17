@@ -1,0 +1,711 @@
+<div class="container mx-auto px-4 py-6">
+  <div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-heading font-bold text-primary">Transactions</h1>
+  </div>
+
+  <!-- Statistiques -->
+  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+    <div class="bg-white p-4 rounded-lg shadow-md">
+      <h3 class="text-sm text-text-light uppercase tracking-wider mb-2">
+        Transactions réussies
+      </h3>
+      <div class="flex items-end justify-between">
+        <p class="text-2xl font-semibold">
+          <span *ngIf="loadingStats">-</span>
+          <span *ngIf="!loadingStats">{{
+            statistics?.successful_transactions || 0
+          }}</span>
+        </p>
+        <div class="text-green-500">
+          <svg
+            class="h-8 w-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow-md">
+      <h3 class="text-sm text-text-light uppercase tracking-wider mb-2">
+        Paiements reçus
+      </h3>
+      <div class="flex items-end justify-between">
+        <p class="text-2xl font-semibold">
+          <span *ngIf="loadingStats">-</span>
+          <span *ngIf="!loadingStats">{{
+            formatAmount(statistics?.total_payments || 0)
+          }}</span>
+        </p>
+        <div class="text-primary">
+          <svg
+            class="h-8 w-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow-md">
+      <h3 class="text-sm text-text-light uppercase tracking-wider mb-2">
+        Remboursements
+      </h3>
+      <div class="flex items-end justify-between">
+        <p class="text-2xl font-semibold">
+          <span *ngIf="loadingStats">-</span>
+          <span *ngIf="!loadingStats">{{
+            formatAmount(statistics?.total_refunds || 0)
+          }}</span>
+        </p>
+        <div class="text-blue-500">
+          <svg
+            class="h-8 w-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+
+    <div class="bg-white p-4 rounded-lg shadow-md">
+      <h3 class="text-sm text-text-light uppercase tracking-wider mb-2">
+        Revenu net
+      </h3>
+      <div class="flex items-end justify-between">
+        <p class="text-2xl font-semibold">
+          <span *ngIf="loadingStats">-</span>
+          <span *ngIf="!loadingStats">{{
+            formatAmount(statistics?.net_revenue || 0)
+          }}</span>
+        </p>
+        <div class="text-secondary">
+          <svg
+            class="h-8 w-8"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              stroke-width="2"
+              d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
+            ></path>
+          </svg>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Filtres -->
+  <div class="bg-white p-4 rounded-lg shadow-md mb-6">
+    <h3 class="text-lg font-semibold mb-3">Filtres</h3>
+
+    <form
+      [formGroup]="filterForm"
+      class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4"
+    >
+      <!-- ID Commande -->
+      <div class="form-group">
+        <label
+          for="order_id"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >ID Commande</label
+        >
+        <input
+          type="number"
+          id="order_id"
+          formControlName="order_id"
+          class="w-full"
+          placeholder="Ex: 1234"
+        />
+      </div>
+
+      <!-- Statut -->
+      <div class="form-group">
+        <label
+          for="status"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Statut</label
+        >
+        <select id="status" formControlName="status" class="w-full">
+          <option value="">Tous les statuts</option>
+          <option *ngFor="let status of statuses" [value]="status.value">
+            {{ status.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Méthode de paiement -->
+      <div class="form-group">
+        <label
+          for="payment_method"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Méthode</label
+        >
+        <select
+          id="payment_method"
+          formControlName="payment_method"
+          class="w-full"
+        >
+          <option value="">Toutes les méthodes</option>
+          <option *ngFor="let method of paymentMethods" [value]="method.value">
+            {{ method.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Type de transaction -->
+      <div class="form-group">
+        <label
+          for="transaction_type"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Type</label
+        >
+        <select
+          id="transaction_type"
+          formControlName="transaction_type"
+          class="w-full"
+        >
+          <option value="">Tous les types</option>
+          <option *ngFor="let type of transactionTypes" [value]="type.value">
+            {{ type.label }}
+          </option>
+        </select>
+      </div>
+
+      <!-- Date de début -->
+      <div class="form-group">
+        <label
+          for="date_from"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Date de début</label
+        >
+        <input
+          type="date"
+          id="date_from"
+          formControlName="date_from"
+          class="w-full"
+        />
+      </div>
+
+      <!-- Date de fin -->
+      <div class="form-group">
+        <label
+          for="date_to"
+          class="block text-sm font-medium text-text-dark mb-1"
+          >Date de fin</label
+        >
+        <input
+          type="date"
+          id="date_to"
+          formControlName="date_to"
+          class="w-full"
+        />
+      </div>
+    </form>
+
+    <div class="flex justify-end mt-4 space-x-2">
+      <button (click)="resetFilters()" class="btn btn-outline">
+        Réinitialiser
+      </button>
+      <button (click)="applyFilters()" class="btn btn-primary">
+        Appliquer
+      </button>
+    </div>
+  </div>
+
+  <!-- Liste des transactions -->
+  <div class="bg-white rounded-lg shadow-md">
+    <div *ngIf="loading" class="p-6 text-center">
+      <svg
+        class="animate-spin h-8 w-8 mx-auto mb-2 text-primary"
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+      >
+        <circle
+          class="opacity-25"
+          cx="12"
+          cy="12"
+          r="10"
+          stroke="currentColor"
+          stroke-width="4"
+        ></circle>
+        <path
+          class="opacity-75"
+          fill="currentColor"
+          d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+        ></path>
+      </svg>
+      <p class="text-text-light">Chargement des transactions...</p>
+    </div>
+
+    <div *ngIf="!loading && transactions.length === 0" class="p-8 text-center">
+      <svg
+        class="h-16 w-16 mx-auto mb-4 text-neutral"
+        fill="none"
+        stroke="currentColor"
+        viewBox="0 0 24 24"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          stroke-width="2"
+          d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+        ></path>
+      </svg>
+      <h3 class="text-lg font-semibold mb-1">Aucune transaction trouvée</h3>
+      <p class="text-text-light mb-4">Essayez d'ajuster vos filtres</p>
+    </div>
+
+    <div *ngIf="!loading && transactions.length > 0" class="overflow-x-auto">
+      <table class="min-w-full divide-y divide-neutral">
+        <thead class="bg-neutral/30">
+          <tr>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              ID
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Date
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Commande
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Méthode
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Montant
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Type
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Statut
+            </th>
+            <th
+              class="px-6 py-3 text-left text-xs font-medium text-text-dark uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="bg-white divide-y divide-neutral">
+          <tr *ngFor="let transaction of transactions">
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+              {{ transaction.id }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+              {{ formatDate(transaction.created_at) }}
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+              <a href="#" class="text-primary hover:text-primary-hover">
+                {{ transaction.order?.order_number || transaction.order_id }}
+              </a>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm text-text">
+              {{ transaction.payment_method }}
+              <div
+                *ngIf="transaction.payment_method_details"
+                class="text-xs text-text-light mt-1"
+              >
+                {{ transaction.payment_method_details }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap text-sm">
+              <span
+                [class]="
+                  transaction.transaction_type === TRANSACTION_TYPES.PAYMENT
+                    ? 'text-green-600'
+                    : 'text-red-600'
+                "
+              >
+                {{
+                  transaction.transaction_type === TRANSACTION_TYPES.PAYMENT
+                    ? ""
+                    : "-"
+                }}{{ formatAmount(transaction.amount, transaction.currency) }}
+              </span>
+              <div
+                *ngIf="transaction.fee_amount"
+                class="text-xs text-text-light mt-1"
+              >
+                Frais:
+                {{ formatAmount(transaction.fee_amount, transaction.currency) }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                [class]="
+                  'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ' +
+                  getTypeClass(transaction.transaction_type)
+                "
+              >
+                {{
+                  transaction.transaction_type === TRANSACTION_TYPES.PAYMENT
+                    ? "Paiement"
+                    : transaction.transaction_type === TRANSACTION_TYPES.REFUND
+                    ? "Remboursement"
+                    : transaction.transaction_type ===
+                      TRANSACTION_TYPES.PARTIAL_REFUND
+                    ? "Remb. partiel"
+                    : transaction.transaction_type
+                }}
+              </span>
+              <div
+                *ngIf="transaction.parent_transaction_id"
+                class="text-xs text-text-light mt-1"
+              >
+                Ref: #{{ transaction.parent_transaction_id }}
+              </div>
+            </td>
+            <td class="px-6 py-4 whitespace-nowrap">
+              <span
+                [class]="
+                  'px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ' +
+                  getStatusClass(transaction.status)
+                "
+              >
+                {{
+                  transaction.status === TRANSACTION_STATUS.COMPLETED
+                    ? "Complété"
+                    : transaction.status === TRANSACTION_STATUS.PENDING
+                    ? "En attente"
+                    : transaction.status === TRANSACTION_STATUS.FAILED
+                    ? "Échoué"
+                    : transaction.status === TRANSACTION_STATUS.REFUNDED
+                    ? "Remboursé"
+                    : transaction.status ===
+                      TRANSACTION_STATUS.PARTIALLY_REFUNDED
+                    ? "Remb. partiel"
+                    : transaction.status
+                }}
+              </span>
+            </td>
+            <td
+              class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 flex"
+            >
+              <button
+                *ngIf="
+                  transaction.transaction_type === TRANSACTION_TYPES.PAYMENT &&
+                  transaction.status === TRANSACTION_STATUS.COMPLETED
+                "
+                (click)="openRefundModal(transaction)"
+                class="text-blue-600 hover:text-blue-800"
+              >
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M3 10h10a8 8 0 018 8v2M3 10l6 6m-6-6l6-6"
+                  ></path>
+                </svg>
+              </button>
+              <button class="text-secondary hover:text-secondary-hover">
+                <svg
+                  class="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                  ></path>
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    stroke-width="2"
+                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                  ></path>
+                </svg>
+              </button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+
+      <!-- Pagination -->
+      <div
+        *ngIf="totalPages > 1"
+        class="px-6 py-4 flex items-center justify-between border-t border-neutral"
+      >
+        <div class="text-sm text-text-light">
+          Affichage de {{ transactions.length }} sur
+          {{ totalTransactions }} transactions
+        </div>
+        <div class="flex space-x-2">
+          <button
+            (click)="changePage(currentPage - 1)"
+            [disabled]="currentPage === 1"
+            [class]="
+              currentPage === 1
+                ? 'btn btn-sm btn-outline opacity-50 cursor-not-allowed'
+                : 'btn btn-sm btn-outline'
+            "
+          >
+            Précédent
+          </button>
+
+          <div class="flex space-x-1">
+            <button
+              *ngFor="
+                let page of [].constructor(totalPages < 8 ? totalPages : 0);
+                let i = index
+              "
+              (click)="changePage(i + 1)"
+              [class]="
+                currentPage === i + 1
+                  ? 'btn btn-sm btn-primary'
+                  : 'btn btn-sm btn-outline'
+              "
+            >
+              {{ i + 1 }}
+            </button>
+
+            <!-- Version simplifiée si trop de pages -->
+            <ng-container *ngIf="totalPages >= 8">
+              <button
+                *ngIf="currentPage > 3"
+                (click)="changePage(1)"
+                class="btn btn-sm btn-outline"
+              >
+                1
+              </button>
+
+              <span *ngIf="currentPage > 4" class="px-2 py-1">...</span>
+
+              <button
+                *ngFor="let page of [-1, 0, 1, 2]; let i = index"
+                (click)="changePage(currentPage + page)"
+                [class]="
+                  page === 0
+                    ? 'btn btn-sm btn-primary'
+                    : 'btn btn-sm btn-outline'
+                "
+                [ngClass]="{
+                  hidden:
+                    currentPage + page < 1 || currentPage + page > totalPages
+                }"
+              >
+                {{ currentPage + page }}
+              </button>
+
+              <span *ngIf="currentPage < totalPages - 3" class="px-2 py-1"
+                >...</span
+              >
+
+              <button
+                *ngIf="currentPage < totalPages - 2"
+                (click)="changePage(totalPages)"
+                class="btn btn-sm btn-outline"
+              >
+                {{ totalPages }}
+              </button>
+            </ng-container>
+          </div>
+
+          <button
+            (
+            (click)="changePage(currentPage + 1)"
+            [disabled]="currentPage === totalPages"
+            [class]="
+              currentPage === totalPages
+                ? 'btn btn-sm btn-outline opacity-50 cursor-not-allowed'
+                : 'btn btn-sm btn-outline'
+            "
+          >
+            Suivant
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modal Remboursement -->
+  <div
+    *ngIf="showRefundModal"
+    class="fixed inset-0 bg-gray-500 bg-opacity-75 flex items-center justify-center z-50"
+  >
+    <div class="bg-white rounded-lg shadow-xl max-w-md w-full mx-4">
+      <div class="p-6">
+        <div class="flex justify-between items-center mb-4">
+          <h3 class="text-lg font-medium text-text-dark">
+            Traiter un remboursement
+          </h3>
+          <button
+            (click)="closeRefundModal()"
+            class="text-text-light hover:text-text-dark"
+          >
+            <svg
+              class="h-6 w-6"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                stroke-width="2"
+                d="M6 18L18 6M6 6l12 12"
+              ></path>
+            </svg>
+          </button>
+        </div>
+
+        <div *ngIf="selectedTransaction" class="mb-6">
+          <div class="mb-4">
+            <p class="text-sm text-text-light mb-1">Transaction d'origine:</p>
+            <p class="font-medium">
+              #{{ selectedTransaction.id }} -
+              {{ formatDate(selectedTransaction.created_at) }}
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <p class="text-sm text-text-light mb-1">Montant original:</p>
+            <p class="font-medium text-lg">
+              {{
+                formatAmount(
+                  selectedTransaction.amount,
+                  selectedTransaction.currency
+                )
+              }}
+            </p>
+          </div>
+
+          <div class="mb-4">
+            <p class="text-sm text-text-light mb-1">Commande:</p>
+            <p class="font-medium">
+              {{
+                selectedTransaction.order?.order_number ||
+                  selectedTransaction.order_id
+              }}
+            </p>
+          </div>
+        </div>
+
+        <form [formGroup]="refundForm" (ngSubmit)="processRefund()">
+          <div class="mb-4">
+            <label
+              for="amount"
+              class="block text-sm font-medium text-text-dark mb-1"
+              >Montant à rembourser*</label
+            >
+            <input
+              type="number"
+              id="amount"
+              formControlName="amount"
+              class="w-full"
+              step="0.01"
+              min="0.01"
+              [max]="selectedTransaction?.amount ?? 0"
+            />
+          </div>
+
+          <div class="mb-4">
+            <label
+              for="reason"
+              class="block text-sm font-medium text-text-dark mb-1"
+              >Raison du remboursement</label
+            >
+            <textarea
+              id="reason"
+              formControlName="reason"
+              class="w-full"
+              rows="3"
+              placeholder="Motif du remboursement (optionnel)"
+            ></textarea>
+          </div>
+
+          <div class="mt-6 flex justify-end space-x-2">
+            <button
+              type="button"
+              (click)="closeRefundModal()"
+              class="btn btn-outline"
+            >
+              Annuler
+            </button>
+            <button
+              type="submit"
+              class="btn btn-primary"
+              [disabled]="processingRefund || refundForm.invalid"
+            >
+              <span *ngIf="processingRefund" class="inline-block mr-2">
+                <svg
+                  class="animate-spin h-4 w-4"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    class="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    stroke-width="4"
+                  ></circle>
+                  <path
+                    class="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
+                  ></path>
+                </svg>
+              </span>
+              Traiter le remboursement
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>

@@ -1,5 +1,5 @@
-import { IUser } from './auth.state.model';
 import { ICategory } from './category.model';
+import { IUser } from './user.model';
 
 export interface IProduct {
   id: number;
@@ -40,7 +40,7 @@ export interface IProductReview {
   user_id: number;
   rating: number;
   comment: string;
-  status: 'published' | 'pending' | 'rejected';
+  status?: 'published' | 'pending' | 'rejected';
   created_at: string;
   updated_at: string;
   user?: IUser;

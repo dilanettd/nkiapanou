@@ -1,10 +1,13 @@
 <div class="fixed top-0 w-full bg-white shadow-md z-50">
-  <div class="flex justify-between items-center px-6 py-2">
+  <div class="flex justify-between items-center px-4 md:px-6 py-3">
     <!-- Logo et titre -->
     <div class="flex items-center">
-      <h1 class="text-2xl font-semibold text-[#0167F3] flex items-center">
+      <a
+        routerLink="/admin/dashboard"
+        class="text-xl md:text-2xl font-heading font-semibold text-primary flex items-center"
+      >
         <svg
-          class="w-8 h-8 mr-2"
+          class="w-7 h-7 md:w-8 md:h-8 mr-2"
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
@@ -16,20 +19,22 @@
             d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
           />
         </svg>
-        nkiapanou
-      </h1>
+        Nkiapa'Nou
+      </a>
     </div>
 
     <!-- Actions à droite -->
-    <div class="flex items-center space-x-6">
+    <div class="flex items-center space-x-4 md:space-x-6">
       <!-- Notifications -->
       <div class="relative">
         <button
-          class="p-2 hover:bg-gray-100 rounded-full relative"
+          (click)="checkNotifications()"
+          class="p-2 hover:bg-neutral rounded-full relative transition-colors duration-200"
           [class.animate-pulse]="hasNewNotifications"
+          [@notificationPulse]="hasNewNotifications"
         >
           <svg
-            class="w-6 h-6 text-gray-600"
+            class="w-6 h-6 text-secondary"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -42,8 +47,8 @@
             />
           </svg>
           <span
-            class="absolute top-1 right-1 w-2 h-2 bg-red-500 rounded-full"
             *ngIf="hasNewNotifications"
+            class="absolute top-1 right-1 w-3 h-3 bg-accent rounded-full border-2 border-white"
           ></span>
         </button>
       </div>
@@ -52,19 +57,19 @@
       <div class="relative" #avatarMenu>
         <button
           (click)="toggleAvatarMenu()"
-          class="flex items-center space-x-3 p-2 rounded-lg hover:bg-gray-100 transition-colors duration-200"
+          class="flex items-center space-x-3 p-2 rounded-lg hover:bg-neutral transition-colors duration-200"
         >
           <div
-            class="w-10 h-10 rounded-full bg-[#0167F3] text-white flex items-center justify-center font-semibold"
+            class="w-10 h-10 rounded-full bg-primary text-text-white flex items-center justify-center font-semibold shadow-md"
           >
             {{ userInitials }}
           </div>
           <div class="hidden md:block text-left">
-            <div class="font-medium text-gray-700">{{ userName }}</div>
-            <div class="text-sm text-gray-500">Admin</div>
+            <div class="font-medium text-text-dark">{{ userName }}</div>
+            <div class="text-sm text-text-light">{{ me?.admin_role }}</div>
           </div>
           <svg
-            class="w-4 h-4 text-gray-500 transition-transform duration-200"
+            class="w-4 h-4 text-text-light transition-transform duration-200"
             [class.rotate-180]="isMenuOpen"
             fill="none"
             stroke="currentColor"
@@ -81,72 +86,23 @@
 
         <!-- Menu déroulant -->
         <div
-          #avatarMenu
           *ngIf="isMenuOpen"
-          class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-gray-100 py-2 z-50"
-          @menuAnimation
+          [@menuAnimation]
+          class="absolute right-0 mt-2 w-64 bg-white rounded-lg shadow-lg border border-neutral py-2 z-50"
         >
           <!-- En-tête du menu -->
-          <div class="px-4 py-3 border-b border-gray-100">
-            <div class="font-medium text-gray-800">{{ userName }}</div>
-            <div class="text-sm text-gray-500">{{ userEmail }}</div>
+          <div class="px-4 py-3 border-b border-neutral">
+            <div class="font-medium text-text-dark">{{ userName }}</div>
+            <div class="text-sm text-text-light">{{ userEmail }}</div>
           </div>
 
           <!-- Options du menu -->
           <div class="py-2">
-            <a
-              routerLink="/admin/profile"
-              class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 space-x-3"
-              (click)="toggleAvatarMenu()"
-            >
-              <svg
-                class="w-5 h-5 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"
-                />
-              </svg>
-              <span>Mon Profil</span>
-            </a>
-
-            <a
-              routerLink="/admin/settings"
-              class="flex items-center px-4 py-2 text-gray-700 hover:bg-gray-50 space-x-3"
-              (click)="toggleAvatarMenu()"
-            >
-              <svg
-                class="w-5 h-5 text-gray-500"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-                />
-                <path
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                  stroke-width="2"
-                  d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                />
-              </svg>
-              <span>Paramètres</span>
-            </a>
-
-            <hr class="my-2 border-gray-100" />
+            <hr class="my-2 border-neutral" />
 
             <button
               (click)="logout()"
-              class="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 space-x-3"
+              class="flex items-center w-full px-4 py-2 text-red-600 hover:bg-red-50 space-x-3 transition-colors duration-200"
             >
               <svg
                 class="w-5 h-5"

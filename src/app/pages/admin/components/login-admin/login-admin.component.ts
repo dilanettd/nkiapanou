@@ -5,7 +5,7 @@ import {
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { Subscription } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
@@ -14,7 +14,7 @@ import { IUser } from '../../../../core/models/auth.state.model';
 @Component({
   selector: 'login-admin',
   standalone: true,
-  imports: [ReactiveFormsModule],
+  imports: [ReactiveFormsModule, RouterModule],
   templateUrl: './login-admin.component.html',
   styleUrls: ['./login-admin.component.scss'],
 })
@@ -50,12 +50,19 @@ export class LoginAdminComponent implements OnDestroy {
       const loginSubscription = this.authService
         .loginAdmin(email, password)
         .subscribe({
-          next: () => {
-            this.toastr.success('You are successfully logged in.');
+          next: (response) => {
+            this.toastr.success('Vous êtes connecté avec succès.');
+
+            // Récupérer l'utilisateur et vérifier son rôle
+            const user = this.authService.getCurrentUser();
+
+            // Rediriger vers le tableau de bord admin
+            this.router.navigate(['/admin/dashboard']);
           },
           error: (error) => {
             this.errorMessage =
-              error.error.message || 'An error occurred during login.';
+              error.error.message ||
+              "Une erreur s'est produite lors de la connexion.";
             this.isLoading = false;
           },
           complete: () => {

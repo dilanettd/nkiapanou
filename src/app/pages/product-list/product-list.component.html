@@ -1,0 +1,210 @@
+<section class="bg-neutral py-6">
+  <div class="container mx-auto px-4">
+    <!-- Breadcrumb navigation -->
+    <div class="mb-4">
+      <nav class="text-sm">
+        <ol class="list-none p-0 inline-flex">
+          <li class="flex items-center">
+            <a routerLink="/" class="text-primary hover:text-primary-hover"
+              >Accueil</a
+            >
+            <i class="lni lni-chevron-right mx-2 text-gray-400 text-xs"></i>
+          </li>
+          <li class="flex items-center">
+            <a
+              routerLink="/products"
+              class="text-primary hover:text-primary-hover"
+              >Produits</a
+            >
+            <ng-container *ngIf="currentCategoryName">
+              <i class="lni lni-chevron-right mx-2 text-gray-400 text-xs"></i>
+              <li class="flex items-center text-text-light">
+                {{ currentCategoryName }}
+              </li>
+            </ng-container>
+          </li>
+        </ol>
+      </nav>
+    </div>
+
+    <!-- Title and description -->
+    <div class="mb-6">
+      <h1 class="text-3xl md:text-4xl font-heading text-primary">
+        {{ pageTitle }}
+      </h1>
+      <p class="mt-2 text-text-light">{{ pageDescription }}</p>
+    </div>
+
+    <!-- Current search term display -->
+    <div *ngIf="searchTerm" class="mb-4 p-3 bg-white rounded-lg shadow-sm">
+      <p class="text-text-light">
+        Résultats de recherche pour :
+        <span class="font-medium text-primary">{{ searchTerm }}</span>
+        <a
+          routerLink="/products"
+          [queryParams]="{ category: currentCategoryId }"
+          class="ml-2 text-sm text-primary hover:underline"
+        >
+          <i class="lni lni-close"></i> Effacer
+        </a>
+      </p>
+    </div>
+
+    <!-- Loading indicator -->
+    <div *ngIf="isLoading" class="flex justify-center my-8">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- No results message -->
+    <div
+      *ngIf="!isLoading && products.length === 0"
+      class="bg-white p-8 rounded-lg shadow-sm text-center"
+    >
+      <i class="lni lni-search-alt text-5xl text-gray-300 mb-4"></i>
+      <h3 class="text-xl font-medium mb-2">Aucun produit trouvé</h3>
+      <p class="text-text-light mb-4">
+        <ng-container *ngIf="searchTerm">
+          Aucun résultat ne correspond à votre recherche "{{ searchTerm }}".
+        </ng-container>
+        <ng-container *ngIf="!searchTerm">
+          Aucun produit n'est disponible dans cette catégorie pour le moment.
+        </ng-container>
+      </p>
+      <a
+        routerLink="/products"
+        class="px-4 py-2 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors inline-block"
+      >
+        Voir tous les produits
+      </a>
+    </div>
+
+    <!-- Results found display -->
+    <div
+      *ngIf="!isLoading && products.length > 0"
+      class="mb-4 flex justify-between items-center"
+    >
+      <div>
+        <p class="text-text-light">{{ totalProducts }} produit(s) trouvé(s)</p>
+      </div>
+      <div class="flex items-center">
+        <label for="perPage" class="text-text-light mr-2">Afficher:</label>
+        <select
+          id="perPage"
+          [(ngModel)]="productsPerPage"
+          (change)="goToPage(1)"
+          class="border-gray-300 w-20 rounded-md text-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-20"
+        >
+          <option [value]="8">8</option>
+          <option [value]="12">12</option>
+          <option [value]="24">24</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- Products grid -->
+    <div
+      *ngIf="!isLoading && products.length > 0"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"
+    >
+      <nkiapanou-product-card
+        *ngFor="let product of products; trackBy: trackByFn"
+        [product]="product"
+        [isInWishlist]="isInWishlist(product.id)"
+        (addToWishlistEvent)="addToWishlist(product)"
+        (removeFromWishlistEvent)="removeFromWishlist($event)"
+        (addToCartEvent)="addToCart($event)"
+      ></nkiapanou-product-card>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!isLoading && totalPages > 1" class="mt-8 flex justify-center">
+      <nav class="flex items-center">
+        <!-- Previous button -->
+        <button
+          class="px-3 py-2 bg-white border rounded-l-md hover:bg-gray-100 transition-colors"
+          [disabled]="currentPage === 1"
+          [ngClass]="{ 'opacity-50 cursor-not-allowed': currentPage === 1 }"
+          (click)="goToPage(currentPage - 1)"
+        >
+          <i class="lni lni-chevron-left"></i>
+        </button>
+
+        <!-- Page numbers -->
+        <div class="flex">
+          <!-- First page -->
+          <button
+            *ngIf="currentPage > 2"
+            class="w-10 h-10 text-sm border-t border-b hover:bg-gray-100 transition-colors"
+            (click)="goToPage(1)"
+          >
+            1
+          </button>
+
+          <!-- Ellipsis -->
+          <span
+            *ngIf="currentPage > 3"
+            class="w-10 h-10 flex items-center justify-center border-t border-b"
+          >
+            ...
+          </span>
+
+          <!-- Previous page -->
+          <button
+            *ngIf="currentPage > 1"
+            class="w-10 h-10 text-sm border-t border-b hover:bg-gray-100 transition-colors"
+            (click)="goToPage(currentPage - 1)"
+          >
+            {{ currentPage - 1 }}
+          </button>
+
+          <!-- Current page -->
+          <button
+            class="w-10 h-10 text-sm border-t border-b bg-primary text-white"
+          >
+            {{ currentPage }}
+          </button>
+
+          <!-- Next page -->
+          <button
+            *ngIf="currentPage < totalPages"
+            class="w-10 h-10 text-sm border-t border-b hover:bg-gray-100 transition-colors"
+            (click)="goToPage(currentPage + 1)"
+          >
+            {{ currentPage + 1 }}
+          </button>
+
+          <!-- Ellipsis -->
+          <span
+            *ngIf="currentPage < totalPages - 2"
+            class="w-10 h-10 flex items-center justify-center border-t border-b"
+          >
+            ...
+          </span>
+
+          <!-- Last page -->
+          <button
+            *ngIf="currentPage < totalPages - 1"
+            class="w-10 h-10 text-sm border-t border-b hover:bg-gray-100 transition-colors"
+            (click)="goToPage(totalPages)"
+          >
+            {{ totalPages }}
+          </button>
+        </div>
+
+        <!-- Next button -->
+        <button
+          class="px-3 py-2 bg-white border rounded-r-md hover:bg-gray-100 transition-colors"
+          [disabled]="currentPage === totalPages"
+          [ngClass]="{
+            'opacity-50 cursor-not-allowed': currentPage === totalPages
+          }"
+          (click)="goToPage(currentPage + 1)"
+        >
+          <i class="lni lni-chevron-right"></i>
+        </button>
+      </nav>
+    </div>
+  </div>
+</section>

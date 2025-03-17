@@ -1,0 +1,255 @@
+<!-- Filtres de recherche -->
+<div class="mb-6 p-4 bg-neutral rounded-lg">
+  <h3 class="text-lg font-medium mb-3 font-heading">Filtres et recherche</h3>
+
+  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+    <div>
+      <label for="search" class="block text-sm font-medium mb-1"
+        >Recherche</label
+      >
+      <input
+        type="text"
+        id="search"
+        [(ngModel)]="searchTerm"
+        placeholder="Nom, description ou SKU"
+        class="w-full"
+      />
+    </div>
+
+    <div>
+      <label for="category" class="block text-sm font-medium mb-1"
+        >Catégorie</label
+      >
+      <select id="category" [(ngModel)]="selectedCategory" class="w-full">
+        <option [ngValue]="null">Toutes les catégories</option>
+        <option *ngFor="let category of categories" [ngValue]="category.id">
+          {{ category.name }}
+        </option>
+      </select>
+    </div>
+
+    <div>
+      <label for="status" class="block text-sm font-medium mb-1">Statut</label>
+      <select id="status" [(ngModel)]="selectedStatus" class="w-full">
+        <option value="all">Tous les statuts</option>
+        <option value="active">Actif</option>
+        <option value="inactive">Inactif</option>
+        <option value="out_of_stock">Rupture de stock</option>
+      </select>
+    </div>
+  </div>
+
+  <div class="flex justify-end space-x-3">
+    <button (click)="resetFilters()" class="btn btn-sm btn-outline-secondary">
+      Réinitialiser
+    </button>
+    <button (click)="onSearchSubmit()" class="btn btn-sm btn-primary">
+      Appliquer les filtres
+    </button>
+  </div>
+</div>
+
+<!-- État de chargement -->
+<div *ngIf="isLoading" class="flex justify-center items-center py-10">
+  <div
+    class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+  ></div>
+</div>
+
+<!-- Message aucun produit -->
+<div
+  *ngIf="!isLoading && products.length === 0"
+  class="bg-neutral py-10 text-center rounded-lg"
+>
+  <i class="lni lni-search-alt text-4xl text-secondary mb-3 block"></i>
+  <p class="text-lg mb-2">Aucun produit trouvé</p>
+  <p class="text-sm text-text-light mb-4">
+    Essayez de modifier vos critères de recherche ou ajoutez un nouveau produit.
+  </p>
+  <button (click)="resetFilters()" class="btn btn-sm btn-primary">
+    Réinitialiser les filtres
+  </button>
+</div>
+
+<!-- Tableau des produits -->
+<div *ngIf="!isLoading && products.length > 0" class="overflow-x-auto">
+  <table class="min-w-full bg-white border-collapse">
+    <thead class="bg-neutral">
+      <tr>
+        <th class="py-3 px-4 text-left text-sm font-medium">
+          <span class="cursor-pointer" (click)="applySort('name')">
+            Produit {{ getSortDirection("name") }}
+          </span>
+        </th>
+        <th class="py-3 px-4 text-left text-sm font-medium">Catégorie</th>
+        <th class="py-3 px-4 text-right text-sm font-medium">
+          <span class="cursor-pointer" (click)="applySort('price')">
+            Prix {{ getSortDirection("price") }}
+          </span>
+        </th>
+        <th class="py-3 px-4 text-center text-sm font-medium">
+          <span class="cursor-pointer" (click)="applySort('quantity')">
+            Stock {{ getSortDirection("quantity") }}
+          </span>
+        </th>
+        <th class="py-3 px-4 text-center text-sm font-medium">Statut</th>
+        <th class="py-3 px-4 text-center text-sm font-medium">Mis en avant</th>
+        <th class="py-3 px-4 text-center text-sm font-medium">Actions</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr
+        *ngFor="let product of products"
+        class="border-b border-gray-200 hover:bg-neutral/50"
+      >
+        <td class="py-3 px-4">
+          <div class="flex items-center">
+            <img
+              [src]="getPrimaryImage(product)"
+              alt="{{ product.name }}"
+              class="w-12 h-12 object-cover rounded-md mr-3"
+            />
+            <div>
+              <p class="font-medium">{{ product.name }}</p>
+              <p class="text-sm text-text-light">SKU: {{ product.sku }}</p>
+            </div>
+          </div>
+        </td>
+        <td class="py-3 px-4">
+          <span class="text-sm">{{
+            getCategoryName(product.category_id)
+          }}</span>
+        </td>
+        <td class="py-3 px-4 text-right">
+          <div>
+            <span
+              *ngIf="product.discount_price"
+              class="text-sm line-through text-text-light"
+              >{{ product.price | currency : "EUR" : "symbol" : "1.2-2" }}</span
+            >
+            <span class="font-medium ml-1">{{
+              product.discount_price || product.price
+                | currency : "EUR" : "symbol" : "1.2-2"
+            }}</span>
+          </div>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <span
+            [ngClass]="
+              product.quantity < (product.low_stock_threshold || 5)
+                ? 'text-red-600 font-medium'
+                : ''
+            "
+          >
+            {{ product.quantity }}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <span
+            class="inline-block px-2 py-1 text-xs font-medium rounded-full"
+            [ngClass]="getStatusClass(product.status)"
+          >
+            {{ getStatusLabel(product.status) }}
+          </span>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <button
+            (click)="onToggleFeatured(product)"
+            class="text-xl"
+            [title]="
+              product.featured
+                ? 'Retirer des produits mis en avant'
+                : 'Ajouter aux produits mis en avant'
+            "
+          >
+            <i
+              *ngIf="product.featured"
+              class="lni lni-star-fill text-primary"
+            ></i>
+            <i
+              *ngIf="!product.featured"
+              class="lni lni-star text-text-light"
+            ></i>
+          </button>
+        </td>
+        <td class="py-3 px-4 text-center">
+          <div class="flex justify-center space-x-2">
+            <button
+              (click)="onEdit(product)"
+              class="text-secondary hover:text-secondary-hover"
+              title="Modifier"
+            >
+              <i class="lni lni-pencil"></i>
+            </button>
+            <button
+              (click)="onToggleStatus(product)"
+              [ngClass]="
+                product.status === 'active'
+                  ? 'text-red-500 hover:text-red-700'
+                  : 'text-green-500 hover:text-green-700'
+              "
+              [title]="product.status === 'active' ? 'Désactiver' : 'Activer'"
+            >
+              <i
+                [class]="
+                  product.status === 'active'
+                    ? 'lni lni-lock'
+                    : 'lni lni-unlock'
+                "
+              ></i>
+            </button>
+            <button
+              (click)="onDelete(product.id)"
+              class="text-red-500 hover:text-red-700"
+              title="Supprimer"
+            >
+              <i class="lni lni-trash-can"></i>
+            </button>
+          </div>
+        </td>
+      </tr>
+    </tbody>
+  </table>
+</div>
+
+<!-- Pagination -->
+<div *ngIf="!isLoading && totalPages > 1" class="mt-6 flex justify-center">
+  <nav class="flex items-center space-x-1">
+    <button
+      [disabled]="(searchParams.page || 1) <= 1"
+      [ngClass]="
+        (searchParams.page || 1) <= 1 ? 'opacity-50 cursor-not-allowed' : ''
+      "
+      (click)="onPageChange((searchParams.page || 1) - 1)"
+      class="px-3 py-1 rounded-md bg-white border border-gray-300"
+    >
+      <i class="lni lni-chevron-left"></i>
+    </button>
+
+    <button
+      *ngFor="let page of getPages()"
+      (click)="onPageChange(page)"
+      [ngClass]="
+        (searchParams.page || 1) === page
+          ? 'bg-primary text-white'
+          : 'bg-white border border-gray-300'
+      "
+      class="px-3 py-1 rounded-md"
+    >
+      {{ page }}
+    </button>
+
+    <button
+      [disabled]="(searchParams.page || 1) >= totalPages"
+      [ngClass]="
+        (searchParams.page || 1) >= totalPages
+          ? 'opacity-50 cursor-not-allowed'
+          : ''
+      "
+      (click)="onPageChange((searchParams.page || 1) + 1)"
+      class="px-3 py-1 rounded-md bg-white border border-gray-300"
+    >
+      <i class="lni lni-chevron-right"></i>
+    </button>
+  </nav>
+</div>

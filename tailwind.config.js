@@ -190,6 +190,7 @@ module.exports = {
           color: theme("colors.secondary.DEFAULT"),
           "&:hover": {
             backgroundColor: "rgba(108, 132, 175, 0.1)",
+            color: theme("colors.secondary.DEFAULT"),
           },
         },
         ".btn-sm": {
@@ -207,7 +208,7 @@ module.exports = {
     // Ajout du plugin pour personnaliser les inputs
     function ({ addComponents, theme }) {
       const inputs = {
-        'input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="url"], input[type="search"], textarea, select':
+        'input[type="text"], input[type="email"], input[type="password"], input[type="number"], input[type="tel"], input[type="url"],input[type="date"], input[type="search"], textarea, select':
           {
             borderColor: "#D6D2B1",
             borderWidth: "1px",

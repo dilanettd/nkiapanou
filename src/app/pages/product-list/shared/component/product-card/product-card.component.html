@@ -1,0 +1,93 @@
+<div
+  class="bg-white rounded-lg shadow-sm overflow-hidden hover:shadow-md transition-shadow duration-300 h-full flex flex-col group"
+>
+  <!-- Image container with fixed aspect ratio -->
+  <div class="relative pt-[100%] overflow-hidden">
+    <a
+      [routerLink]="['/product', product.slug]"
+      class="block absolute inset-0 group-hover:scale-105 transition-transform duration-300"
+    >
+      <img
+        [src]="primaryImage"
+        [alt]="product.name"
+        class="w-full h-full object-cover"
+      />
+      <!-- Overlay au hover avec tooltip -->
+      <div
+        class="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-20 transition-all duration-300 flex items-center justify-center"
+      >
+        <div
+          class="px-4 py-2 bg-primary text-white rounded-md opacity-0 group-hover:opacity-100 transform translate-y-4 group-hover:translate-y-0 transition-all duration-300"
+        >
+          <i class="lni lni-eye"></i>
+          <span>Voir détails</span>
+        </div>
+      </div>
+    </a>
+    <!-- Discount badge -->
+    <div
+      *ngIf="product.discount_price"
+      class="absolute top-2 left-2 bg-primary text-white text-xs font-bold px-2 py-1 rounded-md z-10 shadow-md"
+    >
+      -{{ discountPercentage }}%
+    </div>
+    <!-- Wishlist button amélioré -->
+    <button
+      class="absolute top-2 right-2 w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-md hover:shadow-lg transition-all duration-300 transform hover:scale-110 z-10"
+      (click)="toggleWishlist()"
+      [title]="isInWishlist ? 'Retirer des favoris' : 'Ajouter aux favoris'"
+    >
+      <i
+        class="lni text-xl"
+        [ngClass]="{
+          'lni-heart-filled text-primary': isInWishlist,
+          'lni-heart text-gray-500 hover:text-primary': !isInWishlist
+        }"
+      ></i>
+    </button>
+  </div>
+
+  <!-- Product info -->
+  <div class="p-4 flex flex-col flex-grow">
+    <!-- Category -->
+    <div class="text-sm text-text-light mb-1">{{ product.category?.name }}</div>
+
+    <!-- Name -->
+    <a
+      [routerLink]="['/product', product.slug]"
+      class="block text-lg font-medium mb-2 hover:text-primary transition-colors"
+    >
+      {{ product.name }}
+    </a>
+
+    <!-- Description - avec limite de caractères -->
+    <p
+      *ngIf="product.description"
+      class="text-sm text-gray-600 mb-4 line-clamp-3 flex-grow"
+    >
+      {{ product.description }}
+    </p>
+
+    <!-- Price -->
+    <div class="flex items-baseline mt-auto mb-3">
+      <span class="text-xl font-bold text-primary mr-2">
+        {{ product.discount_price || product.price }} €
+      </span>
+      <span
+        *ngIf="product.discount_price"
+        class="text-sm text-gray-400 line-through"
+      >
+        {{ product.price }} €
+      </span>
+    </div>
+
+    <!-- Add to cart button with hover effect -->
+    <button
+      class="w-full py-2 bg-primary text-white font-medium rounded-md hover:bg-primary-hover transition-colors flex items-center justify-center transform hover:translate-y-[-2px] hover:shadow-md transition-all duration-300"
+      (click)="addToCart()"
+    >
+      <i class="lni lni-cart mr-2"></i>
+      Ajouter au panier
+    </button>
+  </div>
+</div>

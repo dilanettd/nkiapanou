@@ -80,14 +80,30 @@ export class RegisterModalComponent implements OnInit {
     );
   }
 
+  /**
+   * Détermine la langue par défaut selon la langue du navigateur
+   * Si la langue n'est pas supportée, l'anglais est utilisé par défaut
+   */
+  private getDefaultLanguage(): string {
+    // Obtenir la langue du navigateur (format 'fr', 'en-US', etc.)
+    const browserLang = navigator.language.split('-')[0].toLowerCase();
+
+    // Liste des langues supportées
+    const supportedLanguages = ['fr', 'en', 'es', 'de', 'it'];
+
+    // Si la langue du navigateur est supportée, l'utiliser, sinon utiliser l'anglais
+    return supportedLanguages.includes(browserLang) ? browserLang : 'en';
+  }
+
   onSubmit() {
     this.errorMessage = '';
     if (this.registrationForm.valid) {
       this.isLoading = true;
       const { userName, email, password } = this.registrationForm.value;
+      const language = this.getDefaultLanguage(); // Récupérer la langue du navigateur
 
-      // Utiliser la méthode register de l'AuthService
-      this.authService.register(userName, email, password).subscribe({
+      // Utiliser la méthode register de l'AuthService avec le paramètre de langue
+      this.authService.register(userName, email, password, language).subscribe({
         next: (response) => {
           this.isLoading = false;
 

@@ -1,0 +1,48 @@
+<div class="testimonials-wrapper">
+  <swiper-container
+    #swiperContainer
+    slides-per-view="1"
+    space-between="20"
+    pagination="true"
+    navigation="true"
+    loop="true"
+    autoplay-delay="5000"
+    autoplay-disable-on-interaction="false"
+    init="false"
+  >
+    <swiper-slide *ngFor="let review of reviews">
+      <div
+        class="bg-gray-50 rounded-xl shadow-sm p-6 border border-gray-100 h-full"
+      >
+        <div class="flex items-center space-x-3 mb-4">
+          <div class="flex-shrink-0">
+            <img
+              class="w-12 h-12 rounded-full object-cover"
+              [src]="
+                review.user?.profile_image || 'assets/images/default-avatar.jpg'
+              "
+              [alt]="review.user?.name || 'Utilisateur'"
+            />
+          </div>
+          <div>
+            <h3 class="text-base font-medium text-gray-800 font-body">
+              {{ review.user?.name || "Utilisateur" }}
+            </h3>
+            <div class="flex text-yellow-400 text-sm mt-1">
+              <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
+                <i
+                  [class]="getStarClass(review.rating, i)"
+                  class="text-yellow-400"
+                ></i>
+              </ng-container>
+            </div>
+          </div>
+        </div>
+        <p class="text-gray-600 font-body">"{{ review.comment }}"</p>
+        <div class="mt-4 text-sm text-gray-500">
+          <span>Produit acheté: {{ review.product?.name || "Produit" }}</span>
+        </div>
+      </div>
+    </swiper-slide>
+  </swiper-container>
+</div>

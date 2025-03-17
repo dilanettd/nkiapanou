@@ -64,7 +64,6 @@ export class AddressComponent implements OnInit {
 
     this.addressService.getUserAddresses().subscribe({
       next: (addresses) => {
-        console.log('Addresses loaded successfully:', addresses);
         this.addresses = addresses;
         this.filterAddresses();
         this.loading = false;
@@ -181,14 +180,12 @@ export class AddressComponent implements OnInit {
       return;
     }
 
-    console.log('Form values to save:', this.addressForm.value);
     this.formSubmitting = true;
 
     if (this.showAddForm) {
       // Add a new address
       this.addressService.addAddress(this.addressForm.value).subscribe({
         next: (address) => {
-          console.log('Address added successfully:', address);
           this.addresses.push(address);
           this.filterAddresses();
           this.toastr.success('Address successfully added');
@@ -213,7 +210,6 @@ export class AddressComponent implements OnInit {
         .updateAddress(this.selectedAddress.id, this.addressForm.value)
         .subscribe({
           next: (address) => {
-            console.log('Address updated successfully:', address);
             const index = this.addresses.findIndex((a) => a.id === address.id);
             if (index !== -1) {
               this.addresses[index] = address;
@@ -252,7 +248,6 @@ export class AddressComponent implements OnInit {
 
       this.addressService.deleteAddress(address.id).subscribe({
         next: () => {
-          console.log('Address deleted successfully');
           this.addresses = this.addresses.filter((a) => a.id !== address.id);
           this.filterAddresses();
           this.toastr.success('Address successfully deleted');
@@ -285,7 +280,6 @@ export class AddressComponent implements OnInit {
 
     this.addressService.setDefaultAddress(address.id).subscribe({
       next: (updatedAddress) => {
-        console.log('Address set as default successfully:', updatedAddress);
         // Update address in the list
         const index = this.addresses.findIndex(
           (a) => a.id === updatedAddress.id

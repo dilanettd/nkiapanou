@@ -1,0 +1,481 @@
+<!-- Vue de la liste des catégories -->
+<div *ngIf="currentView() === 'list'" class="animate-fade-in">
+  <div class="flex justify-between items-center mb-6">
+    <h3 class="text-xl font-semibold font-heading text-text-dark">
+      Gestion des catégories
+    </h3>
+    <button
+      (click)="setView('form')"
+      class="btn btn-primary flex items-center shadow-sm"
+    >
+      <i class="lni lni-plus mr-2"></i> Ajouter une catégorie
+    </button>
+  </div>
+
+  <!-- État de chargement -->
+  <div *ngIf="isLoading" class="flex justify-center items-center py-16">
+    <div class="flex flex-col items-center">
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-t-4 border-b-4 border-blue-600"
+      ></div>
+      <p class="mt-4 text-gray-500">Chargement en cours...</p>
+    </div>
+  </div>
+
+  <!-- Message aucune catégorie -->
+  <div
+    *ngIf="!isLoading && categories.length === 0"
+    class="bg-neutral py-16 px-6 text-center rounded-lg shadow-sm border border-gray-100"
+  >
+    <i class="lni lni-folder text-5xl text-primary mb-4 block opacity-80"></i>
+    <p class="text-xl font-medium font-heading mb-3 text-text-dark">
+      Aucune catégorie trouvée
+    </p>
+    <p class="text-base text-text mb-6 max-w-lg mx-auto font-body">
+      Commencez par créer une nouvelle catégorie pour organiser vos produits et
+      faciliter la navigation sur votre site.
+    </p>
+    <button
+      (click)="setView('form')"
+      class="btn btn-primary flex items-center mx-auto"
+    >
+      <i class="lni lni-plus mr-2"></i> Ajouter votre première catégorie
+    </button>
+  </div>
+
+  <!-- Tableau des catégories principales -->
+  <div *ngIf="!isLoading && categories.length > 0" class="space-y-6">
+    <div class="overflow-x-auto rounded-lg shadow-sm border border-gray-100">
+      <table class="min-w-full bg-white border-collapse">
+        <thead class="bg-neutral">
+          <tr>
+            <th
+              class="py-4 px-4 text-left text-sm font-medium font-heading text-text uppercase tracking-wider"
+            >
+              Nom
+            </th>
+            <th
+              class="py-4 px-4 text-left text-sm font-medium font-heading text-text uppercase tracking-wider"
+            >
+              Description
+            </th>
+            <th
+              class="py-4 px-4 text-center text-sm font-medium font-heading text-text uppercase tracking-wider"
+            >
+              Statut
+            </th>
+            <th
+              class="py-4 px-4 text-center text-sm font-medium font-heading text-text uppercase tracking-wider"
+            >
+              Actions
+            </th>
+          </tr>
+        </thead>
+        <tbody class="divide-y divide-gray-200">
+          <!-- Catégories principales -->
+          <ng-container *ngFor="let category of getParentCategories()">
+            <tr class="hover:bg-gray-50 transition-colors">
+              <td class="py-4 px-4">
+                <div class="flex items-center">
+                  <img
+                    *ngIf="category.image"
+                    [src]="category.image"
+                    alt="{{ category.name }}"
+                    class="w-12 h-12 object-cover rounded-lg mr-3 shadow-sm border border-gray-200"
+                  />
+                  <div
+                    *ngIf="!category.image"
+                    class="w-12 h-12 bg-primary/10 rounded-lg flex items-center justify-center mr-3 border border-primary/20"
+                  >
+                    <i class="lni lni-folder text-primary"></i>
+                  </div>
+                  <span class="font-medium font-heading text-text-dark">{{
+                    category.name
+                  }}</span>
+                </div>
+              </td>
+              <td class="py-4 px-4">
+                <span class="text-sm text-gray-700">{{
+                  category.description || "Aucune description"
+                }}</span>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <span
+                  class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full"
+                  [ngClass]="
+                    category.status === 'active'
+                      ? 'bg-green-100 text-green-800'
+                      : 'bg-gray-100 text-gray-800'
+                  "
+                >
+                  <span
+                    class="w-2 h-2 rounded-full mr-2"
+                    [ngClass]="
+                      category.status === 'active'
+                        ? 'bg-green-500'
+                        : 'bg-gray-400'
+                    "
+                  ></span>
+                  {{ category.status === "active" ? "Actif" : "Inactif" }}
+                </span>
+              </td>
+              <td class="py-4 px-4 text-center">
+                <div class="flex justify-center space-x-3">
+                  <button
+                    (click)="editCategory(category)"
+                    class="text-secondary hover:text-secondary-hover transition-colors bg-secondary/10 hover:bg-secondary/20 p-2 rounded-full"
+                    title="Modifier"
+                  >
+                    <i class="lni lni-pencil"></i>
+                  </button>
+                  <button
+                    (click)="toggleCategoryStatus(category)"
+                    [ngClass]="
+                      category.status === 'active'
+                        ? 'text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100'
+                        : 'text-green-500 hover:text-green-700 bg-green-50 hover:bg-green-100'
+                    "
+                    class="p-2 rounded-full transition-colors"
+                    [title]="
+                      category.status === 'active' ? 'Désactiver' : 'Activer'
+                    "
+                  >
+                    <i
+                      [class]="
+                        category.status === 'active'
+                          ? 'lni lni-lock'
+                          : 'lni lni-unlock'
+                      "
+                    ></i>
+                  </button>
+                  <button
+                    (click)="deleteCategory(category.id)"
+                    class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                    title="Supprimer"
+                    [disabled]="hasSubcategories(category.id)"
+                    [ngClass]="{
+                      'opacity-50 cursor-not-allowed': hasSubcategories(
+                        category.id
+                      )
+                    }"
+                  >
+                    <i class="lni lni-trash-can"></i>
+                  </button>
+                </div>
+              </td>
+            </tr>
+
+            <!-- Sous-catégories -->
+            <ng-container
+              *ngFor="let subcategory of getSubcategories(category.id)"
+            >
+              <tr class="bg-gray-50/70 hover:bg-gray-100 transition-colors">
+                <td class="py-4 px-4">
+                  <div class="flex items-center pl-10">
+                    <div
+                      class="flex-shrink-0 w-2 h-12 bg-gray-300 rounded-full mr-4"
+                    ></div>
+                    <div
+                      class="w-8 h-8 bg-secondary/10 rounded-lg flex items-center justify-center mr-3 border border-secondary/20"
+                    >
+                      <i class="lni lni-folder-alt text-secondary text-xs"></i>
+                    </div>
+                    <span class="font-normal font-body text-text">{{
+                      subcategory.name
+                    }}</span>
+                  </div>
+                </td>
+                <td class="py-4 px-4">
+                  <span class="text-sm text-gray-600">{{
+                    subcategory.description || "Aucune description"
+                  }}</span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <span
+                    class="inline-flex items-center px-3 py-1 text-sm font-medium rounded-full"
+                    [ngClass]="
+                      subcategory.status === 'active'
+                        ? 'bg-green-100 text-green-800'
+                        : 'bg-gray-100 text-gray-800'
+                    "
+                  >
+                    <span
+                      class="w-2 h-2 rounded-full mr-2"
+                      [ngClass]="
+                        subcategory.status === 'active'
+                          ? 'bg-green-500'
+                          : 'bg-gray-400'
+                      "
+                    ></span>
+                    {{ subcategory.status === "active" ? "Actif" : "Inactif" }}
+                  </span>
+                </td>
+                <td class="py-4 px-4 text-center">
+                  <div class="flex justify-center space-x-3">
+                    <button
+                      (click)="editCategory(subcategory)"
+                      class="text-secondary hover:text-secondary-hover transition-colors bg-secondary/10 hover:bg-secondary/20 p-2 rounded-full"
+                      title="Modifier"
+                    >
+                      <i class="lni lni-pencil"></i>
+                    </button>
+                    <button
+                      (click)="toggleCategoryStatus(subcategory)"
+                      [ngClass]="
+                        subcategory.status === 'active'
+                          ? 'text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100'
+                          : 'text-green-500 hover:text-green-700 bg-green-50 hover:bg-green-100'
+                      "
+                      class="p-2 rounded-full transition-colors"
+                      [title]="
+                        subcategory.status === 'active'
+                          ? 'Désactiver'
+                          : 'Activer'
+                      "
+                    >
+                      <i
+                        [class]="
+                          subcategory.status === 'active'
+                            ? 'lni lni-lock'
+                            : 'lni lni-unlock'
+                        "
+                      ></i>
+                    </button>
+                    <button
+                      (click)="deleteCategory(subcategory.id)"
+                      class="text-red-500 hover:text-red-700 bg-red-50 hover:bg-red-100 p-2 rounded-full transition-colors"
+                      title="Supprimer"
+                    >
+                      <i class="lni lni-trash-can"></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </ng-container>
+          </ng-container>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<!-- Vue du formulaire d'ajout/modification de catégorie -->
+<div *ngIf="currentView() === 'form'" class="animate-fade-in">
+  <div class="flex justify-between items-center mb-6">
+    <h3 class="text-xl font-semibold font-heading text-text-dark">
+      {{ isEditing() ? "Modifier la catégorie" : "Ajouter une catégorie" }}
+    </h3>
+    <button
+      (click)="setView('list')"
+      class="btn btn-outline-secondary flex items-center"
+    >
+      <i class="lni lni-arrow-left mr-2"></i> Retour à la liste
+    </button>
+  </div>
+
+  <form
+    [formGroup]="categoryForm"
+    (ngSubmit)="onSubmit()"
+    class="max-w-3xl mx-auto bg-white p-8 rounded-lg shadow-sm border border-gray-100"
+  >
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <!-- Colonne gauche - Informations principales -->
+      <div class="space-y-6">
+        <!-- Nom -->
+        <div>
+          <label for="name" class="block text-sm font-medium mb-1 text-text"
+            >Nom de la catégorie <span class="text-red-500">*</span></label
+          >
+          <input
+            type="text"
+            id="name"
+            formControlName="name"
+            class="w-full"
+            [ngClass]="{ 'input-error': isFieldInvalid('name') }"
+            placeholder="Ex: Électronique, Vêtements..."
+          />
+          <div *ngIf="isFieldInvalid('name')" class="text-red-500 text-sm mt-1">
+            <span *ngIf="name?.errors?.['required']">Le nom est requis</span>
+            <span *ngIf="name?.errors?.['minlength']"
+              >Le nom doit comporter au moins 2 caractères</span
+            >
+            <span *ngIf="name?.errors?.['maxlength']"
+              >Le nom ne doit pas dépasser 50 caractères</span
+            >
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label
+            for="description"
+            class="block text-sm font-medium mb-1 text-text"
+            >Description</label
+          >
+          <textarea
+            id="description"
+            formControlName="description"
+            rows="4"
+            class="w-full"
+            placeholder="Décrivez brièvement cette catégorie..."
+          ></textarea>
+        </div>
+
+        <!-- Catégorie parente -->
+        <div>
+          <label
+            for="parent_id"
+            class="block text-sm font-medium mb-1 text-text"
+            >Catégorie parente</label
+          >
+          <select id="parent_id" formControlName="parent_id" class="w-full">
+            <option [ngValue]="null">Catégorie principale</option>
+            <option
+              *ngFor="let category of getParentCategories()"
+              [ngValue]="category.id"
+            >
+              {{ category.name }}
+            </option>
+          </select>
+          <p class="text-sm text-gray-500 mt-1">
+            Laissez vide pour une catégorie de premier niveau
+          </p>
+        </div>
+
+        <!-- Statut -->
+        <div>
+          <label class="block text-sm font-medium mb-1 text-text">Statut</label>
+          <div class="flex space-x-4">
+            <label class="inline-flex items-center">
+              <input
+                type="radio"
+                formControlName="status"
+                value="active"
+                class="form-radio text-primary focus:ring-primary-focus"
+              />
+              <span class="ml-2 text-text">Actif</span>
+            </label>
+            <label class="inline-flex items-center">
+              <input
+                type="radio"
+                formControlName="status"
+                value="inactive"
+                class="form-radio text-text-light focus:ring-gray-500"
+              />
+              <span class="ml-2 text-text">Inactif</span>
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <!-- Colonne droite - Image et prévisualisation -->
+      <div class="space-y-6">
+        <div>
+          <label class="block text-sm font-medium mb-1 text-text"
+            >Image de la catégorie</label
+          >
+
+          <!-- Zone de prévisualisation d'image -->
+          <div
+            class="mb-4 border-2 border-dashed border-gray-200 rounded-lg p-4 flex flex-col items-center space-y-4 bg-gray-50"
+          >
+            <!-- Prévisualisation d'image -->
+            <div
+              *ngIf="imagePreview()"
+              class="relative w-full flex justify-center mb-2"
+            >
+              <img
+                [src]="imagePreview()"
+                class="max-h-52 rounded-lg shadow-md border border-gray-200 object-contain"
+                alt="Aperçu de l'image"
+              />
+              <div
+                class="absolute bottom-0 left-0 right-0 bg-black/50 text-white text-xs py-1 px-2 text-center rounded-b-lg"
+              >
+                <ng-container *ngIf="compressInProgress()">
+                  Compression en cours...
+                </ng-container>
+                <ng-container
+                  *ngIf="!compressInProgress() && compressedImageRatio() < 100"
+                >
+                  Image compressée ({{ compressedImageRatio() }}% de l'original)
+                </ng-container>
+              </div>
+              <button
+                *ngIf="imagePreview()"
+                type="button"
+                (click)="clearImage()"
+                class="absolute -top-2 -right-2 bg-red-500 text-white rounded-full p-1 shadow-md hover:bg-red-600 transition-colors"
+                title="Supprimer l'image"
+              >
+                <i class="lni lni-close text-xs"></i>
+              </button>
+            </div>
+
+            <!-- Message et bouton d'upload -->
+            <div *ngIf="!imagePreview()" class="text-center py-6">
+              <i class="lni lni-image text-gray-400 text-4xl mb-2"></i>
+              <p class="text-gray-500 mb-2">Aucune image sélectionnée</p>
+            </div>
+
+            <!-- Bouton d'upload stylisé -->
+            <input
+              type="file"
+              accept="image/*"
+              (change)="onFileChange($event)"
+              class="hidden"
+              #fileInput
+            />
+            <button
+              type="button"
+              (click)="fileInput.click()"
+              class="btn btn-secondary w-full flex items-center justify-center"
+              [disabled]="compressInProgress()"
+            >
+              <i class="lni lni-upload mr-2"></i>
+              <span *ngIf="!imagePreview()">Télécharger une image</span>
+              <span *ngIf="imagePreview()">Changer d'image</span>
+            </button>
+          </div>
+
+          <div
+            class="bg-primary/10 border-l-4 border-primary p-4 rounded text-sm text-text-dark"
+          >
+            <p class="flex items-center">
+              <i class="lni lni-information mr-2"></i>
+              <strong>Informations sur l'image</strong>
+            </p>
+            <ul class="mt-2 ml-6 list-disc">
+              <li>L'image sera automatiquement compressée</li>
+              <li>Formats recommandés: JPG, PNG</li>
+              <li>Taille maximale: 2 Mo</li>
+              <li>Dimensions recommandées: 800 × 800px</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Boutons de soumission -->
+    <div class="mt-8 pt-6 border-t border-gray-200 flex justify-end space-x-4">
+      <button
+        type="button"
+        (click)="setView('list')"
+        class="btn btn-outline-secondary"
+      >
+        Annuler
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary flex items-center"
+        [disabled]="isSubmitting || compressInProgress()"
+      >
+        <i
+          *ngIf="isSubmitting || compressInProgress()"
+          class="lni lni-spinner-arrow animate-spin mr-2"
+        ></i>
+        {{ isEditing() ? "Mettre à jour" : "Créer la catégorie" }}
+      </button>
+    </div>
+  </form>
+</div>

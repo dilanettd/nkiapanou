@@ -1,0 +1,522 @@
+<form
+  [formGroup]="productForm"
+  (ngSubmit)="onSubmit()"
+  class="max-w-4xl mx-auto bg-white p-6 rounded-lg shadow-sm"
+>
+  <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+    <!-- Informations générales -->
+    <div class="space-y-6">
+      <h3
+        class="text-xl font-heading font-semibold text-primary border-b border-primary/30 pb-2 flex items-center"
+      >
+        <i class="lni lni-information mr-2 text-primary-hover"></i>
+        Informations générales
+      </h3>
+
+      <!-- Nom -->
+      <div class="form-group">
+        <label for="name" class="block text-sm font-medium mb-1 text-text"
+          >Nom du produit <span class="text-red-500">*</span></label
+        >
+        <input
+          type="text"
+          id="name"
+          formControlName="name"
+          class="w-full"
+          [ngClass]="{ 'input-error': isFieldInvalid('name') }"
+          placeholder="Entrez le nom du produit"
+        />
+        <div *ngIf="isFieldInvalid('name')" class="text-red-500 text-sm mt-1">
+          <span *ngIf="name?.errors?.['required']">Le nom est requis</span>
+          <span *ngIf="name?.errors?.['minlength']"
+            >Le nom doit comporter au moins 3 caractères</span
+          >
+          <span *ngIf="name?.errors?.['maxlength']"
+            >Le nom ne doit pas dépasser 100 caractères</span
+          >
+        </div>
+      </div>
+
+      <!-- Description -->
+      <div class="form-group">
+        <label
+          for="description"
+          class="block text-sm font-medium mb-1 text-text"
+          >Description</label
+        >
+        <textarea
+          id="description"
+          formControlName="description"
+          rows="4"
+          class="w-full"
+          placeholder="Description détaillée du produit"
+        ></textarea>
+      </div>
+
+      <!-- Catégorie -->
+      <div class="form-group">
+        <label
+          for="category_id"
+          class="block text-sm font-medium mb-1 text-text"
+          >Catégorie <span class="text-red-500">*</span></label
+        >
+        <select
+          id="category_id"
+          formControlName="category_id"
+          class="w-full"
+          [ngClass]="{ 'input-error': isFieldInvalid('category_id') }"
+        >
+          <option [ngValue]="null" disabled>Sélectionnez une catégorie</option>
+          <option *ngFor="let category of categories" [ngValue]="category.id">
+            {{ category.name }}
+          </option>
+        </select>
+        <div
+          *ngIf="isFieldInvalid('category_id')"
+          class="text-red-500 text-sm mt-1"
+        >
+          La catégorie est requise
+        </div>
+      </div>
+
+      <!-- Prix -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label for="price" class="block text-sm font-medium mb-1 text-text"
+            >Prix <span class="text-red-500">*</span></label
+          >
+          <div class="relative">
+            <input
+              type="number"
+              id="price"
+              formControlName="price"
+              class="w-full pl-8"
+              min="0"
+              step="0.01"
+              [ngClass]="{ 'input-error': isFieldInvalid('price') }"
+            />
+            <span
+              class="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-light"
+            >
+              €
+            </span>
+          </div>
+          <div
+            *ngIf="isFieldInvalid('price')"
+            class="text-red-500 text-sm mt-1"
+          >
+            <span *ngIf="price?.errors?.['required']">Le prix est requis</span>
+            <span *ngIf="price?.errors?.['min']"
+              >Le prix doit être supérieur ou égal à 0</span
+            >
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label
+            for="discount_price"
+            class="block text-sm font-medium mb-1 text-text"
+            >Prix promotionnel</label
+          >
+          <div class="relative">
+            <input
+              type="number"
+              id="discount_price"
+              formControlName="discount_price"
+              class="w-full pl-8"
+              min="0"
+              step="0.01"
+            />
+            <span
+              class="absolute left-3 top-1/2 transform -translate-y-1/2 text-text-light"
+            >
+              €
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- SKU avec génération automatique -->
+      <div class="form-group">
+        <label for="sku" class="block text-sm font-medium mb-1 text-text"
+          >SKU (Référence) <span class="text-red-500">*</span></label
+        >
+        <div class="flex">
+          <div class="relative flex-1">
+            <input
+              type="text"
+              id="sku"
+              formControlName="sku"
+              class="w-full"
+              [ngClass]="{ 'input-error': isFieldInvalid('sku') }"
+              placeholder="ex: PRD-123456"
+              (input)="onSkuManualEdit()"
+            />
+            <span
+              *ngIf="autoGenerateSkuFromName"
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-xs px-2 py-1 bg-primary/10 text-primary rounded-full"
+              title="Ce SKU sera mis à jour automatiquement à partir du nom du produit"
+            >
+              Auto
+            </span>
+          </div>
+          <button
+            type="button"
+            class="ml-2 px-3 bg-neutral text-text hover:bg-neutral/70 rounded-lg flex items-center justify-center transition-colors"
+            title="Générer un nouveau SKU aléatoire"
+            (click)="regenerateSku()"
+          >
+            <i class="lni lni-reload"></i>
+          </button>
+        </div>
+        <div *ngIf="isFieldInvalid('sku')" class="text-red-500 text-sm mt-1">
+          Le SKU est requis
+        </div>
+        <p class="text-xs text-text-light mt-1 flex items-center">
+          <i class="lni lni-information-circle mr-1"></i>
+          Ce code est généré automatiquement, mais vous pouvez le modifier.
+        </p>
+      </div>
+    </div>
+
+    <!-- Informations additionnelles -->
+    <div class="space-y-6">
+      <h3
+        class="text-xl font-heading font-semibold text-primary border-b border-primary/30 pb-2 flex items-center"
+      >
+        <i class="lni lni-package mr-2 text-primary-hover"></i>
+        Informations additionnelles
+      </h3>
+
+      <!-- Pays d'origine -->
+      <div class="form-group">
+        <label
+          for="origin_country"
+          class="block text-sm font-medium mb-1 text-text"
+          >Pays d'origine</label
+        >
+        <input
+          type="text"
+          id="origin_country"
+          formControlName="origin_country"
+          class="w-full"
+          placeholder="ex: France, Italie, etc."
+        />
+      </div>
+
+      <!-- Poids et dimensions -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label for="weight" class="block text-sm font-medium mb-1 text-text"
+            >Poids (g)</label
+          >
+          <div class="relative">
+            <input
+              type="number"
+              id="weight"
+              formControlName="weight"
+              class="w-full pr-10"
+              min="0"
+              placeholder="0"
+            />
+            <span
+              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-text-light"
+            >
+              g
+            </span>
+          </div>
+        </div>
+
+        <div class="form-group">
+          <label
+            for="dimensions"
+            class="block text-sm font-medium mb-1 text-text"
+            >Dimensions</label
+          >
+          <input
+            type="text"
+            id="dimensions"
+            formControlName="dimensions"
+            class="w-full"
+            placeholder="ex: 10x20x5 cm"
+          />
+        </div>
+      </div>
+
+      <!-- Emballage -->
+      <div class="form-group">
+        <label for="packaging" class="block text-sm font-medium mb-1 text-text"
+          >Emballage</label
+        >
+        <input
+          type="text"
+          id="packaging"
+          formControlName="packaging"
+          class="w-full"
+          placeholder="ex: Boîte carton, Sachet, etc."
+        />
+      </div>
+
+      <!-- Seuil de stock bas -->
+      <div class="form-group">
+        <label
+          for="low_stock_threshold"
+          class="block text-sm font-medium mb-1 text-text"
+          >Seuil de stock bas</label
+        >
+        <input
+          type="number"
+          id="low_stock_threshold"
+          formControlName="low_stock_threshold"
+          class="w-full"
+          min="1"
+          placeholder="5"
+        />
+        <p class="text-sm text-text-light mt-1 flex items-center">
+          <i class="lni lni-alert-circle text-secondary mr-1"></i>
+          Une alerte sera affichée lorsque le stock sera inférieur à cette
+          valeur
+        </p>
+      </div>
+
+      <!-- Statut et mise en avant -->
+      <div class="grid grid-cols-2 gap-4">
+        <div class="form-group">
+          <label for="status" class="block text-sm font-medium mb-1 text-text"
+            >Statut</label
+          >
+          <select id="status" formControlName="status" class="w-full">
+            <option value="active">Actif</option>
+            <option value="inactive">Inactif</option>
+            <option value="out_of_stock">Rupture de stock</option>
+          </select>
+        </div>
+
+        <div class="form-group flex items-center">
+          <label class="inline-flex items-center mt-6 cursor-pointer">
+            <input
+              type="checkbox"
+              formControlName="featured"
+              class="form-checkbox h-5 w-5 text-primary focus:ring-primary-focus"
+            />
+            <span class="ml-2 text-text">Mettre en avant</span>
+          </label>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section des images -->
+  <div class="mt-10 border-t border-neutral pt-6">
+    <h3
+      class="text-xl font-heading font-semibold text-primary mb-4 flex items-center"
+    >
+      <i class="lni lni-gallery mr-2 text-primary-hover"></i>
+      Images du produit
+    </h3>
+
+    <div class="mb-6 bg-neutral p-6 rounded-lg">
+      <div class="flex flex-wrap items-center gap-4">
+        <div>
+          <input
+            type="file"
+            accept="image/*"
+            (change)="onFileChange($event)"
+            [disabled]="isUploading"
+            class="hidden"
+            #fileInput
+          />
+          <button
+            type="button"
+            (click)="fileInput.click()"
+            [disabled]="isUploading || compressInProgress"
+            class="btn btn-secondary flex items-center"
+          >
+            <i
+              *ngIf="!isUploading && !compressInProgress"
+              class="lni lni-upload mr-2"
+            ></i>
+            <i
+              *ngIf="isUploading || compressInProgress"
+              class="lni lni-spinner-arrow animate-spin mr-2"
+            ></i>
+            <span *ngIf="compressInProgress">Compression en cours...</span>
+            <span *ngIf="isUploading && !compressInProgress"
+              >Téléchargement en cours...</span
+            >
+            <span *ngIf="!isUploading && !compressInProgress"
+              >Ajouter une image</span
+            >
+          </button>
+        </div>
+
+        <div class="text-text flex-1">
+          <p class="text-sm font-medium mb-1">Informations sur les images :</p>
+          <ul class="text-xs text-text-light list-disc pl-4 space-y-1">
+            <li>
+              Les images seront automatiquement compressées pour optimiser le
+              chargement
+            </li>
+            <li>Formats acceptés: JPG, PNG, GIF</li>
+            <li>Taille recommandée: 1000 × 1000 pixels</li>
+            <li>Taille max: 10 Mo</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <div
+      *ngIf="previewImages.length === 0"
+      class="bg-neutral p-8 text-center rounded-lg mb-6"
+    >
+      <i
+        class="lni lni-image text-5xl text-text-light mb-3 block opacity-50"
+      ></i>
+      <p class="text-text-light font-medium mb-2">Aucune image ajoutée</p>
+      <p class="text-sm text-text-light">
+        Ajoutez au moins une image pour votre produit
+      </p>
+    </div>
+
+    <div
+      *ngIf="previewImages.length > 0"
+      class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6"
+    >
+      <div
+        *ngFor="let image of previewImages; let i = index"
+        class="relative group rounded-lg overflow-hidden shadow-sm border border-gray-200"
+      >
+        <div
+          class="absolute inset-0 bg-neutral/30 flex items-center justify-center z-10"
+          *ngIf="image.isPrimary"
+        ></div>
+        <img
+          [src]="image.url"
+          alt="Aperçu de l'image"
+          class="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
+          [ngClass]="{ 'opacity-90': image.isPrimary }"
+        />
+
+        <!-- Controls overlay - Always visible on mobile, visible on hover for desktop -->
+        <div
+          class="absolute inset-0 bg-black bg-opacity-50 flex items-center justify-center md:opacity-0 md:group-hover:opacity-100 transition-opacity duration-200"
+        >
+          <div class="flex flex-row space-x-3">
+            <!-- Set as primary button -->
+            <button
+              type="button"
+              (click)="setAsPrimary(i)"
+              class="text-white bg-primary hover:bg-primary-hover p-3 rounded-full transition-colors shadow-lg flex items-center justify-center w-12 h-12"
+              [disabled]="image.isPrimary"
+              [ngClass]="{ 'opacity-50 cursor-not-allowed': image.isPrimary }"
+              title="Définir comme image principale"
+            >
+              <i class="lni lni-crown text-xl"></i>
+            </button>
+
+            <!-- Delete button -->
+            <button
+              type="button"
+              (click)="removeImage(i)"
+              class="text-white bg-red-500 hover:bg-red-700 p-3 rounded-full transition-colors shadow-lg flex items-center justify-center w-12 h-12"
+              title="Supprimer l'image"
+            >
+              <i class="lni lni-trash-can text-xl"></i>
+            </button>
+          </div>
+        </div>
+
+        <!-- Mobile floating buttons - Always visible on smaller screens -->
+        <div class="absolute bottom-3 right-3 flex space-x-2 md:hidden">
+          <button
+            *ngIf="!image.isPrimary"
+            type="button"
+            (click)="setAsPrimary(i)"
+            class="text-white bg-primary hover:bg-primary-hover p-2 rounded-full shadow-lg"
+            title="Définir comme image principale"
+          >
+            <i class="lni lni-crown"></i>
+          </button>
+
+          <button
+            type="button"
+            (click)="removeImage(i)"
+            class="text-white bg-red-500 hover:bg-red-700 p-2 rounded-full shadow-lg"
+            title="Supprimer l'image"
+          >
+            <i class="lni lni-trash-can"></i>
+          </button>
+        </div>
+
+        <div
+          *ngIf="image.isPrimary"
+          class="absolute top-0 left-0 bg-primary text-white text-xs py-1 px-2 rounded-br-md"
+        >
+          Principale
+        </div>
+
+        <!-- Indicateur de compression -->
+        <div
+          *ngIf="image.compressRatio"
+          class="absolute bottom-0 left-0 right-0 bg-black/60 text-white text-xs py-1 px-2 text-center"
+        >
+          Compressée ({{ image.compressRatio }}%)
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Boutons de soumission -->
+  <div
+    class="mt-8 pt-6 border-t border-neutral flex justify-between items-center"
+  >
+    <!-- Côté gauche - nombre d'images et indication -->
+    <div class="flex items-center">
+      <div class="bg-neutral px-3 py-1 rounded-full flex items-center">
+        <span class="mr-2 text-primary font-medium">{{
+          previewImages.length
+        }}</span>
+        <span class="text-text-light text-sm"
+          >image{{ previewImages.length !== 1 ? "s" : "" }}</span
+        >
+      </div>
+      <span
+        *ngIf="previewImages.length === 0"
+        class="ml-3 text-red-500 text-sm flex items-center"
+      >
+        <i class="lni lni-warning mr-1"></i> Au moins une image est requise
+      </span>
+    </div>
+
+    <!-- Côté droit - boutons -->
+    <div class="flex space-x-4">
+      <button
+        type="button"
+        class="btn btn-outline-secondary flex items-center"
+        [routerLink]="['../']"
+      >
+        <i class="lni lni-close mr-2"></i>
+        Annuler
+      </button>
+      <button
+        type="submit"
+        class="btn btn-primary flex items-center shadow-sm hover:shadow-md transition-all"
+        [disabled]="isSubmitting || compressInProgress"
+      >
+        <i
+          *ngIf="isSubmitting || compressInProgress"
+          class="lni lni-spinner-arrow animate-spin mr-2"
+        ></i>
+        <i
+          *ngIf="!isSubmitting && !compressInProgress && !product"
+          class="lni lni-checkmark-circle mr-2"
+        ></i>
+        <i
+          *ngIf="!isSubmitting && !compressInProgress && product"
+          class="lni lni-pencil mr-2"
+        ></i>
+        {{ product ? "Mettre à jour" : "Créer le produit" }}
+      </button>
+    </div>
+  </div>
+</form>

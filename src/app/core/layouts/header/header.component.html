@@ -13,7 +13,7 @@
         </span>
         <span class="flex items-center">
           <i class="lni lni-envelope mr-1"></i>
-          contactkiapanou.com
+          nkiapanou&#64;yahoo.com
         </span>
       </div>
       <div class="flex items-center space-x-6">
@@ -129,33 +129,44 @@
       <!-- Search bar - DESKTOP VERSION -->
       <div class="hidden md:block w-2/4">
         <div class="relative max-w-xl mx-auto">
-          <div class="flex rounded-lg transition-colors duration-300">
+          <form
+            (submit)="performSearch($event)"
+            class="flex rounded-lg transition-colors duration-300"
+          >
             <div class="relative">
               <select
+                [(ngModel)]="selectedCategory"
+                name="category"
                 class="h-10 pl-4 pr-10 py-2 font-body cursor-pointer border-e-0 rounded-e-none"
               >
                 <option value="all">Catégories</option>
-                <option value="decorations">Décorations</option>
-                <option value="groceries">Épicerie</option>
-                <option value="fashion">Mode</option>
-                <option value="jewelry">Bijoux</option>
+                <option
+                  *ngFor="let category of categories"
+                  [value]="category.id"
+                >
+                  {{ category.name }}
+                </option>
               </select>
             </div>
             <input
               type="text"
+              [(ngModel)]="searchTerm"
+              name="search"
               placeholder="Rechercher un produit..."
               class="h-10 flex-grow pl-4 pr-12 py-2 text-gray-600"
               style="
                 border-top-left-radius: 0px;
                 border-bottom-left-radius: 0px;
               "
+              (keyup)="onSearchKeyUp($event)"
             />
             <button
+              type="submit"
               class="absolute right-0 top-0 h-full px-4 bg-primary text-white hover:bg-primary-dark transition-colors duration-300 rounded-e-lg"
             >
               <i class="lni lni-search-alt text-xl"></i>
             </button>
-          </div>
+          </form>
         </div>
       </div>
 
@@ -171,13 +182,13 @@
 
         <!-- Favorites icon -->
         <a
-          routerLink="/favorites"
+          routerLink="/account/wishlist"
           class="relative text-gray-500 hover:text-primary transition-colors duration-300"
         >
           <i class="lni lni-heart text-2xl"></i>
           <span
             class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
-            >5</span
+            >{{ wishlistItemCount }}</span
           >
         </a>
 
@@ -189,7 +200,7 @@
           <i class="lni lni-cart text-2xl"></i>
           <span
             class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
-            >3</span
+            >{{ cartItemCount }}</span
           >
         </a>
 
@@ -208,30 +219,38 @@
   <div class="md:hidden" [class.hidden]="!isMobileSearchOpen">
     <div class="container mx-auto px-4 py-3 border-t border-gray-100">
       <div class="relative">
-        <div class="flex rounded-lg transition-colors duration-300">
+        <form
+          (submit)="performSearch($event)"
+          class="flex rounded-lg transition-colors duration-300"
+        >
           <div class="relative">
             <select
+              [(ngModel)]="selectedCategory"
+              name="category-mobile"
               class="h-10 pl-4 pr-10 py-2 font-body cursor-pointer border-e-0 rounded-e-none"
             >
               <option value="all">Catégories</option>
-              <option value="decorations">Décorations</option>
-              <option value="groceries">Épicerie</option>
-              <option value="fashion">Mode</option>
-              <option value="jewelry">Bijoux</option>
+              <option *ngFor="let category of categories" [value]="category.id">
+                {{ category.name }}
+              </option>
             </select>
           </div>
           <input
             type="text"
+            [(ngModel)]="searchTerm"
+            name="search-mobile"
             placeholder="Rechercher un produit..."
             class="h-10 flex-grow pl-4 pr-12 py-2 text-gray-600"
             style="border-top-left-radius: 0px; border-bottom-left-radius: 0px"
+            (keyup)="onSearchKeyUp($event)"
           />
           <button
+            type="submit"
             class="absolute right-0 top-0 h-full px-4 bg-primary text-white hover:bg-primary-dark transition-colors duration-300 rounded-e-lg"
           >
             <i class="lni lni-search-alt text-xl"></i>
           </button>
-        </div>
+        </form>
       </div>
     </div>
   </div>
@@ -241,34 +260,16 @@
     <div class="container mx-auto">
       <!-- Main navigation -->
       <nav class="hidden md:flex justify-center mt-0 space-x-8">
-        <a
-          routerLink="/decorations"
-          routerLinkActive="text-primary border-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
-        >
-          Décorations
-        </a>
-        <a
-          routerLink="/groceries"
-          routerLinkActive="text-primary border-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
-        >
-          Épicerie
-        </a>
-        <a
-          routerLink="/fashion"
-          routerLinkActive="text-primary border-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
-        >
-          Mode
-        </a>
-        <a
-          routerLink="/jewelry"
-          routerLinkActive="text-primary border-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
-        >
-          Bijoux
-        </a>
+        <ng-container *ngFor="let category of categories">
+          <a
+            [routerLink]="['/products']"
+            [queryParams]="{ category: category.id }"
+            routerLinkActive="text-primary border-primary font-semibold"
+            class="font-medium text-gray-600 hover:text-primary border-b-2 border-transparent hover:border-primary py-3 px-2 transition-all duration-300"
+          >
+            {{ category.name }}
+          </a>
+        </ng-container>
       </nav>
     </div>
   </div>
@@ -280,34 +281,17 @@
   >
     <div class="container mx-auto px-4 py-2">
       <nav class="flex flex-col">
-        <a
-          routerLink="/decorations"
-          routerLinkActive="text-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary py-3 border-b border-gray-100 flex items-center"
-        >
-          <i class="lni lni-gallery mr-2 text-sm"></i> Décorations
-        </a>
-        <a
-          routerLink="/groceries"
-          routerLinkActive="text-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary py-3 border-b border-gray-100 flex items-center"
-        >
-          <i class="lni lni-restaurant mr-2 text-sm"></i> Épicerie
-        </a>
-        <a
-          routerLink="/fashion"
-          routerLinkActive="text-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary py-3 border-b border-gray-100 flex items-center"
-        >
-          <i class="lni lni-t-shirt mr-2 text-sm"></i> Mode
-        </a>
-        <a
-          routerLink="/jewelry"
-          routerLinkActive="text-primary font-semibold"
-          class="font-medium text-gray-600 hover:text-primary py-3 flex items-center"
-        >
-          <i class="lni lni-diamond mr-2 text-sm"></i> Bijoux
-        </a>
+        <ng-container *ngFor="let category of categories; let last = last">
+          <a
+            (click)="navigateToCategory(category.id)"
+            class="font-medium text-gray-600 hover:text-primary py-3 flex items-center cursor-pointer"
+            [class.border-b]="!last"
+            [class.border-gray-100]="!last"
+          >
+            <i class="lni lni-chevron-right mr-2 text-sm"></i>
+            {{ category.name }}
+          </a>
+        </ng-container>
       </nav>
 
       <!-- Mobile language and account section with improved styling -->

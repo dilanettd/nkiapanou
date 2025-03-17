@@ -1,7 +1,5 @@
-<!-- Start Hero Acarousel -->
+<!-- Start Hero Carousel -->
 <nkiapanou-carousel></nkiapanou-carousel>
-
-<!-- home.component.html -->
 
 <!-- Section Produits Tendance -->
 <section class="py-12 bg-gray-50">
@@ -16,8 +14,18 @@
       </p>
     </div>
 
+    <!-- Loader -->
+    <div *ngIf="isLoadingTrending" class="flex justify-center my-12">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+      ></div>
+    </div>
+
     <!-- Carousel ou Grid des produits tendance -->
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+    <div
+      *ngIf="!isLoadingTrending"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
+    >
       <div
         *ngFor="let product of trendingProducts"
         class="group bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 overflow-hidden"
@@ -26,28 +34,34 @@
         <!-- Image Container -->
         <div class="relative pt-[100%]">
           <img
-            [src]="product.imageUrl || 'assets/images/default-product.jpg'"
+            [src]="
+              product.images && product.images.length > 0
+                ? product.images[0].image_path
+                : productService.getPlaceholderImage(product.name)
+            "
             [alt]="product.name"
             class="absolute inset-0 w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-300"
           />
 
           <span
-            *ngIf="product.badge"
+            *ngIf="product.discount_price"
             class="absolute top-2 left-2 bg-primary text-white text-xs font-medium px-2 py-1 rounded-full"
           >
-            {{ product.badge }}
+            Promo
           </span>
 
           <div
             class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
           >
-            <a
-              [routerLink]="['/product', product.id]"
-              class="bg-white text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
-            >
-              <i class="lni lni-cart"></i>
-              <span>Voir détails</span>
-            </a>
+            <div class="flex flex-col items-center space-y-2">
+              <a
+                [routerLink]="['/product', product.slug]"
+                class="bg-white text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-lg text-sm font-medium transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
+              >
+                <i class="lni lni-eye"></i>
+                <span>Voir détails</span>
+              </a>
+            </div>
           </div>
         </div>
 
@@ -55,35 +69,41 @@
         <div class="p-4">
           <span
             class="font-semibold text-gray-800 text-sm mt-1 mb-2 line-clamp-2 font-body"
-            >{{ product.category }}</span
+            >{{ product.category?.name || "Catégorie" }}</span
           >
-          <h3 class="text-xs text-gray-500 mt-1 mb-2">
+          <h3 class="text-base text-text-dark font-medium mb-2 line-clamp-2">
             {{ product.name }}
           </h3>
 
-          <div class="flex items-center space-x-1 mb-2">
-            <div class="flex text-yellow-400 text-sm">
-              <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
-                <i
-                  [class]="
-                    i < product.rating ? 'lni lni-star-filled' : 'lni lni-star'
-                  "
-                ></i>
-              </ng-container>
+          <div class="flex items-center justify-between mt-2">
+            <div class="flex flex-col">
+              <span
+                *ngIf="product.discount_price"
+                class="text-sm text-gray-500 line-through"
+              >
+                {{ product.price }} €
+              </span>
+              <span class="text-lg font-bold text-primary">
+                {{ product.discount_price || product.price }} €
+              </span>
             </div>
-            <span class="text-xs text-gray-500">({{ product.rating }})</span>
-          </div>
-
-          <div class="flex items-center justify-between">
-            <span class="text-lg font-bold text-primary">
-              {{ product.price }} €
-            </span>
-            <button
-              [routerLink]="['/product', product.id]"
-              class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary bg-opacity-10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-colors duration-300"
-            >
-              <i class="lni lni-cart md:text-lg"></i>
-            </button>
+            <div class="flex space-x-2">
+              <button
+                (click)="toggleWishlist(product, $event)"
+                class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary-100 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-colors duration-300"
+                [ngClass]="{
+                  'bg-primary text-white': isInWishlist(product.id) | async
+                }"
+              >
+                <i class="lni lni-heart md:text-lg"></i>
+              </button>
+              <button
+                (click)="addToCart(product, $event)"
+                class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary bg-opacity-10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-colors duration-300"
+              >
+                <i class="lni lni-cart md:text-lg"></i>
+              </button>
+            </div>
           </div>
         </div>
       </div>
@@ -91,7 +111,11 @@
 
     <!-- Voir Plus Button -->
     <div class="text-center mt-8">
-      <a routerLink="/trending-products" class="btn btn-outline">
+      <a
+        [routerLink]="['/products']"
+        [queryParams]="{ featured: true }"
+        class="btn btn-outline"
+      >
         Tous les produits tendance
         <i class="lni lni-arrow-right ml-2"></i>
       </a>
@@ -112,8 +136,18 @@
       </p>
     </div>
 
+    <!-- Loader pour les catégories -->
+    <div *ngIf="isLoadingCategories" class="flex justify-center my-12">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+      ></div>
+    </div>
+
     <!-- Tabs Navigation -->
-    <div class="flex flex-wrap justify-center mb-10">
+    <div
+      *ngIf="!isLoadingCategories"
+      class="flex flex-wrap justify-center mb-10"
+    >
       <div class="border-b border-gray-200 w-full">
         <ul class="flex flex-wrap -mb-px justify-center" role="tablist">
           <li
@@ -128,7 +162,7 @@
                   ? 'border-primary text-primary'
                   : 'border-transparent text-gray-900 hover:text-primary hover:border-primary'
               "
-              (click)="selectCategory(category.slug)"
+              (click)="selectCategory(category.id)"
               type="button"
               role="tab"
             >
@@ -139,39 +173,79 @@
       </div>
     </div>
 
-    <!-- Tabs Content -->
-    <div class="category-products">
+    <!-- Loader pour les produits par catégorie -->
+    <div *ngIf="isLoadingCategoryProducts" class="flex justify-center my-12">
       <div
-        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 md:gap-6"
+        class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- Empty state pour aucun produit dans la catégorie sélectionnée -->
+    <div
+      *ngIf="!isLoadingCategoryProducts && productsByCategory.length === 0"
+      class="text-center py-12 bg-gray-50 rounded-lg border border-gray-200"
+    >
+      <div class="flex flex-col items-center justify-center">
+        <i class="lni lni-package text-5xl text-gray-300 mb-4"></i>
+        <h3 class="text-xl font-medium text-gray-800 mb-2">
+          Aucun produit disponible
+        </h3>
+        <p class="text-gray-600 max-w-md mx-auto mb-6">
+          Il n'y a actuellement aucun produit disponible dans cette catégorie.
+          Veuillez consulter nos autres catégories ou revenir plus tard.
+        </p>
+        <button
+          (click)="selectCategory(productCategories[0]?.id)"
+          class="btn btn-outline"
+          *ngIf="productCategories.length > 0"
+        >
+          Voir une autre catégorie
+        </button>
+      </div>
+    </div>
+
+    <!-- Tabs Content -->
+    <div
+      *ngIf="!isLoadingCategoryProducts && productsByCategory.length > 0"
+      class="category-products"
+    >
+      <div
+        class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6"
       >
         <div
-          *ngFor="let product of getProductsByCategory()"
+          *ngFor="let product of productsByCategory"
           class="group bg-white rounded-xl shadow-sm hover:shadow-md transition-shadow duration-300 border border-gray-100 overflow-hidden"
           @fadeIn
         >
           <!-- Image Container -->
           <div class="relative pt-[75%]">
             <img
-              [src]="product.imageUrl || 'assets/images/default-product.jpg'"
+              [src]="
+                product.images && product.images.length > 0
+                  ? product.images[0].image_path
+                  : productService.getPlaceholderImage(product.name)
+              "
               [alt]="product.name"
               class="absolute inset-0 w-full h-full object-cover object-center transform group-hover:scale-105 transition-transform duration-300"
             />
             <span
-              *ngIf="product.badge"
+              *ngIf="product.discount_price"
               class="absolute top-2 left-2 bg-primary text-white text-xs font-medium px-2.5 py-1 rounded-full"
             >
-              {{ product.badge }}
+              Promo
             </span>
             <div
               class="absolute inset-0 bg-black/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center"
             >
-              <a
-                [routerLink]="['/product', product.id]"
-                class="bg-white text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-full text-sm font-medium transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
-              >
-                <i class="lni lni-cart"></i>
-                <span>Voir détails</span>
-              </a>
+              <div class="flex flex-col items-center space-y-2">
+                <a
+                  [routerLink]="['/product', product.slug]"
+                  class="bg-white text-primary hover:bg-primary hover:text-white px-4 py-2 rounded-full text-sm font-medium transform hover:scale-105 transition-all duration-300 flex items-center space-x-2"
+                >
+                  <i class="lni lni-eye"></i>
+                  <span>Voir détails</span>
+                </a>
+              </div>
             </div>
           </div>
 
@@ -179,37 +253,41 @@
           <div class="p-4">
             <span
               class="font-semibold text-gray-800 text-sm mt-1 mb-2 line-clamp-2 font-body"
-              >{{ product.category }}</span
+              >{{ product.category?.name || "Catégorie" }}</span
             >
-            <h3 class="text-xs text-gray-500 mt-1 mb-2">
+            <h3 class="text-base text-text-dark font-medium mb-2 line-clamp-2">
               {{ product.name }}
             </h3>
-            <div class="flex items-center space-x-1 mb-2">
-              <div class="flex text-yellow-400 text-sm">
-                <ng-container
-                  *ngFor="let star of [1, 2, 3, 4, 5]; let i = index"
+
+            <div class="flex items-center justify-between mt-2">
+              <div class="flex flex-col">
+                <span
+                  *ngIf="product.discount_price"
+                  class="text-sm text-gray-500 line-through"
                 >
-                  <i
-                    [class]="
-                      i < product.rating
-                        ? 'lni lni-star-filled'
-                        : 'lni lni-star'
-                    "
-                  ></i>
-                </ng-container>
+                  {{ product.price }} €
+                </span>
+                <span class="text-lg font-bold text-primary">
+                  {{ product.discount_price || product.price }} €
+                </span>
               </div>
-              <span class="text-xs text-gray-500">({{ product.rating }})</span>
-            </div>
-            <div class="flex items-center justify-between">
-              <span class="text-lg font-bold text-primary">
-                {{ product.price }} €
-              </span>
-              <button
-                [routerLink]="['/product', product.id]"
-                class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary bg-opacity-10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-colors duration-300"
-              >
-                <i class="lni lni-cart md:text-lg"></i>
-              </button>
+              <div class="flex space-x-2">
+                <button
+                  (click)="toggleWishlist(product, $event)"
+                  class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary-100 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-colors duration-300"
+                  [ngClass]="{
+                    'bg-primary text-white': isInWishlist(product.id) | async
+                  }"
+                >
+                  <i class="lni lni-heart md:text-lg"></i>
+                </button>
+                <button
+                  (click)="addToCart(product, $event)"
+                  class="w-8 h-8 md:w-10 md:h-10 rounded-full bg-primary bg-opacity-10 hover:bg-primary text-primary hover:text-white flex items-center justify-center transition-colors duration-300"
+                >
+                  <i class="lni lni-cart md:text-lg"></i>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -218,7 +296,11 @@
 
     <!-- Voir Plus Button -->
     <div class="text-center mt-8">
-      <a [routerLink]="['/category', selectedCategory]" class="btn btn-outline">
+      <a
+        [routerLink]="['/products']"
+        [queryParams]="{ category: selectedCategoryId }"
+        class="btn btn-outline"
+      >
         Voir tous les produits
         <i class="lni lni-arrow-right ml-2"></i>
       </a>
@@ -226,53 +308,38 @@
   </div>
 </section>
 
-<!-- Section Avis Clients -->
-<section class="py-12 bg-white">
+<!-- Section Avis Clients avec Carousel -->
+<section class="py-12 bg-gray-50">
   <div class="container mx-auto px-4">
     <div class="text-center mb-10">
-      <h2 class="text-2xl md:text-3xl font-bold mb-4">
+      <h2 class="text-2xl md:text-3xl font-bold font-heading text-primary mb-4">
         Ce que disent nos clients
       </h2>
-      <p class="text-gray-600 max-w-2xl mx-auto">
+      <p class="text-gray-600 max-w-2xl mx-auto font-body">
         Découvrez les témoignages de nos clients satisfaits qui ont partagé leur
         expérience avec nos produits et services.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-      <!-- Avis 1 -->
+    <!-- Loader pour les avis -->
+    <div *ngIf="isLoadingReviews" class="flex justify-center my-12">
       <div
-        *ngFor="let review of customerReviews"
-        class="bg-gray-50 rounded-xl shadow-sm p-6 border border-gray-100"
-        @fadeIn
-      >
-        <div class="flex items-center space-x-3 mb-4">
-          <div class="flex-shrink-0">
-            <img
-              class="w-12 h-12 rounded-full"
-              [src]="review.userImage"
-              [alt]="review.userName"
-            />
-          </div>
-          <div>
-            <h3 class="text-base font-medium text-gray-800">
-              {{ review.userName }}
-            </h3>
-            <div class="flex text-yellow-400 text-sm mt-1">
-              <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
-                <i
-                  [class]="getStarClass(review.rating, i)"
-                  class="text-yellow-400"
-                ></i>
-              </ng-container>
-            </div>
-          </div>
-        </div>
-        <p class="text-gray-600">"{{ review.comment }}"</p>
-        <div class="mt-4 text-sm text-gray-500">
-          <span>Produit acheté: {{ review.productName }}</span>
-        </div>
-      </div>
+        class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- Carousel de témoignages -->
+    <nkiapanou-testimonial-carousel
+      *ngIf="!isLoadingReviews && customerReviews.length > 0"
+      [reviews]="customerReviews"
+    ></nkiapanou-testimonial-carousel>
+
+    <!-- Message si aucun témoignage -->
+    <div
+      *ngIf="!isLoadingReviews && customerReviews.length === 0"
+      class="text-center py-8"
+    >
+      <p class="text-gray-600">Aucun témoignage disponible pour le moment.</p>
     </div>
 
     <!-- Voir Plus Button pour les avis -->
@@ -286,23 +353,33 @@
 </section>
 
 <!-- Section Nos Catégories Populaires -->
-<section class="py-12 bg-gray-50">
+<section class="py-12">
   <div class="container mx-auto px-4">
     <div class="text-center mb-10">
-      <h2 class="text-2xl md:text-3xl font-bold mb-4">
+      <h2 class="text-2xl md:text-3xl font-bold font-heading text-primary mb-4">
         Nos Catégories Populaires
       </h2>
-      <p class="text-gray-600 max-w-2xl mx-auto">
+      <p class="text-gray-600 max-w-2xl mx-auto font-body">
         Explorez notre sélection diversifiée de produits authentiques africains,
         soigneusement sélectionnés pour votre plus grand plaisir.
       </p>
     </div>
 
-    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+    <!-- Loader pour les catégories -->
+    <div *ngIf="isLoadingCategories" class="flex justify-center my-12">
+      <div
+        class="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <div
+      *ngIf="!isLoadingCategories"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6"
+    >
       <!-- Catégorie -->
       <a
         *ngFor="let category of categories"
-        [routerLink]="category.link"
+        [routerLink]="['/category', category.slug]"
         class="group"
         @fadeInUp
       >
@@ -310,7 +387,7 @@
           <!-- Image avec overlay -->
           <div class="h-64 bg-gray-200">
             <img
-              [src]="category.imageUrl"
+              [src]="category.image || 'assets/images/default-category.jpg'"
               [alt]="category.name"
               class="w-full h-full object-cover object-center group-hover:scale-110 transition-transform duration-500"
             />
@@ -324,11 +401,16 @@
           <div
             class="absolute inset-0 flex flex-col items-center justify-center text-white p-6"
           >
-            <h3 class="text-xl font-bold mb-2 text-center">
+            <h3 class="text-xl font-bold mb-2 text-center text-white">
               {{ category.name }}
             </h3>
-            <p class="text-sm text-center mb-4 max-w-[200px]">
-              {{ category.description }}
+            <p class="text-xs text-center mb-4 max-w-[200px]">
+              {{ category.description | slice : 0 : 80
+              }}{{
+                category.description && category.description.length > 80
+                  ? "..."
+                  : ""
+              }}
             </p>
             <span
               class="px-4 py-2 bg-white bg-opacity-20 rounded-lg text-sm font-medium backdrop-blur-sm group-hover:bg-primary group-hover:bg-opacity-100 transition-all duration-300"
@@ -337,65 +419,6 @@
             </span>
           </div>
         </div>
-      </a>
-    </div>
-  </div>
-</section>
-
-<!-- Section Avis Clients -->
-<section class="py-12 bg-white">
-  <div class="container mx-auto px-4">
-    <div class="text-center mb-10">
-      <h2 class="text-2xl md:text-3xl font-bold font-heading text-primary mb-4">
-        Ce que disent nos clients
-      </h2>
-      <p class="text-gray-600 max-w-2xl mx-auto font-body">
-        Découvrez les témoignages de nos clients satisfaits qui ont partagé leur
-        expérience avec nos produits et services.
-      </p>
-    </div>
-
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8">
-      <!-- Avis 1 -->
-      <div
-        *ngFor="let review of customerReviews"
-        class="bg-gray-50 rounded-xl shadow-sm p-6 border border-gray-100"
-        @fadeIn
-      >
-        <div class="flex items-center space-x-3 mb-4">
-          <div class="flex-shrink-0">
-            <img
-              class="w-12 h-12 rounded-full"
-              [src]="review.userImage"
-              [alt]="review.userName"
-            />
-          </div>
-          <div>
-            <h3 class="text-base font-medium text-gray-800 font-body">
-              {{ review.userName }}
-            </h3>
-            <div class="flex text-yellow-400 text-sm mt-1">
-              <ng-container *ngFor="let star of [1, 2, 3, 4, 5]; let i = index">
-                <i
-                  [class]="getStarClass(review.rating, i)"
-                  class="text-yellow-400"
-                ></i>
-              </ng-container>
-            </div>
-          </div>
-        </div>
-        <p class="text-gray-600 font-body">"{{ review.comment }}"</p>
-        <div class="mt-4 text-sm text-gray-500">
-          <span>Produit acheté: {{ review.productName }}</span>
-        </div>
-      </div>
-    </div>
-
-    <!-- Voir Plus Button pour les avis -->
-    <div class="text-center mt-8">
-      <a routerLink="/testimonials" class="btn btn-outline">
-        Voir plus d'avis
-        <i class="lni lni-arrow-right ml-2"></i>
       </a>
     </div>
   </div>
@@ -518,6 +541,11 @@
             formControlName="email"
             placeholder="Votre adresse e-mail"
             class="flex-grow px-4 py-3 rounded-lg focus:outline-none focus:ring-2 focus:ring-primary-focus border-primary text-text-default shadow-sm font-body"
+            [ngClass]="{
+              'input-error':
+                newsletterForm.get('email')?.invalid &&
+                newsletterForm.get('email')?.touched
+            }"
           />
           <button
             type="submit"
@@ -532,6 +560,15 @@
               class="lni lni-spinner-arrow animate-spin ml-2"
             ></i>
           </button>
+        </div>
+        <div
+          *ngIf="
+            newsletterForm.get('email')?.invalid &&
+            newsletterForm.get('email')?.touched
+          "
+          class="text-red-500 mt-2 text-sm"
+        >
+          Veuillez entrer une adresse e-mail valide
         </div>
       </form>
 
