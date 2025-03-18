@@ -105,16 +105,14 @@
           <button
             type="submit"
             [disabled]="loginForm.invalid || isLoading"
-            class="w-full sm:w-auto btn btn-primary py-2 px-4 relative min-w-[120px]"
+            class="btn btn-primary flex-1"
           >
-            <span class="flex items-center justify-center">
-              <span [class.opacity-0]="isLoading" class="block"
-                >Se connecter</span
-              >
-              <span [class.opacity-0]="!isLoading" class="opacity-0"
-                >Connexion en cours...</span
-              >
-            </span>
+            <ng-container *ngIf="isLoading; else defaultText">
+              <spinner></spinner>
+            </ng-container>
+            <ng-template #defaultText>
+              <span>Se connecter</span>
+            </ng-template>
           </button>
         </div>
       </form>

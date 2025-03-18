@@ -1,5 +1,6 @@
 <IfModule mod_rewrite.c>
-  RewriteEngine On RewriteBase / RewriteRule ^index\.html$ - [L] RewriteCond
-  %{REQUEST_FILENAME} !-f RewriteCond %{REQUEST_FILENAME} !-d RewriteRule .
-  /index.html [L]
+  RewriteEngine On # Forced redirection to HTTPS RewriteCond %{HTTPS} off
+  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L] #Angular rules
+  RewriteBase / RewriteRule ^index\.html$ - [L] RewriteCond %{REQUEST_FILENAME}
+  !-f RewriteCond %{REQUEST_FILENAME} !-d RewriteRule . /index.html [L]
 </IfModule>

@@ -1,4 +1,4 @@
-import { Injectable, inject, signal } from '@angular/core';
+import { Injectable, Injector, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LocalStorageService } from 'ngx-webstorage';
 import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
@@ -29,7 +29,7 @@ export class AuthService {
   // Pour suivre le processus de synchronisation
   public isSynchronizing = signal<boolean>(false);
 
-  constructor() {
+  constructor(private injector: Injector) {
     // Initialiser l'état d'authentification avec la valeur du localStorage
     const token = this.storage.retrieve('authToken');
     const initialAuthState = !!token;
@@ -63,14 +63,14 @@ export class AuthService {
   // Méthodes d'injection lazy pour éviter les dépendances circulaires
   private getCartService(): CartService {
     if (!this.cartService) {
-      this.cartService = inject(CartService);
+      this.cartService = this.injector.get(CartService);
     }
     return this.cartService;
   }
 
   private getWishlistService(): WishlistService {
     if (!this.wishlistService) {
-      this.wishlistService = inject(WishlistService);
+      this.wishlistService = this.injector.get(WishlistService);
     }
     return this.wishlistService;
   }

@@ -10,11 +10,18 @@ import { AuthService } from '../../../../core/services/auth/auth.service';
 import { Subscription } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 import { IUser } from '../../../../core/models/auth.state.model';
+import { CommonModule } from '@angular/common';
+import { ButtonSpinnerComponent } from '../../../../shared/components/button-spinner/button-spinner.component';
 
 @Component({
   selector: 'login-admin',
   standalone: true,
-  imports: [ReactiveFormsModule, RouterModule],
+  imports: [
+    ReactiveFormsModule,
+    RouterModule,
+    CommonModule,
+    ButtonSpinnerComponent,
+  ],
   templateUrl: './login-admin.component.html',
   styleUrls: ['./login-admin.component.scss'],
 })
