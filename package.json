@@ -24,6 +24,7 @@
     "bootstrap-icons": "^1.11.3",
     "chart.js": "^4.4.8",
     "ngx-image-compress": "^18.1.5",
+    "ngx-stripe": "^0.0.1",
     "ngx-toastr": "^19.0.0",
     "ngx-webstorage": "^18.0.0",
     "rxjs": "~7.8.0",
