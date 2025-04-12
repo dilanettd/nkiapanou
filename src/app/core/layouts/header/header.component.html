@@ -8,11 +8,11 @@
     <div class="container mx-auto flex flex-wrap justify-between items-center">
       <div class="flex items-center space-x-5 text-sm">
         <span class="flex items-center">
-          <i class="lni lni-phone-set mr-1"></i>
+          <i class="lni lni-phone-set mr-1 text-xl"></i>
           +33 (0)1 23 45 67 89
         </span>
         <span class="flex items-center">
-          <i class="lni lni-envelope mr-1"></i>
+          <i class="lni lni-envelope mr-1 text-xl"></i>
           nkiapanou&#64;yahoo.com
         </span>
       </div>
@@ -63,7 +63,7 @@
             (click)="toggleAuthDropdown()"
             class="text-sm flex items-center text-gray-500 hover:text-primary transition-colors duration-300 font-medium"
           >
-            <i class="lni lni-user mr-1"></i>
+            <i class="lni lni-user mr-1 text-xl"></i>
             @if (isAuthenticated) {
             <span>{{ userName }}</span>
             } @else {
@@ -180,24 +180,32 @@
           <i class="lni lni-search-alt text-2xl"></i>
         </button>
 
-        <!-- Favorites icon -->
+        <!-- Favorites icon with circle -->
         <a
           routerLink="/account/wishlist"
           class="relative text-gray-500 hover:text-primary transition-colors duration-300"
         >
-          <i class="lni lni-heart text-2xl"></i>
+          <div
+            class="h-10 w-10 rounded-full border flex items-center justify-center"
+          >
+            <i class="lni lni-heart text-2xl"></i>
+          </div>
           <span
             class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
             >{{ wishlistItemCount }}</span
           >
         </a>
 
-        <!-- Cart icon -->
+        <!-- Cart icon with circle -->
         <a
           routerLink="/cart"
           class="relative text-gray-500 hover:text-primary transition-colors duration-300"
         >
-          <i class="lni lni-cart text-2xl"></i>
+          <div
+            class="h-10 w-10 rounded-full border flex items-center justify-center"
+          >
+            <i class="lni lni-cart text-2xl"></i>
+          </div>
           <span
             class="absolute -top-2 -right-2 bg-primary text-white text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center shadow-sm"
             >{{ cartItemCount }}</span

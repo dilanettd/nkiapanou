@@ -19,6 +19,7 @@
     "@angular/platform-browser-dynamic": "^18.2.8",
     "@angular/router": "^18.2.8",
     "@ng-bootstrap/ng-bootstrap": "^17.0.1",
+    "@stripe/stripe-js": "^6.1.0",
     "@tailwindcss/forms": "^0.5.10",
     "bootstrap-icons": "^1.11.3",
     "chart.js": "^4.4.8",

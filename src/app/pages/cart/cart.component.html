@@ -1,10 +1,10 @@
-<section class="bg-neutral py-6">
-  <div class="container mx-auto px-4">
+<section class="bg-neutral py-8">
+  <div class="container mx-auto px-4 max-w-6xl">
     <!-- Bouton retour -->
-    <div class="mb-4">
+    <div class="mb-6">
       <button
         (click)="goBack()"
-        class="flex items-center text-primary hover:text-primary-hover transition-colors"
+        class="flex items-center bg-primary hover:bg-primary-hover text-white py-2 px-4 rounded-button transition-colors font-medium shadow-sm"
       >
         <i class="lni lni-arrow-left mr-2"></i>
         Retour
@@ -12,18 +12,20 @@
     </div>
 
     <!-- Page title -->
-    <div class="mb-6">
+    <div class="mb-8">
       <h1 class="text-3xl md:text-4xl font-heading text-primary">Mon Panier</h1>
-      <p class="mt-2 text-text-light">Vérifiez et finalisez votre commande</p>
+      <p class="mt-2 text-text-light font-body">
+        Vérifiez et finalisez votre commande
+      </p>
     </div>
 
     <!-- Synchronization indicator -->
     <div
       *ngIf="isSyncing"
-      class="bg-blue-50 rounded-lg p-3 mb-4 text-blue-800 flex items-center"
+      class="bg-secondary bg-opacity-10 rounded-lg p-3 mb-6 text-secondary flex items-center"
     >
       <div
-        class="animate-spin rounded-full h-5 w-5 border-b-2 border-blue-600 mr-2"
+        class="animate-spin rounded-full h-5 w-5 border-b-2 border-secondary mr-2"
       ></div>
       <span>Synchronisation de votre panier en cours...</span>
     </div>
@@ -40,228 +42,744 @@
       *ngIf="!isLoading && cartItems?.length === 0"
       class="bg-white rounded-lg shadow-sm p-8 text-center"
     >
-      <div class="text-gray-400 mb-4">
+      <div class="text-text-light mb-4">
         <i class="lni lni-cart text-6xl"></i>
       </div>
-      <h2 class="text-2xl font-medium mb-2">Votre panier est vide</h2>
-      <p class="text-gray-500 mb-4">
+      <h2 class="text-2xl font-heading mb-2">Votre panier est vide</h2>
+      <p class="text-text-light mb-4 font-body">
         Ajoutez des produits à votre panier pour commencer votre shopping.
       </p>
-      <a
-        routerLink="/products"
-        class="inline-block px-6 py-3 bg-primary text-white rounded-md hover:bg-primary-hover transition-colors"
-      >
+      <a routerLink="/products" class="btn btn-primary">
         Continuer mes achats
       </a>
     </div>
 
-    <!-- Cart with items -->
+    <!-- Cart content -->
     <div
       *ngIf="!isLoading && cartItems && cartItems.length > 0"
-      class="flex flex-col lg:flex-row gap-6"
+      class="flex flex-col gap-8"
     >
-      <!-- Cart items list -->
-      <div
-        class="w-full lg:w-2/3 bg-white rounded-lg shadow-sm overflow-hidden"
-      >
-        <!-- Table header on desktop -->
-        <div
-          class="hidden md:flex bg-gray-50 p-4 border-b text-text-light font-medium"
-        >
-          <div class="w-1/2">Produit</div>
-          <div class="w-1/6 text-center">Prix</div>
-          <div class="w-1/6 text-center">Quantité</div>
-          <div class="w-1/6 text-center">Total</div>
-        </div>
+      <!-- Cart items section prend toute la largeur -->
+      <div class="w-full">
+        <!-- Cart items container avec overflow pour mobile -->
+        <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+          <div class="p-6 border-b border-neutral">
+            <h2 class="text-xl font-heading text-text-dark">
+              Articles ({{ cartItems.length }})
+            </h2>
+          </div>
 
-        <!-- Cart items -->
-        <div class="divide-y">
+          <!-- Table header on desktop -->
           <div
-            *ngFor="let item of cartItems"
-            class="p-4 flex flex-col md:flex-row items-start md:items-center"
+            class="hidden md:flex border p-4 text-text-light font-body font-medium"
           >
-            <!-- Product info -->
-            <div class="w-full md:w-1/2 flex mb-4 md:mb-0">
-              <!-- Product image -->
-              <div class="w-20 h-20 rounded-md overflow-hidden flex-shrink-0">
-                <a [routerLink]="['/product', item.product_id]">
-                  <img
-                    [src]="
-                      item.productDetails &&
-                      item.productDetails.images &&
-                      item.productDetails.images.length > 0
-                        ? item.productDetails.images[0].image_path
-                        : 'assets/images/placeholder.jpg'
-                    "
-                    [alt]="item.productDetails?.name || 'Produit'"
-                    class="w-full h-full object-cover"
-                  />
-                </a>
-              </div>
+            <div class="w-2/5">Produit</div>
+            <div class="w-1/5 text-center">Prix</div>
+            <div class="w-1/5 text-center">Quantité</div>
+            <div class="w-1/5 text-center">Total</div>
+          </div>
 
-              <!-- Product details -->
-              <div class="ml-4">
-                <a
-                  [routerLink]="['/product', item.product_id]"
-                  class="font-medium text-text-dark hover:text-primary transition-colors"
-                >
-                  {{ item.productDetails?.name || "Produit inconnu" }}
-                </a>
+          <!-- Cart items avec scrollable sur mobile -->
+          <div class="overflow-x-auto max-w-full">
+            <div class="divide-y divide-neutral min-w-full">
+              <div
+                *ngFor="let item of cartItems"
+                class="p-4 flex flex-col md:flex-row items-start md:items-center hover:bg-neutral transition-colors"
+              >
+                <!-- Product info -->
+                <div class="w-full md:w-2/5 flex mb-4 md:mb-0">
+                  <!-- Product image -->
+                  <div
+                    class="w-20 h-20 rounded-lg overflow-hidden flex-shrink-0 border border-neutral"
+                  >
+                    <a [routerLink]="['/product', item.product_id]">
+                      <img
+                        [src]="
+                          item.productDetails &&
+                          item.productDetails.images &&
+                          item.productDetails.images.length > 0
+                            ? item.productDetails.images[0].image_path
+                            : 'assets/images/placeholder.jpg'
+                        "
+                        [alt]="item.productDetails?.name || 'Produit'"
+                        class="w-full h-full object-cover"
+                      />
+                    </a>
+                  </div>
+
+                  <!-- Product details -->
+                  <div class="ml-4">
+                    <a
+                      [routerLink]="['/product', item.product_id]"
+                      class="font-medium text-text-dark hover:text-primary transition-colors"
+                    >
+                      {{ item.productDetails?.name || "Produit inconnu" }}
+                    </a>
+                    <div
+                      *ngIf="item.productDetails && item.productDetails.sku"
+                      class="text-xs text-text-light mt-1 font-body"
+                    >
+                      Réf: {{ item.productDetails.sku }}
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Prix -->
                 <div
-                  *ngIf="item.productDetails && item.productDetails.sku"
-                  class="text-xs text-text-light mt-1"
+                  class="w-full md:w-1/5 flex md:justify-center mb-2 md:mb-0"
                 >
-                  Réf: {{ item.productDetails.sku }}
+                  <span class="md:hidden text-text-light mr-2">Prix:</span>
+                  <span class="font-medium font-body">
+                    {{
+                      formatPrice(
+                        item.productDetails
+                          ? item.productDetails.discount_price ||
+                              item.productDetails.price ||
+                              0
+                          : 0
+                      )
+                    }}
+                  </span>
+                </div>
+
+                <!-- Quantité -->
+                <div
+                  class="w-full md:w-1/5 flex md:justify-center mb-2 md:mb-0"
+                >
+                  <span class="md:hidden text-text-light mr-2">Quantité:</span>
+                  <div class="flex items-center">
+                    <button
+                      class="w-8 h-8 rounded-l-button flex items-center justify-center border hover:bg-accent hover:bg-opacity-10 transition-colors"
+                      (click)="updateQuantity(item.id, item.quantity - 1)"
+                      [disabled]="item.quantity <= 1"
+                      [ngClass]="{
+                        'opacity-50 cursor-not-allowed': item.quantity <= 1
+                      }"
+                    >
+                      <i class="lni lni-minus text-xs"></i>
+                    </button>
+                    <input
+                      type="number"
+                      [ngModel]="item.quantity"
+                      min="1"
+                      [max]="item.productDetails?.quantity || 99"
+                      class="h-8 w-16 text-center border-t border-b border-neutral"
+                      (ngModelChange)="updateQuantity(item.id, $event)"
+                    />
+                    <button
+                      class="w-8 h-8 rounded-r-button flex items-center justify-center border hover:bg-accent hover:bg-opacity-10 transition-colors"
+                      (click)="updateQuantity(item.id, item.quantity + 1)"
+                      [disabled]="
+                        item.productDetails &&
+                        item.quantity >= item.productDetails.quantity
+                      "
+                      [ngClass]="{
+                        'opacity-50 cursor-not-allowed':
+                          item.productDetails &&
+                          item.quantity >= item.productDetails.quantity
+                      }"
+                    >
+                      <i class="lni lni-plus text-xs"></i>
+                    </button>
+                  </div>
+                </div>
+
+                <!-- Subtotal -->
+                <div
+                  class="w-full md:w-1/5 flex md:justify-center items-center"
+                >
+                  <span class="md:hidden text-text-light mr-2">Total:</span>
+                  <span class="font-medium text-primary">{{
+                    formatPrice(item.subtotal || 0)
+                  }}</span>
+                  <button
+                    class="ml-auto md:ml-2 p-1 text-text-light hover:text-secondary transition-colors"
+                    (click)="removeItem(item.id)"
+                    title="Supprimer"
+                  >
+                    <i class="lni lni-trash-can"></i>
+                  </button>
                 </div>
               </div>
             </div>
+          </div>
 
-            <!-- Price -->
-            <div class="w-full md:w-1/6 flex md:justify-center mb-2 md:mb-0">
-              <span class="md:hidden text-text-light mr-2">Prix:</span>
-              <span class="font-medium">
-                {{
-                  formatPrice(
-                    item.productDetails
-                      ? item.productDetails.discount_price ||
-                          item.productDetails.price ||
-                          0
-                      : 0
-                  )
-                }}
-              </span>
-            </div>
+          <!-- Cart actions -->
+          <div class="p-4 border flex justify-between items-center">
+            <button
+              class="text-text-light hover:text-secondary transition-colors flex items-center"
+              (click)="clearCart()"
+            >
+              <i class="lni lni-trash-can mr-1"></i>
+              Vider le panier
+            </button>
+            <a
+              routerLink="/products"
+              class="text-primary hover:text-primary-hover transition-colors flex items-center"
+            >
+              <i class="lni lni-arrow-left mr-1"></i>
+              Continuer mes achats
+            </a>
+          </div>
+        </div>
+      </div>
 
-            <!-- Quantity -->
-            <div class="w-full md:w-1/6 flex md:justify-center mb-2 md:mb-0">
-              <span class="md:hidden text-text-light mr-2">Quantité:</span>
-              <div class="flex items-center">
-                <button
-                  class="w-8 h-8 bg-gray-100 rounded-l-md flex items-center justify-center border border-gray-300 hover:bg-gray-200 transition-colors"
-                  (click)="updateQuantity(item.id, item.quantity - 1)"
-                  [disabled]="item.quantity <= 1"
-                  [ngClass]="{
-                    'opacity-50 cursor-not-allowed': item.quantity <= 1
-                  }"
-                >
-                  <i class="lni lni-minus text-xs"></i>
-                </button>
-                <input
-                  type="number"
-                  [ngModel]="item.quantity"
-                  min="1"
-                  [max]="item.productDetails?.quantity || 99"
-                  class="h-8 w-16 text-center border-t border-b border-gray-300"
-                  (ngModelChange)="updateQuantity(item.id, $event)"
-                />
-                <button
-                  class="w-8 h-8 bg-gray-100 rounded-r-md flex items-center justify-center border border-gray-300 hover:bg-gray-200 transition-colors"
-                  (click)="updateQuantity(item.id, item.quantity + 1)"
-                  [disabled]="
-                    item.productDetails &&
-                    item.quantity >= item.productDetails.quantity
-                  "
-                  [ngClass]="{
-                    'opacity-50 cursor-not-allowed':
-                      item.productDetails &&
-                      item.quantity >= item.productDetails.quantity
-                  }"
-                >
-                  <i class="lni lni-plus text-xs"></i>
-                </button>
-              </div>
-            </div>
-
-            <!-- Subtotal -->
-            <div class="w-full md:w-1/6 flex md:justify-center items-center">
-              <span class="md:hidden text-text-light mr-2">Total:</span>
-              <span class="font-medium text-primary">{{
-                formatPrice(item.subtotal || 0)
-              }}</span>
+      <!-- Section address et récapitulatif -->
+      <div class="flex flex-col lg:flex-row gap-8">
+        <!-- Left column: Shipping Address -->
+        <div class="w-full lg:w-7/12">
+          <!-- Shipping Address -->
+          <div class="bg-white rounded-lg shadow-sm overflow-hidden mb-6">
+            <div
+              class="p-6 border-b border-neutral flex justify-between items-center"
+            >
+              <h2 class="text-xl font-heading text-text-dark">
+                Adresse de livraison
+              </h2>
               <button
-                class="ml-auto md:ml-2 p-1 text-gray-400 hover:text-red-500 transition-colors"
-                (click)="removeItem(item.id)"
-                title="Supprimer"
+                *ngIf="
+                  isAuthenticated &&
+                  userAddresses &&
+                  userAddresses.length > 0 &&
+                  !showAddressForm
+                "
+                class="text-sm text-primary hover:text-primary-hover font-medium btn-sm btn-outline"
+                (click)="showAddressFormAction('shipping')"
               >
-                <i class="lni lni-trash-can"></i>
+                {{ selectedShippingAddressId ? "Modifier" : "Ajouter" }}
+              </button>
+            </div>
+
+            <!-- Loading indicator -->
+            <div *ngIf="loadingAddresses" class="flex justify-center my-6 p-4">
+              <div
+                class="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"
+              ></div>
+            </div>
+
+            <!-- Saved addresses selection -->
+            <div
+              *ngIf="
+                isAuthenticated &&
+                userAddresses &&
+                userAddresses.length > 0 &&
+                !showAddressForm
+              "
+              class="p-6"
+            >
+              <div class="grid grid-cols-1 gap-4">
+                <div
+                  *ngFor="
+                    let address of userAddresses
+                      | filteredBy : ['address_type', 'shipping']
+                  "
+                  class="border rounded-lg p-4 cursor-pointer transition-all duration-200"
+                  [ngClass]="{
+                    'border-primary bg-accent bg-opacity-10 shadow-md':
+                      selectedShippingAddressId === address.id,
+                    'hover:border-accent border-neutral hover:shadow-sm':
+                      selectedShippingAddressId !== address.id
+                  }"
+                  (click)="selectAddress(address.id, 'shipping')"
+                >
+                  <div class="flex justify-between items-start">
+                    <div>
+                      <p class="font-medium">
+                        <span class="text-text-light">Nom : </span
+                        >{{ address.recipient_name }}
+                      </p>
+                      <p class="text-sm mt-1 font-body">
+                        <span class="text-text-light">Adresse : </span>
+                        {{ address.address_line1 }}
+                        <span *ngIf="address.address_line2"
+                          >, {{ address.address_line2 }}</span
+                        >
+                      </p>
+                      <p class="text-sm font-body">
+                        <span class="text-text-light"
+                          >Code postal/Ville :
+                        </span>
+                        {{ address.postal_code }} {{ address.city }}
+                        <span *ngIf="address.state_province"
+                          >, {{ address.state_province }}</span
+                        >
+                      </p>
+                      <p class="text-sm font-body">
+                        <span class="text-text-light">Pays : </span>
+                        {{ getCountryName(address.country) }}
+                      </p>
+                      <p class="text-sm mt-1 font-body">
+                        <span class="text-text-light">Téléphone : </span>
+                        {{ address.phone_number }}
+                      </p>
+                    </div>
+                    <div
+                      *ngIf="address.is_default"
+                      class="bg-primary text-white text-xs px-2 py-1 rounded-full"
+                    >
+                      Défaut
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Bouton pour ajouter une nouvelle adresse -->
+              <button
+                class="mt-4 flex items-center text-primary hover:text-primary-hover"
+                (click)="showAddressFormAction('shipping')"
+              >
+                <i class="lni lni-plus mr-1"></i>
+                Nouvelle adresse de livraison
+              </button>
+            </div>
+
+            <!-- Address form -->
+            <div
+              *ngIf="
+                !isAuthenticated ||
+                (showAddressForm && editingAddressType === 'shipping') ||
+                userAddresses.length === 0
+              "
+              class="p-6"
+            >
+              <form
+                [formGroup]="shippingAddressForm"
+                class="grid grid-cols-1 md:grid-cols-2 gap-4"
+              >
+                <div class="col-span-2">
+                  <label class="block text-text-light mb-1 font-body"
+                    >Nom du destinataire *</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="recipient_name"
+                    class="w-full"
+                    [ngClass]="{
+                      'input-error':
+                        shippingAddressForm.get('recipient_name')?.invalid &&
+                        shippingAddressForm.get('recipient_name')?.touched
+                    }"
+                  />
+                  <div
+                    *ngIf="
+                      shippingAddressForm.get('recipient_name')?.invalid &&
+                      shippingAddressForm.get('recipient_name')?.touched
+                    "
+                    class="text-red-500 text-xs mt-1 font-body"
+                  >
+                    Ce champ est requis
+                  </div>
+                </div>
+
+                <div class="col-span-2">
+                  <label class="block text-text-light mb-1 font-body"
+                    >Adresse *</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="address_line1"
+                    class="w-full"
+                    [ngClass]="{
+                      'input-error':
+                        shippingAddressForm.get('address_line1')?.invalid &&
+                        shippingAddressForm.get('address_line1')?.touched
+                    }"
+                  />
+                  <div
+                    *ngIf="
+                      shippingAddressForm.get('address_line1')?.invalid &&
+                      shippingAddressForm.get('address_line1')?.touched
+                    "
+                    class="text-red-500 text-xs mt-1 font-body"
+                  >
+                    Ce champ est requis
+                  </div>
+                </div>
+
+                <div class="col-span-2">
+                  <label class="block text-text-light mb-1 font-body"
+                    >Complément d'adresse</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="address_line2"
+                    class="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-text-light mb-1 font-body"
+                    >Ville *</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="city"
+                    class="w-full"
+                    [ngClass]="{
+                      'input-error':
+                        shippingAddressForm.get('city')?.invalid &&
+                        shippingAddressForm.get('city')?.touched
+                    }"
+                  />
+                  <div
+                    *ngIf="
+                      shippingAddressForm.get('city')?.invalid &&
+                      shippingAddressForm.get('city')?.touched
+                    "
+                    class="text-red-500 text-xs mt-1 font-body"
+                  >
+                    Ce champ est requis
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-text-light mb-1 font-body"
+                    >Région/Département</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="state_province"
+                    class="w-full"
+                  />
+                </div>
+
+                <div>
+                  <label class="block text-text-light mb-1 font-body"
+                    >Code postal *</label
+                  >
+                  <input
+                    type="text"
+                    formControlName="postal_code"
+                    class="w-full"
+                    [ngClass]="{
+                      'input-error':
+                        shippingAddressForm.get('postal_code')?.invalid &&
+                        shippingAddressForm.get('postal_code')?.touched
+                    }"
+                  />
+                  <div
+                    *ngIf="
+                      shippingAddressForm.get('postal_code')?.invalid &&
+                      shippingAddressForm.get('postal_code')?.touched
+                    "
+                    class="text-red-500 text-xs mt-1 font-body"
+                  >
+                    Ce champ est requis
+                  </div>
+                </div>
+
+                <div>
+                  <label class="block text-text-light mb-1 font-body"
+                    >Pays *</label
+                  >
+                  <select
+                    formControlName="country"
+                    class="w-full"
+                    [ngClass]="{
+                      'input-error':
+                        shippingAddressForm.get('country')?.invalid &&
+                        shippingAddressForm.get('country')?.touched
+                    }"
+                    (change)="onShippingCountryChange($event)"
+                  >
+                    <option value="">Sélectionnez un pays</option>
+                    <option
+                      *ngFor="let country of countries"
+                      [value]="country.code"
+                    >
+                      {{ country.name }}
+                    </option>
+                  </select>
+                  <div
+                    *ngIf="
+                      shippingAddressForm.get('country')?.invalid &&
+                      shippingAddressForm.get('country')?.touched
+                    "
+                    class="text-red-500 text-xs mt-1 font-body"
+                  >
+                    Ce champ est requis
+                  </div>
+                </div>
+
+                <div class="col-span-2">
+                  <label class="block text-text-light mb-1 font-body"
+                    >Téléphone *</label
+                  >
+                  <input
+                    type="tel"
+                    formControlName="phone_number"
+                    class="w-full"
+                    [ngClass]="{
+                      'input-error':
+                        shippingAddressForm.get('phone_number')?.invalid &&
+                        shippingAddressForm.get('phone_number')?.touched
+                    }"
+                  />
+                  <div
+                    *ngIf="
+                      shippingAddressForm.get('phone_number')?.invalid &&
+                      shippingAddressForm.get('phone_number')?.touched
+                    "
+                    class="text-red-500 text-xs mt-1 font-body"
+                  >
+                    Ce champ est requis
+                  </div>
+                </div>
+
+                <div class="col-span-2 flex justify-end space-x-3 mt-2">
+                  <button
+                    *ngIf="showAddressForm"
+                    type="button"
+                    class="btn btn-outline-secondary btn-sm"
+                    (click)="hideAddressForm()"
+                  >
+                    Annuler
+                  </button>
+                  <button
+                    type="button"
+                    class="btn btn-primary btn-sm"
+                    (click)="submitAddressForm()"
+                  >
+                    Enregistrer
+                  </button>
+                </div>
+              </form>
+            </div>
+
+            <!-- No address message -->
+            <div
+              *ngIf="
+                !loadingAddresses &&
+                (!userAddresses || userAddresses.length === 0) &&
+                !showAddressForm
+              "
+              class="p-6 text-center"
+            >
+              <div class="text-text-light mb-4">
+                <i class="lni lni-map-marker text-4xl"></i>
+              </div>
+              <p class="text-text-light mb-4 font-body">
+                Aucune adresse de livraison n'a été ajoutée
+              </p>
+              <button
+                class="btn btn-primary"
+                (click)="showAddressFormAction('shipping')"
+              >
+                Ajouter une adresse
               </button>
             </div>
           </div>
         </div>
 
-        <!-- Cart actions -->
-        <div class="p-4 bg-gray-50 flex justify-between items-center">
-          <button
-            class="text-text-light hover:text-primary transition-colors flex items-center"
-            (click)="clearCart()"
-          >
-            <i class="lni lni-trash-can mr-1"></i>
-            Vider le panier
-          </button>
-          <a
-            routerLink="/products"
-            class="text-primary hover:text-primary-hover transition-colors flex items-center"
-          >
-            <i class="lni lni-arrow-left mr-1"></i>
-            Continuer mes achats
-          </a>
-        </div>
-      </div>
+        <!-- Right column: Order summary and checkout button -->
+        <div class="w-full lg:w-5/12">
+          <div class="bg-white rounded-lg shadow-sm top-6">
+            <div class="p-6 border-b border-neutral">
+              <h2 class="text-xl font-heading text-text-dark">Récapitulatif</h2>
+            </div>
 
-      <!-- Order summary -->
-      <div class="w-full lg:w-1/3">
-        <div class="bg-white rounded-lg shadow-sm p-6">
-          <h3 class="text-xl font-medium mb-4 pb-2 border-b">Récapitulatif</h3>
+            <!-- Section du récapitulatif à mettre à jour dans le template existant -->
+            <div class="p-6">
+              <!-- Subtotal -->
+              <div class="flex justify-between mb-3">
+                <span class="text-text-light font-body">Sous-total</span>
+                <span class="font-medium">{{
+                  formatPrice(cartSubtotal || 0)
+                }}</span>
+              </div>
 
-          <!-- Subtotal -->
-          <div class="flex justify-between mb-2">
-            <span class="text-text-light">Sous-total</span>
-            <span class="font-medium">{{ formatPrice(cartTotal || 0) }}</span>
-          </div>
+              <!-- Shipping -->
+              <div class="flex justify-between mb-3">
+                <span class="text-text-light font-body">Livraison</span>
+                <div class="flex items-center">
+                  <span
+                    *ngIf="isCalculatingShipping"
+                    class="text-sm text-secondary italic font-body"
+                    >Calcul en cours...</span
+                  >
+                  <span
+                    *ngIf="
+                      !isCalculatingShipping &&
+                      shippingCost === 0 &&
+                      selectedShippingAddressId
+                    "
+                    class="text-green-600 font-medium font-body"
+                    >Gratuite</span
+                  >
+                  <span
+                    *ngIf="
+                      !isCalculatingShipping &&
+                      shippingCost === 0 &&
+                      !selectedShippingAddressId
+                    "
+                    class="text-secondary text-sm italic font-body"
+                    >Adresse requise</span
+                  >
+                  <span
+                    *ngIf="!isCalculatingShipping && shippingCost > 0"
+                    class="font-medium font-body"
+                    >{{ formatPrice(shippingCost || 0) }}</span
+                  >
+                  <span
+                    *ngIf="isCalculatingShipping"
+                    class="ml-2 w-4 h-4 border-b-2 border-primary rounded-full animate-spin"
+                  ></span>
+                </div>
+              </div>
 
-          <!-- Shipping (placeholder) -->
-          <div class="flex justify-between mb-2">
-            <span class="text-text-light">Livraison</span>
-            <span class="font-medium">{{ formatPrice(0) }}</span>
-          </div>
+              <!-- Tax -->
+              <div
+                class="flex justify-between mb-6 pb-6 border-b border-neutral"
+              >
+                <span class="text-text-light font-body">TVA (20%)</span>
+                <span class="font-medium">{{
+                  formatPrice(taxAmount || 0)
+                }}</span>
+              </div>
 
-          <!-- Tax (placeholder) -->
-          <div class="flex justify-between mb-4 pb-4 border-b">
-            <span class="text-text-light">TVA (20%)</span>
-            <span class="font-medium">{{
-              formatPrice((cartTotal || 0) * 0.2)
-            }}</span>
-          </div>
+              <!-- Total -->
+              <div class="flex justify-between mb-6">
+                <span class="text-lg font-medium text-text-dark font-body"
+                  >Total</span
+                >
+                <span class="text-xl font-bold text-primary">{{
+                  formatPrice(cartTotal || 0)
+                }}</span>
+              </div>
 
-          <!-- Total -->
-          <div class="flex justify-between mb-6">
-            <span class="text-lg font-medium">Total</span>
-            <span class="text-lg font-bold text-primary">{{
-              formatPrice((cartTotal || 0) * 1.2)
-            }}</span>
-          </div>
+              <!-- Méthodes de paiement -->
+              <div class="mb-6">
+                <h3 class="text-md font-medium mb-3 font-body">
+                  Choisissez votre méthode de paiement
+                </h3>
 
-          <!-- Checkout button -->
-          <button
-            class="w-full py-3 bg-primary text-white font-medium rounded-md hover:bg-primary-hover transition-colors flex items-center justify-center"
-            [disabled]="!cartItems || cartItems.length === 0"
-            [ngClass]="{
-              'opacity-50 cursor-not-allowed':
-                !cartItems || cartItems.length === 0
-            }"
-          >
-            <i class="lni lni-credit-cards mr-2"></i>
-            Passer à la caisse
-          </button>
+                <div class="grid grid-cols-2 gap-3 mb-4">
+                  <!-- Option Carte bancaire (Stripe) -->
+                  <div
+                    class="border rounded-lg p-3 cursor-pointer transition-all duration-200 flex flex-col items-center"
+                    [ngClass]="{
+                      'border-primary bg-accent bg-opacity-10 shadow-md':
+                        selectedPaymentMethod === 'stripe',
+                      'hover:border-accent border-neutral hover:shadow-sm':
+                        selectedPaymentMethod !== 'stripe'
+                    }"
+                    (click)="selectPaymentMethod('stripe')"
+                  >
+                    <div class="flex justify-center mb-2">
+                      <i
+                        class="lni lni-credit-card text-2xl"
+                        [ngClass]="{
+                          'text-primary': selectedPaymentMethod === 'stripe'
+                        }"
+                      ></i>
+                    </div>
+                    <div class="text-center">
+                      <p
+                        class="font-medium"
+                        [ngClass]="{
+                          'text-primary': selectedPaymentMethod === 'stripe'
+                        }"
+                      >
+                        Carte Bancaire
+                      </p>
+                      <p class="text-xs text-text-light">
+                        Visa, Mastercard, etc.
+                      </p>
+                    </div>
+                  </div>
 
-          <!-- Payment methods (placeholder) -->
-          <div class="mt-4 pt-4 border-t text-center">
-            <p class="text-xs text-gray-400 mb-2">Nous acceptons</p>
-            <div class="flex justify-center space-x-2">
-              <i class="lni lni-visa text-2xl text-blue-700"></i>
-              <i class="lni lni-mastercard text-2xl text-red-500"></i>
-              <i class="lni lni-paypal text-2xl text-blue-600"></i>
-              <i class="lni lni-amazon-pay text-2xl text-gray-700"></i>
+                  <!-- Option PayPal -->
+                  <div
+                    class="border rounded-lg p-3 cursor-pointer transition-all duration-200 flex flex-col items-center"
+                    [ngClass]="{
+                      'border-primary bg-accent bg-opacity-10 shadow-md':
+                        selectedPaymentMethod === 'paypal',
+                      'hover:border-accent border-neutral hover:shadow-sm':
+                        selectedPaymentMethod !== 'paypal'
+                    }"
+                    (click)="selectPaymentMethod('paypal')"
+                  >
+                    <div class="flex justify-center mb-2">
+                      <i
+                        class="lni lni-paypal text-2xl"
+                        [ngClass]="{
+                          'text-primary': selectedPaymentMethod === 'paypal',
+                          'text-blue-600': selectedPaymentMethod !== 'paypal'
+                        }"
+                      ></i>
+                    </div>
+                    <div class="text-center">
+                      <p
+                        class="font-medium"
+                        [ngClass]="{
+                          'text-primary': selectedPaymentMethod === 'paypal'
+                        }"
+                      >
+                        PayPal
+                      </p>
+                      <p class="text-xs text-text-light">
+                        Paiement sécurisé PayPal
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Checkout button -->
+              <button
+                class="w-full btn"
+                [ngClass]="{
+                  'btn-primary': canCheckout(),
+                  'btn-outline-secondary opacity-50 cursor-not-allowed':
+                    !canCheckout()
+                }"
+                [disabled]="!canCheckout()"
+                (click)="checkout()"
+              >
+                <div class="flex items-center justify-center">
+                  <div
+                    *ngIf="isProcessingOrder"
+                    class="mr-2 w-4 h-4 border-b-2 border-white rounded-full animate-spin"
+                  ></div>
+                  <ng-container *ngIf="!isProcessingOrder">
+                    <i
+                      class="lni"
+                      [ngClass]="{
+                        'lni-credit-card': selectedPaymentMethod === 'stripe',
+                        'lni-paypal': selectedPaymentMethod === 'paypal'
+                      }"
+                      class="mr-2"
+                    ></i>
+                  </ng-container>
+                  <span>{{
+                    isProcessingOrder
+                      ? "Traitement en cours..."
+                      : "Finaliser la commande"
+                  }}</span>
+                </div>
+              </button>
+
+              <!-- Alert message when address is missing -->
+              <div
+                *ngIf="!selectedShippingAddressId && cartItems.length > 0"
+                class="mt-4 bg-accent bg-opacity-10 border border-accent border-opacity-20 rounded-lg p-3 text-text font-body text-sm"
+              >
+                <i class="lni lni-warning mr-1"></i>
+                Veuillez ajouter une adresse de livraison pour continuer
+              </div>
+
+              <!-- Payment methods -->
+              <div class="mt-6 pt-4 border-t border-neutral text-center">
+                <p class="text-xs text-text-light mb-2 font-body">
+                  Paiement sécurisé
+                </p>
+                <div class="flex justify-center space-x-3">
+                  <i class="lni lni-shield text-green-600 text-sm mr-1"></i>
+                  <span class="text-xs text-green-600 font-medium"
+                    >Protection SSL 256 bits</span
+                  >
+                </div>
+              </div>
             </div>
           </div>
         </div>

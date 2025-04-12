@@ -1,4 +1,4 @@
-import { IAdmin } from './auth.state.model';
+import { IAdmin } from './admin.model';
 import { IProduct } from './product.model';
 
 export interface IInventoryMovement {

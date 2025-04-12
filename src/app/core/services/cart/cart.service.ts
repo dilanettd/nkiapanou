@@ -59,15 +59,11 @@ export class CartService {
    * Gets the cart from the server or local storage
    */
   getCart(): Observable<ICartItem[]> {
-    // Toujours renvoyer le panier local d'abord pour une interface utilisateur réactive
     const currentCart = this.cartItemsSubject.getValue();
 
-    // Si l'utilisateur n'est pas authentifié, on retourne simplement le panier local
     if (!this.isUserAuthenticated()) {
       return of(currentCart);
     }
-
-    // Sinon, on récupère aussi le panier depuis le serveur pour le mettre à jour
     return this.http
       .get<{
         status: string;

@@ -2,14 +2,13 @@ import { Component, inject, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
-  FormsModule,
   ReactiveFormsModule,
   Validators,
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { UserService } from '../../core/services/user/user.service';
 import { CommonModule } from '@angular/common';
 import { HttpClientModule } from '@angular/common/http';
+import { ContactService } from '../../core/services/contact/contact.service';
 
 @Component({
   selector: 'nkiapanou-contact-us',
@@ -23,7 +22,7 @@ export class ContactUsComponent implements OnInit {
   isSubmitting = false;
 
   private fb = inject(FormBuilder);
-  private userService = inject(UserService);
+  private contactService = inject(ContactService);
   private toastr = inject(ToastrService);
 
   ngOnInit(): void {
@@ -51,10 +50,7 @@ export class ContactUsComponent implements OnInit {
   onSubmit(): void {
     if (this.contactForm.invalid) {
       this.markFormGroupTouched(this.contactForm);
-      this.toastr.warning(
-        'Veuillez corriger les erreurs dans le formulaire',
-        'Formulaire invalide'
-      );
+      this.toastr.warning('Formulaire invalide');
       return;
     }
 
@@ -63,28 +59,22 @@ export class ContactUsComponent implements OnInit {
     // Prepare form data
     const formData = this.contactForm.value;
 
-    // Utiliser le userService pour envoyer le message
-    this.userService.sendContactMessage(formData).subscribe({
+    // Utiliser le contactService pour envoyer le message
+    this.contactService.sendContactMessage(formData).subscribe({
       next: (response) => {
         this.isSubmitting = false;
-        this.toastr.success(
-          'Votre message a été envoyé avec succès. Nous vous répondrons dans les plus brefs délais.',
-          'Message envoyé'
-        );
+        this.toastr.success('Message envoyé');
         this.contactForm.reset();
       },
       error: (error) => {
         this.isSubmitting = false;
-        this.toastr.error(
-          "Une erreur est survenue lors de l'envoi de votre message. Veuillez réessayer plus tard.",
-          'Erreur'
-        );
+        this.toastr.error('Erreur');
         console.error('Contact form submission error:', error);
       },
     });
   }
 
-  // Nous utilisons maintenant directement userService.sendContactMessage
+  // Nous utilisons maintenant directement contactService.sendContactMessage
 
   // Utility method to mark all controls as touched
   private markFormGroupTouched(formGroup: FormGroup) {

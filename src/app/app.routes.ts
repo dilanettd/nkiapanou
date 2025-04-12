@@ -30,6 +30,26 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'payment',
+    children: [
+      {
+        path: 'stripe',
+        loadComponent: () =>
+          import(
+            './pages/payment/components/stripe-payment/stripe-payment.component'
+          ).then((m) => m.StripePaymentComponent),
+        canActivate: [authGuard],
+      },
+      {
+        path: 'confirmation',
+        loadComponent: () =>
+          import(
+            './pages/payment/components/payment-confirmation/payment-confirmation.component'
+          ).then((m) => m.PaymentConfirmationComponent),
+      },
+    ],
+  },
+  {
     path: 'payment-delivery',
     loadComponent: () =>
       import('./pages/payment-delivery/payment-delivery.component').then(
@@ -143,6 +163,20 @@ export const routes: Routes = [
           import(
             './pages/admin/components/products-admin/products-admin.component'
           ).then((m) => m.ProductsAdminComponent),
+      },
+      {
+        path: 'messages',
+        loadComponent: () =>
+          import('./pages/admin/components/messages/messages.component').then(
+            (m) => m.MessagesComponent
+          ),
+      },
+      {
+        path: 'messages/:id',
+        loadComponent: () =>
+          import('./pages/admin/components/messages/messages.component').then(
+            (m) => m.MessagesComponent
+          ),
       },
       {
         path: 'inventory',

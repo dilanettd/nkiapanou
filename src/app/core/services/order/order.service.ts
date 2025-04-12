@@ -315,6 +315,155 @@ export class OrderService {
   }
 
   /**
+   * Crée une nouvelle commande
+   * @param object orderData Les données de la commande
+   */
+  createOrder(orderData: any): Observable<any> {
+    return this.http.post<any>(`${this.apiUrl}/orders`, orderData).pipe(
+      catchError((error) => {
+        console.error('Error creating order:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Récupère l'historique des commandes de l'utilisateur connecté
+   */
+  getOrdersHistory(): Observable<any> {
+    return this.http.get<any>(`${this.apiUrl}/orders/history`).pipe(
+      catchError((error) => {
+        console.error('Error fetching order history:', error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Annule une commande
+   * @param id L'ID de la commande à annuler
+   */
+  cancelOrder(id: number): Observable<any> {
+    return this.http.patch<any>(`${this.apiUrl}/orders/${id}/cancel`, {}).pipe(
+      catchError((error) => {
+        console.error(`Error cancelling order ${id}:`, error);
+        throw error;
+      })
+    );
+  }
+
+  /**
+   * Récupère les commandes de l'utilisateur connecté
+   * @param params Paramètres de recherche et pagination
+   */
+  getUserOrders(params: any = {}): Observable<any> {
+    let httpParams = new HttpParams();
+
+    if (params.page) {
+      httpParams = httpParams.set('page', params.page.toString());
+    }
+
+    if (params.limit) {
+      httpParams = httpParams.set('limit', params.limit.toString());
+    }
+
+    if (params.status && params.status !== 'all') {
+      httpParams = httpParams.set('status', params.status);
+    }
+
+    return this.http
+      .get<any>(`${this.apiUrl}/orders`, { params: httpParams })
+      .pipe(
+        catchError((error) => {
+          console.error('Error fetching user orders:', error);
+          throw error;
+        })
+      );
+  }
+
+  /**
+   * Formate l'adresse complète
+   * @param address L'objet adresse
+   */
+  formatAddress(address: any): string {
+    if (!address) return '';
+
+    const parts = [
+      address.address_line1,
+      address.address_line2,
+      address.city,
+      address.state_province,
+      address.postal_code,
+      address.country,
+    ];
+
+    return parts.filter((part) => part).join(', ');
+  }
+
+  /**
+   * Vérifie si l'utilisateur peut annuler une commande
+   * Les commandes peuvent généralement être annulées si elles sont en statut 'pending' ou 'processing'
+   * @param order La commande à vérifier
+   */
+  canCancelOrder(order: Order): boolean {
+    return ['pending', 'processing'].includes(order.status || '');
+  }
+
+  /**
+   * Calcule le total d'une commande
+   * @param orderItems Les articles de la commande
+   */
+  calculateOrderTotal(orderItems: IOrderItem[]): number {
+    if (!orderItems || orderItems.length === 0) {
+      return 0;
+    }
+
+    return orderItems.reduce((total, item) => {
+      return total + item.price * item.quantity;
+    }, 0);
+  }
+
+  /**
+   * Formatte l'objet commande pour l'envoi à l'API
+   * @param cartItems Articles du panier
+   * @param shippingAddress Adresse de livraison
+   * @param billingAddress Adresse de facturation
+   * @param paymentMethod Méthode de paiement
+   * @param additionalData Données additionnelles
+   */
+  formatOrderData(
+    cartItems: any[],
+    shippingAddress: any,
+    billingAddress: any = null,
+    paymentMethod: string = 'stripe',
+    additionalData: any = {}
+  ): any {
+    // Si l'adresse de facturation n'est pas fournie, utiliser l'adresse de livraison
+    const billing = billingAddress || shippingAddress;
+
+    return {
+      payment_method: paymentMethod,
+      payment_id: additionalData.payment_id || null,
+      billing_address: billing.address_line1,
+      billing_city: billing.city,
+      billing_postal_code: billing.postal_code,
+      billing_country: billing.country,
+      shipping_address: shippingAddress.address_line1,
+      shipping_city: shippingAddress.city,
+      shipping_postal_code: shippingAddress.postal_code,
+      shipping_country: shippingAddress.country,
+      notes: additionalData.notes || '',
+      items: cartItems.map((item) => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+      })),
+      shipping_fee: additionalData.shipping_fee || 0,
+      tax_amount: additionalData.tax_amount || 0,
+      discount_amount: additionalData.discount_amount || 0,
+    };
+  }
+
+  /**
    * Formate un prix en euros
    */
   formatPrice(price: number): string {

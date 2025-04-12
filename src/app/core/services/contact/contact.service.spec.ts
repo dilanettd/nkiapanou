@@ -1,13 +1,13 @@
 import { TestBed } from '@angular/core/testing';
 
-import { MaxValueService } from './max-value.service';
+import { ContactService } from './contact.service';
 
-describe('MaxValueService', () => {
-  let service: MaxValueService;
+describe('ContactService', () => {
+  let service: ContactService;
 
   beforeEach(() => {
     TestBed.configureTestingModule({});
-    service = TestBed.inject(MaxValueService);
+    service = TestBed.inject(ContactService);
   });
 
   it('should be created', () => {

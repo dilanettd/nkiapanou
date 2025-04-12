@@ -15,11 +15,12 @@ import { AuthService } from '../../../../core/services/auth/auth.service';
 import { IUser } from '../../../../core/models2/user.model';
 import { Subscription } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
+import { NotificationDropdownComponent } from './components/notification-dropdown/notification-dropdown.component';
 
 @Component({
   selector: 'admin-header',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, NotificationDropdownComponent],
   templateUrl: './header.component.html',
   styleUrl: './header.component.scss',
   animations: [
@@ -56,7 +57,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
 
   me: IUser | null | undefined;
   isMenuOpen = false;
-  hasNewNotifications = false;
   isAuthenticated = false;
   private userSubscription: Subscription | null = null;
 
@@ -107,12 +107,6 @@ export class HeaderComponent implements OnInit, OnDestroy {
         this.me = user;
         this.cdr.detectChanges();
       });
-
-    // Vérifier si l'utilisateur est authentifié au démarrage
-    if (this.authService.isAuthenticated()) {
-      // Vous pouvez ajouter une logique pour récupérer les notifications ici
-      this.hasNewNotifications = true;
-    }
   }
 
   ngOnDestroy(): void {
@@ -138,12 +132,7 @@ export class HeaderComponent implements OnInit, OnDestroy {
     this.isMenuOpen = !this.isMenuOpen;
   }
 
-  checkNotifications() {
-    // Logique pour vérifier les notifications
-    this.hasNewNotifications = false;
-    // Rediriger vers la page des notifications ou ouvrir un panneau
-    this.router.navigateByUrl('/admin/notifications');
-  }
+  // La méthode checkNotifications a été remplacée par le composant NotificationDropdownComponent
 
   logout() {
     // Utiliser directement la méthode logout du AuthService

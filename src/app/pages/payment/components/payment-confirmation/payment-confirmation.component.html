@@ -1,0 +1,221 @@
+<section class="bg-neutral py-12">
+  <div class="container mx-auto px-4 max-w-3xl">
+    <!-- Loading indicator -->
+    <div *ngIf="isLoading" class="flex justify-center my-12">
+      <div
+        class="animate-spin rounded-full h-16 w-16 border-b-2 border-primary"
+      ></div>
+    </div>
+
+    <!-- Payment confirmation content -->
+    <div
+      *ngIf="!isLoading"
+      class="bg-white rounded-lg shadow-sm overflow-hidden"
+    >
+      <!-- Status header with appropriate colors -->
+      <div
+        class="p-8 border-b text-center"
+        [ngClass]="{
+          'bg-green-50 border-green-100': status === 'success',
+          'bg-red-50 border-red-100': status === 'failure',
+          'bg-yellow-50 border-yellow-100': status === 'pending',
+          'bg-gray-50 border-gray-100': status === 'unknown'
+        }"
+      >
+        <!-- Success icon -->
+        <div
+          *ngIf="status === 'success'"
+          class="mx-auto w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mb-4"
+        >
+          <i class="lni lni-checkmark text-green-600 text-2xl"></i>
+        </div>
+
+        <!-- Failed icon -->
+        <div
+          *ngIf="status === 'failure'"
+          class="mx-auto w-16 h-16 rounded-full bg-red-100 flex items-center justify-center mb-4"
+        >
+          <i class="lni lni-close text-red-600 text-2xl"></i>
+        </div>
+
+        <!-- Pending icon -->
+        <div
+          *ngIf="status === 'pending'"
+          class="mx-auto w-16 h-16 rounded-full bg-yellow-100 flex items-center justify-center mb-4"
+        >
+          <i class="lni lni-timer text-yellow-600 text-2xl"></i>
+        </div>
+
+        <!-- Unknown icon -->
+        <div
+          *ngIf="status === 'unknown'"
+          class="mx-auto w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4"
+        >
+          <i class="lni lni-question-circle text-gray-600 text-2xl"></i>
+        </div>
+
+        <!-- Status title -->
+        <h1
+          class="text-3xl font-heading mb-2"
+          [ngClass]="{
+            'text-green-600': status === 'success',
+            'text-red-600': status === 'failure',
+            'text-yellow-600': status === 'pending',
+            'text-gray-600': status === 'unknown'
+          }"
+        >
+          <ng-container *ngIf="status === 'success'"
+            >Paiement confirmé</ng-container
+          >
+          <ng-container *ngIf="status === 'failure'"
+            >Paiement échoué</ng-container
+          >
+          <ng-container *ngIf="status === 'pending'"
+            >Paiement en cours</ng-container
+          >
+          <ng-container *ngIf="status === 'unknown'"
+            >Statut inconnu</ng-container
+          >
+        </h1>
+
+        <!-- Status message -->
+        <p class="text-text-light font-body">{{ message }}</p>
+      </div>
+
+      <!-- Order information -->
+      <div *ngIf="orderId" class="p-6 border-b border-neutral">
+        <h2 class="text-xl font-heading text-text-dark mb-4">
+          Détails de votre commande
+        </h2>
+
+        <div class="font-body">
+          <div class="flex justify-between py-2">
+            <span class="text-text-light">Numéro de commande</span>
+            <span class="font-medium">#{{ orderId }}</span>
+          </div>
+
+          <div
+            *ngIf="orderDetails?.status"
+            class="flex justify-between py-2 border-t border-neutral"
+          >
+            <span class="text-text-light">Statut de la commande</span>
+            <span class="font-medium">
+              {{ orderService.getOrderStatusLabel(orderDetails.status) }}
+            </span>
+          </div>
+
+          <div
+            *ngIf="orderDetails?.payment_status"
+            class="flex justify-between py-2 border-t border-neutral"
+          >
+            <span class="text-text-light">Statut du paiement</span>
+            <span class="font-medium">
+              {{
+                orderService.getPaymentStatusLabel(orderDetails.payment_status)
+              }}
+            </span>
+          </div>
+
+          <div
+            *ngIf="orderDetails?.total_amount"
+            class="flex justify-between py-2 border-t border-neutral"
+          >
+            <span class="text-text-light">Montant total</span>
+            <span class="font-medium text-primary">
+              {{ formatPrice(orderDetails.total_amount) }}
+            </span>
+          </div>
+
+          <div
+            *ngIf="orderDetails?.created_at"
+            class="flex justify-between py-2 border-t border-neutral"
+          >
+            <span class="text-text-light">Date de la commande</span>
+            <span class="font-medium">
+              {{ orderService.formatDate(orderDetails.created_at) }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Next steps -->
+      <div class="p-6">
+        <ng-container *ngIf="status === 'success'">
+          <p class="font-body mb-4">
+            Nous avons reçu votre paiement et votre commande est maintenant en
+            cours de traitement. Vous recevrez un email de confirmation avec
+            tous les détails de votre achat.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <button
+              (click)="goToOrderDetails()"
+              class="btn btn-primary"
+              *ngIf="orderId"
+            >
+              <i class="lni lni-package mr-2"></i>
+              Voir ma commande
+            </button>
+
+            <button (click)="goToHome()" class="btn btn-outline-secondary">
+              <i class="lni lni-home mr-2"></i>
+              Retour à l'accueil
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="status === 'failure'">
+          <p class="font-body mb-4">
+            Nous n'avons pas pu traiter votre paiement. Veuillez vérifier vos
+            informations de paiement et réessayer.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <button [routerLink]="['/cart']" class="btn btn-primary">
+              <i class="lni lni-cart mr-2"></i>
+              Retour au panier
+            </button>
+
+            <button (click)="goToHome()" class="btn btn-outline-secondary">
+              <i class="lni lni-home mr-2"></i>
+              Retour à l'accueil
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="status === 'pending'">
+          <p class="font-body mb-4">
+            Votre paiement est en cours de traitement. Nous vous informerons par
+            email dès qu'il sera confirmé.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <button (click)="goToHome()" class="btn btn-primary">
+              <i class="lni lni-home mr-2"></i>
+              Retour à l'accueil
+            </button>
+          </div>
+        </ng-container>
+
+        <ng-container *ngIf="status === 'unknown'">
+          <p class="font-body mb-4">
+            Nous n'avons pas pu déterminer le statut de votre paiement. Si vous
+            avez été débité, veuillez contacter notre service client.
+          </p>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+            <button [routerLink]="['/cart']" class="btn btn-primary">
+              <i class="lni lni-cart mr-2"></i>
+              Retour au panier
+            </button>
+
+            <button (click)="goToHome()" class="btn btn-outline-secondary">
+              <i class="lni lni-home mr-2"></i>
+              Retour à l'accueil
+            </button>
+          </div>
+        </ng-container>
+      </div>
+    </div>
+  </div>
+</section>

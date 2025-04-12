@@ -2,6 +2,7 @@
   <form
     class="card login-form bg-background-light border border-primary rounded-lg overflow-hidden"
     [formGroup]="registrationForm"
+    (ngSubmit)="onSubmit()"
   >
     <div class="card-body p-6">
       <div class="title text-center mb-5">

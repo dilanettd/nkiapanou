@@ -92,8 +92,7 @@ export interface ITransaction {
   payment_response?: any;
   created_at: string;
   updated_at: string;
-  // Relations
-  order?: any; // Vous pouvez remplacer "any" par l'interface IOrder si vous en avez une
+  order?: any;
 }
 
 export interface ITransactionStatistics {

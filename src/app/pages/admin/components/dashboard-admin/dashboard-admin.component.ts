@@ -10,7 +10,7 @@ import {
 } from '@angular/core';
 import { RouterModule } from '@angular/router';
 import { Chart, registerables } from 'chart.js';
-import { MaxValuePipe } from '../../../../core/pipes/max-value.service';
+import { MaxValuePipe } from '../../../../core/pipes/max-value.pipe';
 import {
   CategoryPerformance,
   DashboardService,

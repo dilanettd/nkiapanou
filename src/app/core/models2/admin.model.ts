@@ -1,4 +1,4 @@
-import { IUser } from './auth.state.model';
+import { IUser } from './user.model';
 
 export interface IAdmin {
   id: number;
