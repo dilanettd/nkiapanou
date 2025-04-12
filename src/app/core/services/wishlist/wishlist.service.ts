@@ -1,8 +1,22 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LocalStorageService } from 'ngx-webstorage';
-import { Observable, BehaviorSubject, of, throwError } from 'rxjs';
-import { catchError, tap, map, shareReplay, finalize } from 'rxjs/operators';
+import {
+  Observable,
+  BehaviorSubject,
+  of,
+  throwError,
+  firstValueFrom,
+} from 'rxjs';
+import {
+  catchError,
+  tap,
+  map,
+  shareReplay,
+  finalize,
+  take,
+  switchMap,
+} from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { IProduct } from '../../models2/product.model';
 import { IUser, IWishlistItem } from '../../models2/user.model';
@@ -36,7 +50,7 @@ export class WishlistService {
   }
 
   /**
-   * Charge la wishlist depuis le stockage local (cache)
+   * Loads the wishlist from local storage (cache)
    */
   private loadWishlistFromStorage(): void {
     const storedWishlist = this.storage.retrieve(this.storageKey);
@@ -46,32 +60,32 @@ export class WishlistService {
   }
 
   /**
-   * Vérifie si l'utilisateur est authentifié
+   * Checks if the user is authenticated
    */
   private isUserAuthenticated(): boolean {
-    // Vérifier si un token d'authentification existe
+    // Check if an authentication token exists
     return !!this.storage.retrieve('authToken');
   }
 
   /**
-   * Récupère la wishlist depuis le serveur ou le stockage local
+   * Gets the wishlist from the server or local storage
    */
   getWishlist(): Observable<IProduct[]> {
-    // Toujours retourner la liste locale d'abord pour une UI réactive
+    // Always return the local list first for a responsive UI
     const currentWishlist = this.wishlistSubject.getValue();
 
-    // Si l'utilisateur n'est pas authentifié, retourner la liste locale
+    // If the user is not authenticated, return the local list
     if (!this.isUserAuthenticated()) {
       return of(currentWishlist);
     }
 
-    // Sinon, récupérer la liste depuis le serveur
+    // Otherwise, retrieve the list from the server
     return this.http
       .get<{ status: string; data: IWishlistItem[] }>(`${this.apiUrl}/wishlist`)
       .pipe(
         map((response) => {
           if (response.status === 'success') {
-            // Extraire les produits des items de la wishlist
+            // Extract products from wishlist items
             const products = response.data
               .filter((item) => item.product)
               .map((item) => item.product as IProduct);
@@ -92,23 +106,24 @@ export class WishlistService {
 
   /**
    * Vérifie si un produit est dans la wishlist
+   * @returns Observable qui émet true si le produit est dans la wishlist, false sinon
    */
   isInWishlist(productId: number): Observable<boolean> {
-    // Vérifier le cache d'abord
+    // Check cache first
     if (this.wishlistCheckCache.has(productId)) {
       return this.wishlistCheckCache.get(productId)!;
     }
 
-    // Vérifier dans la liste locale
+    // Check in the local list
     const result = this.wishlist$.pipe(
+      take(1), // Take only the first value to avoid multiple emissions
       map((products) => products.some((product) => product.id === productId)),
       shareReplay(1)
     );
 
     this.wishlistCheckCache.set(productId, result);
 
-    // Si l'utilisateur est authentifié, faire une vérification côté serveur aussi
-    // mais ne pas bloquer l'UI en attendant la réponse
+    // If the user is authenticated, also do a server-side check
     if (this.isUserAuthenticated()) {
       this.http
         .get<{ status: string; in_wishlist: boolean }>(
@@ -121,13 +136,13 @@ export class WishlistService {
           })
         )
         .subscribe((response) => {
-          // Mettre à jour la liste locale si nécessaire
+          // Update the local list if necessary
           const isInLocalWishlist = this.wishlistSubject
             .getValue()
             .some((p) => p.id === productId);
 
           if (response.in_wishlist && !isInLocalWishlist) {
-            // Le produit est sur le serveur mais pas en local, l'ajouter localement
+            // Product is on the server but not locally, add it locally
             this.http
               .get<IProduct>(`${this.apiUrl}/products/${productId}`)
               .subscribe((product) => {
@@ -142,7 +157,7 @@ export class WishlistService {
                 }
               });
           } else if (!response.in_wishlist && isInLocalWishlist) {
-            // Le produit est en local mais pas sur le serveur, le supprimer localement
+            // Product is locally but not on the server, remove it locally
             const currentList = this.wishlistSubject.getValue();
             const updatedList = currentList.filter((p) => p.id !== productId);
             this.wishlistSubject.next(updatedList);
@@ -156,114 +171,124 @@ export class WishlistService {
   }
 
   /**
-   * Ajoute un produit à la wishlist
+   * Checks synchronously if a product is in the wishlist
+   * @returns Promise that resolves to true if the product is in the wishlist, false otherwise
+   */
+  async isInWishlistSync(productId: number): Promise<boolean> {
+    return firstValueFrom(this.isInWishlist(productId));
+  }
+
+  /**
+   * Adds a product to the wishlist if it's not already there
    */
   addToWishlist(product: IProduct): Observable<IProduct[]> {
-    // Toujours mettre à jour la liste locale immédiatement
-    const currentList = this.wishlistSubject.getValue();
+    // First check if the product already exists in the wishlist
+    return this.isInWishlist(product.id).pipe(
+      take(1),
+      switchMap((isInWishlist: boolean) => {
+        // If already in the wishlist, simply return the current list
+        if (isInWishlist) {
+          console.log(
+            `Product ${product.id} already in wishlist, skipping add operation`
+          );
+          return of(this.wishlistSubject.getValue());
+        }
 
-    // Vérifier si le produit existe déjà
-    if (!currentList.some((p) => p.id === product.id)) {
-      const updatedList = [...currentList, product];
-      this.wishlistSubject.next(updatedList);
-      this.storage.store(this.storageKey, updatedList);
-      this.clearProductFromCache(product.id);
-    }
+        // If not in the wishlist, add it
+        // Always update the local list immediately
+        const currentList = this.wishlistSubject.getValue();
+        const updatedList = [...currentList, product];
+        this.wishlistSubject.next(updatedList);
+        this.storage.store(this.storageKey, updatedList);
+        this.clearProductFromCache(product.id);
 
-    // Si l'utilisateur est authentifié, synchroniser avec le serveur
-    if (this.isUserAuthenticated()) {
-      this.http
-        .post<{ status: string; message: string; data: IWishlistItem }>(
-          `${this.apiUrl}/wishlist`,
-          { product_id: product.id }
-        )
-        .pipe(
-          catchError((error) => {
-            console.error('Error adding to wishlist on server:', error);
-            return throwError(error);
-          })
-        )
-        .subscribe(
-          () => {
-            // L'ajout local a déjà été effectué
-          },
-          (error) => {
-            console.error('Failed to add to wishlist on server:', error);
-            // On conserve l'élément en local malgré l'erreur
-          }
-        );
-    }
+        // If the user is authenticated, synchronize with the server
+        if (this.isUserAuthenticated()) {
+          return this.http
+            .post<{ status: string; message: string; data: IWishlistItem }>(
+              `${this.apiUrl}/wishlist`,
+              { product_id: product.id }
+            )
+            .pipe(
+              map(() => updatedList),
+              catchError((error) => {
+                console.error('Error adding to wishlist on server:', error);
+                return of(updatedList); // Still return the updated list
+              })
+            );
+        }
 
-    return of(this.wishlistSubject.getValue());
+        return of(updatedList);
+      })
+    );
   }
 
   /**
-   * Retire un produit de la wishlist
+   * Removes a product from the wishlist if it's present
    */
   removeFromWishlist(productId: number): Observable<IProduct[]> {
-    // Toujours mettre à jour la liste locale immédiatement
-    const currentList = this.wishlistSubject.getValue();
-    const updatedList = currentList.filter(
-      (product) => product.id !== productId
-    );
+    // First check if the product exists in the wishlist
+    return this.isInWishlist(productId).pipe(
+      take(1),
+      switchMap((isInWishlist: boolean) => {
+        // If not in the wishlist, simply return the current list
+        if (!isInWishlist) {
+          console.log(
+            `Product ${productId} not in wishlist, skipping remove operation`
+          );
+          return of(this.wishlistSubject.getValue());
+        }
 
-    this.wishlistSubject.next(updatedList);
-    this.storage.store(this.storageKey, updatedList);
-    this.clearProductFromCache(productId);
-
-    // Si l'utilisateur est authentifié, synchroniser avec le serveur
-    if (this.isUserAuthenticated()) {
-      this.http
-        .delete<{ status: string; message: string }>(
-          `${this.apiUrl}/wishlist/${productId}`
-        )
-        .pipe(
-          catchError((error) => {
-            console.error('Error removing from wishlist on server:', error);
-            return throwError(error);
-          })
-        )
-        .subscribe(
-          () => {
-            // La suppression locale a déjà été effectuée
-          },
-          (error) => {
-            console.error('Failed to remove from wishlist on server:', error);
-            // On garde la suppression locale malgré l'erreur
-          }
+        // If in the wishlist, remove it
+        // Always update the local list immediately
+        const currentList = this.wishlistSubject.getValue();
+        const updatedList = currentList.filter(
+          (product) => product.id !== productId
         );
-    }
 
-    return of(this.wishlistSubject.getValue());
+        this.wishlistSubject.next(updatedList);
+        this.storage.store(this.storageKey, updatedList);
+        this.clearProductFromCache(productId);
+
+        // If the user is authenticated, synchronize with the server
+        if (this.isUserAuthenticated()) {
+          return this.http
+            .delete<{ status: string; message: string }>(
+              `${this.apiUrl}/wishlist/${productId}`
+            )
+            .pipe(
+              map(() => updatedList),
+              catchError((error) => {
+                console.error('Error removing from wishlist on server:', error);
+                return of(updatedList); // Still return the updated list
+              })
+            );
+        }
+
+        return of(updatedList);
+      })
+    );
   }
 
   /**
-   * Vide la wishlist entière
+   * Clears the entire wishlist
    */
   clearWishlist(): Observable<IProduct[]> {
-    // Toujours vider la liste locale immédiatement
+    // Always clear the local list immediately
     this.wishlistSubject.next([]);
     this.storage.store(this.storageKey, []);
     this.clearCheckCache();
 
-    // Si l'utilisateur est authentifié, synchroniser avec le serveur
+    // If the user is authenticated, synchronize with the server
     if (this.isUserAuthenticated()) {
-      this.http
+      return this.http
         .delete<{ status: string; message: string }>(`${this.apiUrl}/wishlist`)
         .pipe(
+          map(() => []),
           catchError((error) => {
             console.error('Error clearing wishlist on server:', error);
-            return throwError(error);
+            return of([]); // Still return the empty list
           })
-        )
-        .subscribe(
-          () => {
-            // La suppression locale a déjà été effectuée
-          },
-          (error) => {
-            console.error('Failed to clear wishlist on server:', error);
-            // On garde la liste vide localement malgré l'erreur
-          }
         );
     }
 
@@ -271,11 +296,11 @@ export class WishlistService {
   }
 
   /**
-   * Synchronise la wishlist locale avec le serveur
-   * Utile quand un utilisateur se connecte avec des items dans le stockage local
+   * Synchronizes the local wishlist with the server
+   * Useful when a user logs in with items in local storage
    */
   syncWishlistWithServer(): Observable<IProduct[]> {
-    // Si l'utilisateur n'est pas authentifié, on retourne simplement la liste locale
+    // If the user is not authenticated, simply return the local list
     if (!this.isUserAuthenticated()) {
       return of(this.wishlistSubject.getValue());
     }
@@ -285,7 +310,7 @@ export class WishlistService {
 
     const localWishlist = this.wishlistSubject.getValue();
 
-    // Si la liste locale est vide, récupérer simplement la liste du serveur
+    // If the local list is empty, simply get the list from the server
     if (localWishlist.length === 0) {
       return this.getWishlist().pipe(
         finalize(() => {
@@ -294,26 +319,26 @@ export class WishlistService {
       );
     }
 
-    // Si nous avons des éléments locaux, nous devons les synchroniser avec le serveur
+    // If we have local items, we need to synchronize them with the server
     return this.http
       .get<{ status: string; data: IWishlistItem[] }>(`${this.apiUrl}/wishlist`)
       .pipe(
         map((response) => {
           if (response.status === 'success') {
-            // Extraire les IDs des produits du serveur
+            // Extract product IDs from the server
             const serverProductIds = response.data
               .filter((item) => item.product)
               .map((item) => item.product!.id);
 
-            // Synchroniser les éléments locaux avec le serveur
+            // Synchronize local items with the server
             this.syncLocalWithServer(localWishlist, serverProductIds);
 
-            // Extraire les produits complets pour la liste locale
+            // Extract complete products for the local list
             const serverProducts = response.data
               .filter((item) => item.product)
               .map((item) => item.product as IProduct);
 
-            // Fusionner avec les produits locaux qui pourraient ne pas encore être sur le serveur
+            // Merge with local products that might not yet be on the server
             const mergedProducts = this.mergeWishlists(
               localWishlist,
               serverProducts
@@ -337,18 +362,18 @@ export class WishlistService {
   }
 
   /**
-   * Synchronise les éléments locaux avec le serveur
+   * Synchronizes local items with the server
    */
   private syncLocalWithServer(
     localProducts: IProduct[],
     serverProductIds: number[]
   ): void {
-    // Trouver les produits qui sont en local mais pas sur le serveur
+    // Find products that are local but not on the server
     const productsToAdd = localProducts.filter(
       (product) => !serverProductIds.includes(product.id)
     );
 
-    // Ajouter chaque produit manquant au serveur
+    // Add each missing product to the server
     productsToAdd.forEach((product) => {
       this.http
         .post<{ status: string; message: string }>(`${this.apiUrl}/wishlist`, {
@@ -369,40 +394,40 @@ export class WishlistService {
   }
 
   /**
-   * Fusionne les listes locales et serveur
+   * Merges local and server lists
    */
   private mergeWishlists(
     localProducts: IProduct[],
     serverProducts: IProduct[]
   ): IProduct[] {
-    // Créer un Map pour éliminer les doublons par ID
+    // Create a Map to eliminate duplicates by ID
     const productMap = new Map<number, IProduct>();
 
-    // D'abord ajouter les produits du serveur
+    // First add server products
     serverProducts.forEach((product) => {
       productMap.set(product.id, product);
     });
 
-    // Ensuite ajouter les produits locaux qui ne sont pas déjà dans la map
+    // Then add local products that aren't already in the map
     localProducts.forEach((product) => {
       if (!productMap.has(product.id)) {
         productMap.set(product.id, product);
       }
     });
 
-    // Convertir la Map en tableau
+    // Convert the Map to an array
     return Array.from(productMap.values());
   }
 
   /**
-   * Vide le cache de vérification pour un produit spécifique
+   * Clears the check cache for a specific product
    */
   private clearProductFromCache(productId: number): void {
     this.wishlistCheckCache.delete(productId);
   }
 
   /**
-   * Vide tout le cache de vérification
+   * Clears the entire check cache
    */
   private clearCheckCache(): void {
     this.wishlistCheckCache.clear();
