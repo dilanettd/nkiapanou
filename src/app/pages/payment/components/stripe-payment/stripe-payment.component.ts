@@ -1,8 +1,16 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject, OnDestroy, OnInit } from '@angular/core';
+import {
+  Component,
+  inject,
+  OnDestroy,
+  OnInit,
+  AfterViewInit,
+  ViewChild,
+  ElementRef,
+} from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { Subject, takeUntil } from 'rxjs';
+import { Subject, takeUntil, timer } from 'rxjs';
 import { CartService } from '../../../../core/services/cart/cart.service';
 import { OrderService } from '../../../../core/services/order/order.service';
 import { StripeService } from '../../../../core/services/stripe/stripe.service';
@@ -14,7 +22,11 @@ import { StripeService } from '../../../../core/services/stripe/stripe.service';
   templateUrl: './stripe-payment.component.html',
   styleUrl: './stripe-payment.component.scss',
 })
-export class StripePaymentComponent implements OnInit, OnDestroy {
+export class StripePaymentComponent
+  implements OnInit, AfterViewInit, OnDestroy
+{
+  @ViewChild('paymentElement') paymentElementRef!: ElementRef;
+
   private stripeService = inject(StripeService);
   private orderService = inject(OrderService);
   private cartService = inject(CartService);
@@ -24,32 +36,32 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
-  // États du composant
+  // Component states
   isLoading = true;
   isProcessing = false;
   isCardReady = false;
   error: string | null = null;
-  showFallbackOption = false; // Pour afficher les options alternatives
+  showFallbackOption = false; // For displaying alternative options
 
-  // Variables pour Stripe
+  // Stripe variables
   stripe: any;
   elements: any;
   paymentElement: any;
   clientSecret: string | null = null;
   paymentIntentId: string | null = null;
 
-  // ID de la commande
+  // Order ID
   orderId: number | null = null;
   orderTotal: number = 0;
 
-  // Surveillez les tentatives de chargement
+  // Monitor loading attempts
   private loadAttempts = 0;
   private maxLoadAttempts = 3;
 
   constructor() {}
 
   ngOnInit(): void {
-    // Récupérer les paramètres de la commande depuis la route
+    // Get order parameters from route
     this.route.queryParams
       .pipe(takeUntil(this.destroy$))
       .subscribe((params) => {
@@ -59,13 +71,25 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
         this.orderTotal = params['amount'] ? parseFloat(params['amount']) : 0;
 
         if (!this.orderId || !this.orderTotal) {
-          this.error = 'Données de commande manquantes ou invalides';
+          this.error = 'Missing or invalid order data';
           this.isLoading = false;
           return;
         }
 
+        // Initialize payment after route parameters are loaded
+        // But don't mount elements yet - we'll do that in AfterViewInit
         this.initStripePayment();
       });
+  }
+
+  ngAfterViewInit(): void {
+    // If we already have the clientSecret from ngOnInit, set up elements now
+    if (this.clientSecret) {
+      // Give the DOM a little time to stabilize
+      timer(100).subscribe(() => {
+        this.setupStripeElements();
+      });
+    }
   }
 
   ngOnDestroy(): void {
@@ -74,7 +98,7 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Initialise le paiement Stripe
+   * Initialize Stripe payment
    */
   async initStripePayment(): Promise<void> {
     if (this.loadAttempts >= this.maxLoadAttempts) {
@@ -83,25 +107,22 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
     }
 
     this.loadAttempts++;
-    this.isLoading = true;
+    this.isLoading = false;
     this.error = null;
 
     try {
-      // Initialiser l'instance Stripe avec un délai maximum
+      // Initialize Stripe instance with maximum delay
       const stripePromise = this.stripeService.initStripe();
 
-      // Ajouter un timeout pour ne pas bloquer indéfiniment
+      // Add timeout to avoid blocking indefinitely
       const stripe = await Promise.race([
         stripePromise,
         new Promise((_, reject) =>
-          setTimeout(
-            () => reject(new Error('Chargement de Stripe a expiré')),
-            10000
-          )
+          setTimeout(() => reject(new Error('Stripe loading timed out')), 10000)
         ),
       ]);
 
-      // Créer un PaymentIntent
+      // Create a PaymentIntent
       if (this.orderId && this.orderTotal) {
         this.stripeService
           .createPaymentIntent(this.orderId, this.orderTotal)
@@ -111,55 +132,66 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
               if (response.success && response.clientSecret) {
                 this.clientSecret = response.clientSecret;
 
-                // Extraire l'ID du PaymentIntent du clientSecret
+                // Extract PaymentIntent ID from clientSecret
                 // Format: pi_xxxx_secret_yyyy
                 const parts = this.clientSecret.split('_secret_');
                 if (parts.length > 0) {
                   this.paymentIntentId = parts[0];
                 }
 
-                this.setupStripeElements();
+                // If view is already initialized, we can mount the elements
+                if (this.paymentElementRef) {
+                  timer(100).subscribe(() => {
+                    this.setupStripeElements();
+                  });
+                }
+                // Otherwise, elements will be mounted in ngAfterViewInit
               } else {
-                this.error = "Impossible de créer l'intention de paiement";
+                this.error = 'Could not create payment intent';
                 this.isLoading = false;
                 this.showFallbackOption = true;
               }
             },
             error: (err) => {
-              console.error(
-                'Erreur lors de la création du PaymentIntent:',
-                err
-              );
-              this.error =
-                'Une erreur est survenue lors de la préparation du paiement';
+              console.error('Error creating PaymentIntent:', err);
+              this.error = 'An error occurred while preparing the payment';
               this.isLoading = false;
               this.showFallbackOption = true;
             },
           });
       }
     } catch (error) {
-      console.error("Erreur lors de l'initialisation de Stripe:", error);
+      console.error('Error initializing Stripe:', error);
       this.error =
-        "Impossible d'initialiser le système de paiement. Veuillez vérifier votre connexion ou réessayer ultérieurement.";
+        'Could not initialize payment system. Please check your connection or try again later.';
       this.isLoading = false;
       this.showFallbackOption = true;
 
-      // Réinitialiser Stripe pour une nouvelle tentative
+      // Reset Stripe for a new attempt
       this.stripeService.resetStripe();
     }
   }
 
   /**
-   * Configure les éléments de carte Stripe
+   * Set up Stripe elements
    */
   setupStripeElements(): void {
     if (!this.clientSecret) return;
+
+    // Verify the element exists in the DOM
+    if (!document.getElementById('payment-element')) {
+      console.error('Payment element not found in DOM');
+      this.error = 'Could not load payment form';
+      this.isLoading = false;
+      this.showFallbackOption = true;
+      return;
+    }
 
     try {
       const stripe = this.stripeService.getStripe();
       const elements = stripe.elements({ clientSecret: this.clientSecret });
 
-      // Créer et monter l'élément de paiement
+      // Create and mount the payment element
       const paymentElement = elements.create('payment', {
         layout: 'tabs',
         defaultValues: {
@@ -182,56 +214,39 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
         },
       });
 
-      // Vérifier si l'élément est monté avec succès
-      const mountPromise = new Promise<void>((resolve, reject) => {
-        setTimeout(() => {
-          try {
-            paymentElement.mount('#payment-element');
-            resolve();
-          } catch (err) {
-            reject(err);
-          }
-        }, 100);
-      });
+      // Mount with safety checks
+      try {
+        paymentElement.mount('#payment-element');
 
-      mountPromise
-        .then(() => {
-          // Écouter les événements
-          paymentElement.on('ready', () => {
-            this.isCardReady = true;
-            this.isLoading = false;
-          });
-
-          paymentElement.on('change', (event: any) => {
-            this.error = event.error ? event.error.message : null;
-          });
-
-          this.stripe = stripe;
-          this.elements = elements;
-          this.paymentElement = paymentElement;
-        })
-        .catch((err) => {
-          console.error(
-            "Erreur lors du montage de l'élément de paiement:",
-            err
-          );
-          this.error = 'Impossible de charger le formulaire de paiement';
+        // Listen for events
+        paymentElement.on('ready', () => {
+          this.isCardReady = true;
           this.isLoading = false;
-          this.showFallbackOption = true;
         });
+
+        paymentElement.on('change', (event: any) => {
+          this.error = event.error ? event.error.message : null;
+        });
+
+        this.stripe = stripe;
+        this.elements = elements;
+        this.paymentElement = paymentElement;
+      } catch (err) {
+        console.error('Error mounting payment element:', err);
+        this.error = 'Could not load payment form';
+        this.isLoading = false;
+        this.showFallbackOption = true;
+      }
     } catch (error) {
-      console.error(
-        'Erreur lors de la configuration des éléments Stripe:',
-        error
-      );
-      this.error = 'Impossible de configurer le formulaire de paiement';
+      console.error('Error setting up Stripe elements:', error);
+      this.error = 'Could not configure payment form';
       this.isLoading = false;
       this.showFallbackOption = true;
     }
   }
 
   /**
-   * Soumet le paiement à Stripe
+   * Submit payment to Stripe
    */
   async submitPayment(): Promise<void> {
     if (!this.stripe || !this.elements || this.isProcessing) {
@@ -242,17 +257,17 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
     this.error = null;
 
     try {
-      // Construire l'URL de retour (succès et annulation)
+      // Build return URL (success and cancel)
       const returnUrl = `${window.location.origin}/payment/confirmation`;
 
-      // Valider et envoyer le paiement
+      // Validate and send payment
       const result = await this.stripe.confirmPayment({
         elements: this.elements,
         confirmParams: {
           return_url: returnUrl,
           payment_method_data: {
             billing_details: {
-              // Vous pouvez ajouter des détails supplémentaires ici si nécessaire
+              // You can add additional details here if needed
             },
           },
         },
@@ -260,39 +275,39 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
       });
 
       if (result.error) {
-        // Afficher l'erreur au client
+        // Display error to client
         this.error = this.stripeService.getErrorMessage(result.error);
         this.isProcessing = false;
       } else if (
         result.paymentIntent &&
         result.paymentIntent.status === 'succeeded'
       ) {
-        // Paiement réussi sans redirection
+        // Payment succeeded without redirection
         await this.handleSuccessfulPayment(result.paymentIntent.id);
       }
-      // Si 3D Secure est nécessaire, la redirection sera automatique
+      // If 3D Secure is required, redirection will be automatic
     } catch (error) {
-      console.error('Erreur lors du traitement du paiement:', error);
-      this.error = 'Une erreur est survenue lors du traitement du paiement';
+      console.error('Error processing payment:', error);
+      this.error = 'An error occurred while processing payment';
       this.isProcessing = false;
     }
   }
 
   /**
-   * Gérer un paiement réussi
+   * Handle successful payment
    */
   async handleSuccessfulPayment(paymentIntentId: string): Promise<void> {
-    // Confirmer le paiement avec notre backend
+    // Confirm payment with our backend
     this.stripeService
       .confirmPayment(paymentIntentId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
           if (response.success) {
-            // Vider le panier
+            // Clear cart
             this.cartService.clearCart().subscribe();
 
-            // Rediriger vers la page de confirmation
+            // Redirect to confirmation page
             this.router.navigate(['/payment/confirmation'], {
               queryParams: {
                 order_id: this.orderId,
@@ -302,35 +317,33 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
               },
             });
           } else {
-            this.toastr.error(
-              response.message || 'Erreur de confirmation du paiement'
-            );
+            this.toastr.error(response.message || 'Error confirming payment');
             this.isProcessing = false;
           }
         },
         error: (err) => {
-          console.error('Erreur lors de la confirmation du paiement:', err);
-          this.error = 'Impossible de confirmer le paiement avec notre serveur';
+          console.error('Error confirming payment:', err);
+          this.error = 'Could not confirm payment with our server';
           this.isProcessing = false;
         },
       });
   }
 
   /**
-   * En cas d'échec de Stripe, fallback vers une autre méthode
+   * In case of Stripe failure, fallback to another method
    */
   fallbackToDirectPayment(): void {
     this.isLoading = false;
     this.error =
-      "Le système de paiement Stripe n'a pas pu être chargé. Veuillez choisir une autre option de paiement ou réessayer plus tard.";
+      'The Stripe payment system could not be loaded. Please choose another payment option or try again later.';
     this.showFallbackOption = true;
   }
 
   /**
-   * Rediriger vers une méthode de paiement alternative
+   * Redirect to an alternative payment method
    */
   useFallbackPayment(): void {
-    // Rediriger vers PayPal ou une page de paiement alternative
+    // Redirect to PayPal or alternative payment page
     this.router.navigate(['/payment/paypal'], {
       queryParams: {
         order_id: this.orderId,
@@ -340,7 +353,7 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Essayer à nouveau de charger Stripe
+   * Try again to load Stripe
    */
   retryStripePayment(): void {
     this.stripeService.resetStripe();
@@ -350,7 +363,7 @@ export class StripePaymentComponent implements OnInit, OnDestroy {
   }
 
   /**
-   * Annuler le paiement et retourner à la page du panier
+   * Cancel payment and return to cart page
    */
   cancelPayment(): void {
     if (this.isProcessing) {

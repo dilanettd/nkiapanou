@@ -60,7 +60,7 @@
 
         <div class="flex justify-between text-sm mb-3">
           <span class="text-text-light">Montant total:</span>
-          <span class="font-medium">{{ order.total_amount.toFixed(2) }} €</span>
+          <span class="font-medium">{{ order.total_amount }} €</span>
         </div>
 
         <div class="flex justify-between text-sm mb-4">
@@ -157,7 +157,7 @@
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium">
-                  {{ order.total_amount.toFixed(2) }} €
+                  {{ order.total_amount }} €
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
@@ -391,7 +391,7 @@
             </tr>
           </thead>
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr *ngFor="let item of selectedOrder.order_items">
+            <tr *ngFor="let item of selectedOrder.items">
               <td class="px-6 py-4">
                 <div class="flex items-center">
                   <div
@@ -419,16 +419,14 @@
                 </div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
-                <div class="text-sm text-text-dark">
-                  {{ item.price.toFixed(2) }} €
-                </div>
+                <div class="text-sm text-text-dark">{{ item.price }} €</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm text-text-dark">{{ item.quantity }}</div>
               </td>
               <td class="px-6 py-4 whitespace-nowrap">
                 <div class="text-sm font-medium text-text-dark">
-                  {{ item.total.toFixed(2) }} €
+                  {{ item.total }} €
                 </div>
               </td>
             </tr>
@@ -439,16 +437,16 @@
       <!-- Products - Mobile View avec défilement vertical si besoin -->
       <div class="md:hidden space-y-4 mb-4 max-h-[400px] overflow-y-auto">
         <div
-          *ngFor="let item of selectedOrder.order_items"
+          *ngFor="let item of selectedOrder.items"
           class="border border-gray-100 rounded-md p-3"
         >
           <div class="flex gap-3 mb-2">
             <div
               class="h-16 w-16 flex-shrink-0 overflow-hidden rounded-md border border-gray-200"
-              *ngIf="item.product?.images && item.product!.images.length > 0"
+              *ngIf="item.product?.primary_image_url"
             >
               <img
-                [src]="item.product!.images[0].image_path"
+                [src]="item.product!.primary_image_url"
                 alt="{{ item.product?.name }}"
                 class="h-full w-full object-cover object-center"
               />
@@ -466,7 +464,7 @@
           <div class="grid grid-cols-3 gap-2 text-sm">
             <div>
               <div class="text-text-light">Prix</div>
-              <div>{{ item.price.toFixed(2) }} €</div>
+              <div>{{ item.price }} €</div>
             </div>
             <div>
               <div class="text-text-light">Quantité</div>
@@ -474,7 +472,7 @@
             </div>
             <div>
               <div class="text-text-light">Total</div>
-              <div class="font-medium">{{ item.total.toFixed(2) }} €</div>
+              <div class="font-medium">{{ item.total }} €</div>
             </div>
           </div>
         </div>
@@ -487,34 +485,32 @@
             <span>Sous-total</span>
             <span
               >{{
-                (
-                  selectedOrder.total_amount -
+                selectedOrder.total_amount -
                   selectedOrder.shipping_fee -
                   selectedOrder.tax_amount +
                   selectedOrder.discount_amount
-                ).toFixed(2)
               }}
               €</span
             >
           </div>
           <div class="flex justify-between">
             <span>Frais de livraison</span>
-            <span>{{ selectedOrder.shipping_fee.toFixed(2) }} €</span>
+            <span>{{ selectedOrder.shipping_fee }} €</span>
           </div>
           <div class="flex justify-between">
             <span>Taxes</span>
-            <span>{{ selectedOrder.tax_amount.toFixed(2) }} €</span>
+            <span>{{ selectedOrder.tax_amount }} €</span>
           </div>
           <div
             class="flex justify-between"
             *ngIf="selectedOrder.discount_amount > 0"
           >
             <span>Remise</span>
-            <span>-{{ selectedOrder.discount_amount.toFixed(2) }} €</span>
+            <span>-{{ selectedOrder.discount_amount }} €</span>
           </div>
           <div class="flex justify-between border-t pt-2 font-medium text-lg">
             <span>Total</span>
-            <span>{{ selectedOrder.total_amount.toFixed(2) }} €</span>
+            <span>{{ selectedOrder.total_amount }} €</span>
           </div>
         </div>
       </div>

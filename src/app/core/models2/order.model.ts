@@ -26,7 +26,7 @@ export interface Order {
   created_at: string;
   updated_at: string;
   user?: IUser;
-  order_items?: IOrderItem[];
+  items?: IOrderItem[];
 }
 
 export interface IOrderItem {

@@ -281,7 +281,7 @@ export class CartService {
     if (this.isUserAuthenticated()) {
       this.http
         .delete<{ status: string; message: string }>(
-          `${this.apiUrl}/cart/${itemId}`
+          `${this.apiUrl}/cart/remove/${itemId}`
         )
         .pipe(
           catchError((error) => {

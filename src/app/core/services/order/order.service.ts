@@ -217,11 +217,11 @@ export class OrderService {
    * Calcule le nombre total d'articles dans une commande
    */
   getTotalItems(order: Order): number {
-    if (!order.order_items || order.order_items.length === 0) {
+    if (!order.items || order.items.length === 0) {
       return 0;
     }
 
-    return order.order_items.reduce((total, item) => total + item.quantity, 0);
+    return order.items.reduce((total, item) => total + item.quantity, 0);
   }
 
   /**

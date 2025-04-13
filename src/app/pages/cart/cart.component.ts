@@ -225,14 +225,14 @@ export class CartComponent implements OnInit, OnDestroy {
     // Créer l'objet de commande
     const orderData = {
       shipping_address_id: this.selectedShippingAddressId,
-      billing_address_id: billingAddressId, // Peut être null, le backend utilisera l'adresse de livraison
-      payment_method: this.selectedPaymentMethod, // Méthode de paiement choisie
-      shipping_method: 'standard', // Méthode de livraison
+      billing_address_id: billingAddressId,
+      payment_method: this.selectedPaymentMethod,
+      shipping_method: 'standard',
       notes: '',
       shipping_fee: this.shippingCost,
       tax_amount: this.taxAmount,
-      discount_amount: 0, // À mettre à jour si vous avez un système de remises
-      total_amount: this.cartTotal, // Montant total du panier
+      discount_amount: 0,
+      total_amount: this.roundPrice(this.cartTotal),
       items: orderItems,
     };
 
@@ -512,16 +512,17 @@ export class CartComponent implements OnInit, OnDestroy {
    * Calculer les totaux du panier
    */
   calculateTotals(): void {
+    // Calculer le sous-total (montant TTC)
     this.cartSubtotal = this.cartItems.reduce(
       (total, item) => total + item.subtotal,
       0
     );
 
-    // Calculer la TVA (20%)
-    this.taxAmount = this.cartSubtotal * 0.2;
-
-    // Calculer le total
-    this.cartTotal = this.cartSubtotal + this.taxAmount + this.shippingCost;
+    // Calculer la TVA (20%) qui est déjà incluse dans le prix
+    // Prix HT = Prix TTC / 1.2
+    // TVA = Prix TTC - Prix HT = Prix TTC - (Prix TTC / 1.2) = Prix TTC * (1 - 1/1.2) = Prix TTC * 0.1667
+    this.taxAmount = this.cartSubtotal * 0.1667;
+    this.cartTotal = this.cartSubtotal + this.shippingCost;
   }
 
   /**
@@ -719,6 +720,17 @@ export class CartComponent implements OnInit, OnDestroy {
     const formattedDecimal = decimal.padEnd(2, '0').substring(0, 2);
 
     return `${parts[0]}.${formattedDecimal} €`;
+  }
+
+  /**
+   * Retourne le prix arrondi à deux décimales sous forme de number
+   */
+  roundPrice(price: number | null | undefined): number {
+    if (price === null || price === undefined) {
+      return 0;
+    }
+
+    return Math.round(price * 100) / 100;
   }
 
   /**

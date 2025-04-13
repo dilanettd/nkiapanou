@@ -333,7 +333,7 @@ export class PaymentConfirmationComponent implements OnInit, OnDestroy {
    */
   goToOrderDetails(): void {
     if (this.orderId) {
-      this.router.navigate(['/account/orders', this.orderId]);
+      this.router.navigateByUrl('/account/purchases');
     }
   }
 }

@@ -582,9 +582,9 @@
             <div class="p-6">
               <!-- Subtotal -->
               <div class="flex justify-between mb-3">
-                <span class="text-text-light font-body">Sous-total</span>
+                <span class="text-text-light font-body">Sous-total (TTC)</span>
                 <span class="font-medium">{{
-                  formatPrice(cartSubtotal || 0)
+                  formatPrice(cartSubtotal - taxAmount || 0)
                 }}</span>
               </div>
 
@@ -631,7 +631,7 @@
               <div
                 class="flex justify-between mb-6 pb-6 border-b border-neutral"
               >
-                <span class="text-text-light font-body">TVA (20%)</span>
+                <span class="text-text-light font-body">Dont TVA (20%)</span>
                 <span class="font-medium">{{
                   formatPrice(taxAmount || 0)
                 }}</span>
@@ -640,7 +640,7 @@
               <!-- Total -->
               <div class="flex justify-between mb-6">
                 <span class="text-lg font-medium text-text-dark font-body"
-                  >Total</span
+                  >Total (TTC)</span
                 >
                 <span class="text-xl font-bold text-primary">{{
                   formatPrice(cartTotal || 0)

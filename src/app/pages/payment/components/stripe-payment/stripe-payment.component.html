@@ -2,10 +2,8 @@
   <div class="container mx-auto px-4 max-w-3xl">
     <!-- Page header -->
     <div class="mb-8 text-center">
-      <h1 class="text-3xl md:text-4xl font-heading text-primary">Paiement</h1>
-      <p class="mt-2 text-text-light font-body">
-        Finalisez votre commande en toute sécurité
-      </p>
+      <h1 class="text-3xl md:text-4xl font-heading text-primary">Payment</h1>
+      <p class="mt-2 text-text-light font-body">Complete your order securely</p>
     </div>
 
     <!-- Loading spinner with timeout message -->
@@ -13,7 +11,7 @@
       <div
         class="animate-spin rounded-full h-16 w-16 border-b-2 border-primary mb-4"
       ></div>
-      <p class="text-text-light">Chargement du système de paiement...</p>
+      <p class="text-text-light">Loading payment system...</p>
     </div>
 
     <!-- Error message -->
@@ -36,18 +34,13 @@
       *ngIf="showFallbackOption"
       class="bg-yellow-50 border border-yellow-100 rounded-lg p-6 mb-6"
     >
-      <h3 class="text-lg font-medium mb-2">
-        Problème avec le système de paiement
-      </h3>
-      <p class="mb-4">
-        Le système de paiement par carte bancaire n'est pas disponible pour le
-        moment.
-      </p>
+      <h3 class="text-lg font-medium mb-2">Issue with payment system</h3>
+      <p class="mb-4">The card payment system is currently unavailable.</p>
 
       <div class="flex flex-col sm:flex-row gap-4">
         <button (click)="useFallbackPayment()" class="btn btn-primary">
           <i class="lni lni-paypal mr-2"></i>
-          Payer avec PayPal
+          Pay with PayPal
         </button>
 
         <button
@@ -55,12 +48,12 @@
           class="btn btn-outline-secondary"
         >
           <i class="lni lni-reload mr-2"></i>
-          Réessayer avec Carte
+          Retry with Card
         </button>
 
         <button (click)="cancelPayment()" class="btn btn-outline-secondary">
           <i class="lni lni-arrow-left mr-2"></i>
-          Retour au panier
+          Return to cart
         </button>
       </div>
     </div>
@@ -72,11 +65,9 @@
     >
       <!-- Order summary header -->
       <div class="p-6 border-b border-neutral">
-        <h2 class="text-xl font-heading text-text-dark">
-          Récapitulatif de la commande
-        </h2>
+        <h2 class="text-xl font-heading text-text-dark">Order Summary</h2>
         <p *ngIf="orderId" class="mt-2 text-text-light font-body">
-          Commande #{{ orderId }}
+          Order #{{ orderId }}
         </p>
       </div>
 
@@ -84,30 +75,30 @@
       <div class="p-6 border-b border-neutral">
         <div class="flex justify-between mb-6">
           <span class="text-lg font-medium text-text-dark font-body"
-            >Total à payer</span
+            >Total to pay</span
           >
           <span class="text-xl font-bold text-primary">{{
-            orderTotal | currency : "EUR" : "symbol" : "1.2-2" : "fr"
+            orderTotal | currency : "EUR" : "symbol" : "1.2-2"
           }}</span>
         </div>
       </div>
 
       <!-- Stripe payment element -->
       <div class="p-6">
-        <div id="payment-element" class="mb-6">
+        <!-- This is the container where Stripe will mount the payment element -->
+        <div id="payment-element" #paymentElement class="mb-6">
           <!-- Stripe Elements will be mounted here -->
         </div>
 
-        <!-- Protection assurance -->
+        <!-- Security assurance -->
         <div
           class="flex items-center mb-6 bg-secondary bg-opacity-5 p-4 rounded-lg"
         >
           <i class="lni lni-shield text-secondary text-xl mr-3"></i>
           <div class="font-body text-sm">
-            <p class="font-medium text-text-dark">Paiement sécurisé</p>
+            <p class="font-medium text-text-dark">Secure payment</p>
             <p class="text-text-light">
-              Vos données de paiement sont protégées par un cryptage SSL 256
-              bits.
+              Your payment information is protected by 256-bit SSL encryption.
             </p>
           </div>
         </div>
@@ -129,9 +120,7 @@
               class="mr-2 w-4 h-4 border-b-2 border-white rounded-full animate-spin"
             ></div>
             <i *ngIf="!isProcessing" class="lni lni-credit-card mr-2"></i>
-            <span>{{
-              isProcessing ? "Traitement en cours..." : "Payer maintenant"
-            }}</span>
+            <span>{{ isProcessing ? "Processing..." : "Pay now" }}</span>
           </div>
         </button>
 
@@ -142,18 +131,8 @@
           [disabled]="isProcessing"
         >
           <i class="lni lni-arrow-left mr-2"></i>
-          Annuler et retourner au panier
+          Cancel and return to cart
         </button>
-      </div>
-
-      <!-- Payment methods -->
-      <div class="p-6 pt-2 border-t border-neutral text-center">
-        <p class="text-xs text-text-light mb-2 font-body">Nous acceptons</p>
-        <div class="flex justify-center space-x-4">
-          <span class="text-blue-700 font-medium">Visa</span>
-          <span class="text-red-500 font-medium">Mastercard</span>
-          <span class="text-blue-600 font-medium">American Express</span>
-        </div>
       </div>
     </div>
   </div>

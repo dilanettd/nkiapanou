@@ -13,6 +13,7 @@ export interface IProduct {
   status: 'active' | 'inactive' | 'out_of_stock';
   featured: boolean;
   weight?: number;
+  primary_image_url: string;
   dimensions?: string;
   origin_country?: string;
   sku: string;

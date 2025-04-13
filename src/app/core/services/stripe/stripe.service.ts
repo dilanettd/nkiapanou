@@ -1,9 +1,9 @@
-import { Injectable, inject } from '@angular/core';
+import { Injectable, inject, PLATFORM_ID, Inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, throwError } from 'rxjs';
-import { catchError, map, tap } from 'rxjs/operators';
+import { Observable, throwError, from } from 'rxjs';
+import { catchError, shareReplay } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { loadStripe } from '@stripe/stripe-js';
+import { isPlatformBrowser } from '@angular/common';
 
 // Types pour les réponses de l'API Stripe
 export interface PaymentIntentResponse {
@@ -24,18 +24,28 @@ export interface PaymentConfirmationResponse {
 export class StripeService {
   private http = inject(HttpClient);
   private apiUrl = environment.API_URL;
+  private isBrowser: boolean;
 
   // Variable pour stocker l'instance Stripe
   private stripeInstance: any;
   private stripePromise: Promise<any> | null = null;
 
-  constructor() {}
+  constructor(@Inject(PLATFORM_ID) platformId: Object) {
+    this.isBrowser = isPlatformBrowser(platformId);
+  }
 
   /**
    * Initialise l'instance Stripe avec la clé publique
    * Doit être appelé au démarrage de l'application ou avant toute opération Stripe
    */
   initStripe(): Promise<any> {
+    // Vérifier si nous sommes dans un navigateur
+    if (!this.isBrowser) {
+      return Promise.reject(
+        new Error('Stripe ne peut être chargé que dans un navigateur')
+      );
+    }
+
     // Si nous avons déjà une promesse en cours, la renvoyer
     if (this.stripePromise) {
       return this.stripePromise;
@@ -44,25 +54,32 @@ export class StripeService {
     // Créer une nouvelle promesse pour charger Stripe
     this.stripePromise = new Promise((resolve, reject) => {
       try {
-        // Utiliser la bibliothèque officielle pour charger Stripe
-        loadStripe(environment.STRIPE_PUBLIC_KEY)
-          .then((stripe) => {
-            if (!stripe) {
-              reject(
-                new Error("Impossible de charger Stripe. L'instance est null.")
-              );
-              return;
-            }
-            this.stripeInstance = stripe;
-            resolve(stripe);
-          })
-          .catch((err) => {
-            console.error(
-              'Erreur lors du chargement de Stripe via loadStripe:',
-              err
+        // Vérifier si la bibliothèque Stripe est déjà chargée globalement
+        if (window.Stripe) {
+          this.stripeInstance = window.Stripe(environment.STRIPE_PUBLIC_KEY);
+          resolve(this.stripeInstance);
+          return;
+        }
+
+        // Charger manuellement le script Stripe
+        const script = document.createElement('script');
+        script.src = 'https://js.stripe.com/v3/';
+        script.async = true;
+        script.onload = () => {
+          if (window.Stripe) {
+            this.stripeInstance = window.Stripe(environment.STRIPE_PUBLIC_KEY);
+            resolve(this.stripeInstance);
+          } else {
+            reject(
+              new Error("Stripe.js chargé mais Stripe n'est pas disponible")
             );
-            reject(err);
-          });
+          }
+        };
+        script.onerror = (err) => {
+          reject(new Error('Impossible de charger Stripe.js'));
+        };
+
+        document.body.appendChild(script);
       } catch (error) {
         console.error(
           "Erreur critique lors de l'initialisation de Stripe:",
@@ -217,23 +234,34 @@ export class StripeService {
    * Utile lorsque l'authentification 3D Secure est requise
    */
   checkPaymentStatus(): Observable<any> {
-    const stripe = this.getStripe();
-    const clientSecret = new URLSearchParams(window.location.search).get(
-      'payment_intent_client_secret'
-    );
-
-    if (!clientSecret) {
-      return throwError(() => new Error('Pas de paiement en cours'));
-    }
-
     return new Observable((observer) => {
-      stripe
-        .retrievePaymentIntent(clientSecret)
-        .then((result: any) => {
-          observer.next(result);
-          observer.complete();
+      if (!this.isBrowser) {
+        observer.error(new Error('Non disponible en environnement serveur'));
+        return;
+      }
+
+      this.initStripe()
+        .then((stripe) => {
+          const clientSecret = new URLSearchParams(window.location.search).get(
+            'payment_intent_client_secret'
+          );
+
+          if (!clientSecret) {
+            observer.error(new Error('Pas de paiement en cours'));
+            return;
+          }
+
+          stripe
+            .retrievePaymentIntent(clientSecret)
+            .then((result: any) => {
+              observer.next(result);
+              observer.complete();
+            })
+            .catch((error: any) => {
+              observer.error(error);
+            });
         })
-        .catch((error: any) => {
+        .catch((error) => {
           observer.error(error);
         });
     });
@@ -301,5 +329,12 @@ export class StripeService {
       default:
         return 'Statut inconnu';
     }
+  }
+}
+
+// Type definition for global Stripe
+declare global {
+  interface Window {
+    Stripe?: any;
   }
 }
