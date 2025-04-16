@@ -1,4 +1,4 @@
-import { Component, inject, OnInit } from '@angular/core';
+import { Component, inject, OnDestroy, OnInit } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -13,6 +13,7 @@ import { CustomValidators } from './Customvalidator';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ButtonSpinnerComponent } from '../button-spinner/button-spinner.component';
+import { Subscription } from 'rxjs';
 
 @Component({
   selector: 'nkiapanou-register-modal',
@@ -26,12 +27,13 @@ import { ButtonSpinnerComponent } from '../button-spinner/button-spinner.compone
   templateUrl: './register-modal.component.html',
   styleUrl: './register-modal.component.scss',
 })
-export class RegisterModalComponent implements OnInit {
+export class RegisterModalComponent implements OnInit, OnDestroy {
   private fb = inject(FormBuilder);
   private authService = inject(AuthService);
   private toastr = inject(ToastrService);
   private modalService = inject(NgbModal);
 
+  registerSubscribe?: Subscription;
   registrationForm!: FormGroup;
   isLoading = false;
   errorMessage = '';
@@ -80,18 +82,9 @@ export class RegisterModalComponent implements OnInit {
     );
   }
 
-  /**
-   * Détermine la langue par défaut selon la langue du navigateur
-   * Si la langue n'est pas supportée, l'anglais est utilisé par défaut
-   */
   private getDefaultLanguage(): string {
-    // Obtenir la langue du navigateur (format 'fr', 'en-US', etc.)
     const browserLang = navigator.language.split('-')[0].toLowerCase();
-
-    // Liste des langues supportées
     const supportedLanguages = ['fr', 'en', 'es', 'de', 'it'];
-
-    // Si la langue du navigateur est supportée, l'utiliser, sinon utiliser l'anglais
     return supportedLanguages.includes(browserLang) ? browserLang : 'en';
   }
 
@@ -100,40 +93,77 @@ export class RegisterModalComponent implements OnInit {
     if (this.registrationForm.valid) {
       this.isLoading = true;
       const { userName, email, password } = this.registrationForm.value;
-      const language = this.getDefaultLanguage(); // Récupérer la langue du navigateur
+      const language = this.getDefaultLanguage();
 
       // Utiliser la méthode register de l'AuthService avec le paramètre de langue
-      this.authService.register(userName, email, password, language).subscribe({
-        next: (response) => {
-          this.isLoading = false;
+      this.registerSubscribe = this.authService
+        .register(userName, email, password, language)
+        .subscribe({
+          next: (response) => {
+            this.isLoading = false;
 
-          if (response.status === 'success') {
-            this.toastr.success(
-              'Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.'
-            );
-            this.modalService.dismissAll();
-          } else {
+            if (response.status === 'success') {
+              this.toastr.success(
+                'Inscription réussie ! Veuillez vérifier votre email pour confirmer votre compte.'
+              );
+              this.modalService.dismissAll();
+            } else {
+              this.errorMessage =
+                response.message ||
+                "Une erreur est survenue pendant l'inscription.";
+              this.toastr.error(this.errorMessage);
+            }
+          },
+          error: (err) => {
+            this.isLoading = false;
             this.errorMessage =
-              response.message ||
+              err.error?.message ||
               "Une erreur est survenue pendant l'inscription.";
             this.toastr.error(this.errorMessage);
-          }
-        },
-        error: (err) => {
-          this.isLoading = false;
-          this.errorMessage =
-            err.error?.message ||
-            "Une erreur est survenue pendant l'inscription.";
-          this.toastr.error(this.errorMessage);
-        },
-      });
+          },
+        });
     } else {
       this.isLoading = false;
       this.validateAllFormFields(this.registrationForm);
     }
   }
 
-  socialLogin() {}
+  /**
+   * Gère la connexion via les réseaux sociaux
+   * @param provider Le fournisseur ('facebook' ou 'google')
+   */
+  socialLogin(provider: 'facebook' | 'google') {
+    this.isLoading = true;
+    this.errorMessage = '';
+
+    let socialLoginObservable;
+
+    if (provider === 'facebook') {
+      socialLoginObservable = this.authService.loginWithFacebook();
+    } else {
+      socialLoginObservable = this.authService.loginWithGoogle();
+    }
+
+    this.registerSubscribe = socialLoginObservable.subscribe({
+      next: (response) => {
+        this.isLoading = false;
+
+        if (response.status === 'success' && response.user) {
+          this.toastr.success(`Connexion ${provider} réussie`);
+          this.modalService.dismissAll();
+        } else {
+          this.errorMessage = response.message || 'Erreur de connexion sociale';
+          this.toastr.error(this.errorMessage);
+        }
+      },
+      error: (err) => {
+        this.isLoading = false;
+        this.errorMessage =
+          err.message || `Erreur lors de la connexion ${provider}`;
+        this.toastr.error(this.errorMessage);
+      },
+    });
+  }
 
   validateAllFormFields(formGroup: FormGroup) {
     Object.keys(formGroup.controls).forEach((field) => {
@@ -148,5 +178,11 @@ export class RegisterModalComponent implements OnInit {
 
   closeModal() {
     this.modalService.dismissAll();
+  }
+
+  ngOnDestroy(): void {
+    if (this.registerSubscribe) {
+      this.registerSubscribe.unsubscribe();
+    }
   }
 }

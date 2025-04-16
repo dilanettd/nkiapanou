@@ -1,7 +1,7 @@
 import { IProduct } from './product.model';
 import { IUser } from './user.model';
 
-export interface Order {
+export interface IOrder {
   id: number;
   user_id: number;
   order_number: string;
@@ -39,7 +39,7 @@ export interface IOrderItem {
   created_at: string;
   updated_at: string;
   product?: IProduct;
-  order?: Order;
+  order?: IOrder;
 }
 
 export interface Cart {
@@ -60,6 +60,8 @@ export interface ICartItem {
   updated_at: string;
   product?: IProduct;
   cart?: Cart;
+  productDetails?: any;
+  subtotal?: number;
 }
 
 export interface IShipping {

@@ -1,7 +1,7 @@
-import { Injectable, Injector, inject, signal } from '@angular/core';
+import { Injectable, Injector, NgZone, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { LocalStorageService } from 'ngx-webstorage';
-import { BehaviorSubject, Observable, of, forkJoin } from 'rxjs';
+import { BehaviorSubject, Observable, of, forkJoin, from } from 'rxjs';
 import { tap, catchError, finalize, switchMap, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { handleHttpError } from '../errors';
@@ -9,6 +9,10 @@ import { IAuthResponse } from '../../models2/auth.model';
 import { IUser } from '../../models2/user.model';
 import { CartService } from '../cart/cart.service';
 import { WishlistService } from '../wishlist/wishlist.service';
+import { ToastrService } from 'ngx-toastr';
+
+declare const FB: any;
+declare const google: any;
 
 @Injectable({
   providedIn: 'root',
@@ -16,6 +20,9 @@ import { WishlistService } from '../wishlist/wishlist.service';
 export class AuthService {
   private http = inject(HttpClient);
   private storage = inject(LocalStorageService);
+  private ngZone = inject(NgZone);
+  private toastr = inject(ToastrService);
+
   // Services injectés de manière lazy pour éviter les dépendances circulaires
   private cartService?: CartService;
   private wishlistService?: WishlistService;
@@ -28,6 +35,11 @@ export class AuthService {
 
   // Pour suivre le processus de synchronisation
   public isSynchronizing = signal<boolean>(false);
+
+  private googleClientId = environment.GOOGLE_CLIENT_ID;
+  private googleInitialized = false;
+  private facebookInitialized = false;
+  private googleAuth: any;
 
   constructor(private injector: Injector) {
     // Initialiser l'état d'authentification avec la valeur du localStorage
@@ -57,6 +69,74 @@ export class AuthService {
       const isAuth = !!token;
       this.authStatus.set(isAuth);
       this.isAuthenticatedSubject.next(isAuth);
+    });
+  }
+
+  // Remplacez cette partie dans votre AuthService
+
+  /**
+   * Initialise Facebook SDK
+   */
+  initFacebookSdk(): Promise<void> {
+    if (this.facebookInitialized) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      window.onload = () => {
+        (window as any).fbAsyncInit = () => {
+          FB.init({
+            appId: environment.FACEBOOK_APP_ID,
+            cookie: true,
+            xfbml: true,
+            version: 'v18.0',
+          });
+          this.facebookInitialized = true;
+          resolve();
+        };
+
+        (function (d, s, id) {
+          var js,
+            fjs = d.getElementsByTagName(s)[0];
+          if (d.getElementById(id)) {
+            return;
+          }
+          js = d.createElement(s) as HTMLScriptElement;
+          js.id = id;
+          js.src = 'https://connect.facebook.net/en_US/sdk.js';
+          fjs.parentNode?.insertBefore(js, fjs);
+        })(document, 'script', 'facebook-jssdk');
+      };
+    });
+  }
+
+  /**
+   * Initialise Google Sign-In API
+   */
+  initGoogleApi(): Promise<void> {
+    if (this.googleInitialized) {
+      return Promise.resolve();
+    }
+
+    return new Promise<void>((resolve) => {
+      const script = document.createElement('script');
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        this.googleAuth = google.accounts.oauth2.initTokenClient({
+          client_id: this.googleClientId,
+          scope: 'email profile',
+          callback: (tokenResponse: any) => {
+            if (tokenResponse && tokenResponse.access_token) {
+              this.handleGoogleToken(tokenResponse.access_token);
+            }
+          },
+        });
+        this.googleInitialized = true;
+        resolve();
+      };
+      document.body.appendChild(script);
     });
   }
 
@@ -135,6 +215,157 @@ export class AuthService {
         }),
         catchError(handleHttpError)
       );
+  }
+
+  /**
+   * Connexion avec Facebook
+   */
+  loginWithFacebook(): Observable<any> {
+    if (!this.facebookInitialized) {
+      this.toastr.error('Facebook SDK not initialized');
+      return of({ status: 'error', message: 'Facebook SDK not initialized' });
+    }
+
+    return from(
+      new Promise((resolve, reject) => {
+        FB.login(
+          (response: any) => {
+            if (response.authResponse) {
+              FB.api('/me', { fields: 'name,email' }, (userInfo: any) => {
+                this.ngZone.run(() => {
+                  const userData = {
+                    name: userInfo.name,
+                    email: userInfo.email,
+                    socialId: response.authResponse.userID,
+                    socialType: 'facebook',
+                  };
+
+                  this.socialLogin(
+                    userData.name,
+                    userData.email,
+                    userData.socialId,
+                    userData.socialType as 'facebook'
+                  ).subscribe({
+                    next: (authResponse) => {
+                      resolve(authResponse);
+                    },
+                    error: (error) => {
+                      reject(error);
+                    },
+                  });
+                });
+              });
+            } else {
+              reject({
+                status: 'error',
+                message: 'User cancelled login or did not fully authorize.',
+              });
+            }
+          },
+          { scope: 'email,public_profile' }
+        );
+      })
+    ).pipe(
+      tap((response: any) => {
+        if (response.status === 'success') {
+          this.toastr.success('Connexion Facebook réussie');
+        }
+      }),
+      catchError((err) => {
+        this.toastr.error(err.message || 'Erreur de connexion Facebook');
+        return of({ status: 'error', message: err.message });
+      })
+    );
+  }
+
+  /**
+   * Connexion avec Google
+   */
+  loginWithGoogle(): Observable<any> {
+    if (!this.googleInitialized) {
+      this.toastr.error('Google API not initialized');
+      return of({ status: 'error', message: 'Google API not initialized' });
+    }
+
+    // Déclencher la demande de token
+    this.googleAuth.requestAccessToken();
+
+    // Returning an observable that will be resolved when the token callback is executed
+    return new Observable((observer) => {
+      const originalCallback = this.googleAuth.callback;
+
+      this.googleAuth.callback = (tokenResponse: any) => {
+        // Call the original callback
+        if (originalCallback) {
+          originalCallback(tokenResponse);
+        }
+
+        if (tokenResponse && tokenResponse.access_token) {
+          this.handleGoogleToken(tokenResponse.access_token).subscribe({
+            next: (response) => {
+              observer.next(response);
+              observer.complete();
+            },
+            error: (error) => {
+              observer.error(error);
+            },
+          });
+        } else {
+          observer.error({
+            status: 'error',
+            message: 'Failed to get access token',
+          });
+        }
+      };
+    });
+  }
+
+  /**
+   * Traiter le token d'accès Google
+   */
+  private handleGoogleToken(accessToken: string): Observable<any> {
+    return from(
+      fetch(
+        `https://www.googleapis.com/oauth2/v3/userinfo?access_token=${accessToken}`
+      )
+        .then((response) => response.json())
+        .then((userInfo) => {
+          return this.ngZone.run(() => {
+            const userData = {
+              name: userInfo.name,
+              email: userInfo.email,
+              socialId: userInfo.sub,
+              socialType: 'google',
+            };
+
+            return new Promise((resolve, reject) => {
+              this.socialLogin(
+                userData.name,
+                userData.email,
+                userData.socialId,
+                userData.socialType as 'google'
+              ).subscribe({
+                next: (authResponse) => {
+                  resolve(authResponse);
+                },
+                error: (error) => {
+                  reject(error);
+                },
+              });
+            });
+          });
+        })
+    ).pipe(
+      tap((response: any) => {
+        if (response.status === 'success') {
+          this.toastr.success('Connexion Google réussie');
+        }
+      }),
+      catchError((err) => {
+        this.toastr.error(err.message || 'Erreur de connexion Google');
+        return of({ status: 'error', message: err.message });
+      })
+    );
   }
 
   /**
@@ -251,7 +482,7 @@ export class AuthService {
     email: string,
     socialId: string,
     socialType: 'facebook' | 'google',
-    language: string = 'fr'
+    language: string = this.getDefaultLanguage()
   ): Observable<IAuthResponse> {
     return this.http
       .post<IAuthResponse>(`${this.apiUrl}/social-login`, {
@@ -465,5 +696,11 @@ export class AuthService {
    */
   getUser(): Observable<IUser | null> {
     return this.storage.observe('currentUser');
+  }
+
+  private getDefaultLanguage(): string {
+    const browserLang = navigator.language.split('-')[0].toLowerCase();
+    const supportedLanguages = ['fr', 'en', 'es', 'de', 'it'];
+    return supportedLanguages.includes(browserLang) ? browserLang : 'en';
   }
 }

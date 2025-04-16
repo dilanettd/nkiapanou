@@ -1,0 +1,31 @@
+// Custom styles for PayPal payment component
+:host {
+  #paypal-button-container {
+    min-height: 150px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+  }
+
+  // PayPal button styling adjustments
+  ::ng-deep {
+    .paypal-button-container {
+      max-width: 600px !important;
+      margin: 0 auto;
+    }
+  }
+
+  // Loading spinner animation
+  @keyframes spin {
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
+  }
+
+  .animate-spin {
+    animation: spin 1s linear infinite;
+  }
+}

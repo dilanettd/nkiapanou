@@ -7,7 +7,7 @@ import {
   FormGroup,
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { Order } from '../../../../core/models2/order.model';
+import { IOrder } from '../../../../core/models2/order.model';
 import { OrderService } from '../../../../core/services/order/order.service';
 
 @Component({
@@ -23,12 +23,12 @@ export class OrdersAdminComponent implements OnInit {
   private toastr = inject(ToastrService);
 
   // Display properties
-  orders: Order[] = [];
+  orders: IOrder[] = [];
   loading = true;
   totalItems = 0;
   pageSize = 10;
   currentPage = 1;
-  selectedOrder: Order | null = null;
+  selectedOrder: IOrder | null = null;
   isDetailModalOpen = false;
   isTrackingModalOpen = false;
   trackingNumber = '';
@@ -196,7 +196,7 @@ export class OrdersAdminComponent implements OnInit {
 
   // Actions sur les commandes
   updateOrderStatus(
-    order: Order,
+    order: IOrder,
     status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
   ): void {
     this.orderService.updateOrderStatus(order.id, status).subscribe(
@@ -228,7 +228,7 @@ export class OrdersAdminComponent implements OnInit {
   }
 
   updatePaymentStatus(
-    order: Order,
+    order: IOrder,
     paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
   ): void {
     this.orderService.updatePaymentStatus(order.id, paymentStatus).subscribe(
@@ -260,7 +260,7 @@ export class OrdersAdminComponent implements OnInit {
   }
 
   // Gestion du numéro de suivi
-  openTrackingModal(order: Order): void {
+  openTrackingModal(order: IOrder): void {
     this.selectedOrder = order;
     this.trackingNumber = order.tracking_number || '';
     this.isTrackingModalOpen = true;
@@ -310,7 +310,7 @@ export class OrdersAdminComponent implements OnInit {
   }
 
   // Gestion de la modal de détail
-  openDetailModal(order: Order): void {
+  openDetailModal(order: IOrder): void {
     this.selectedOrder = order;
     this.isDetailModalOpen = true;
   }
@@ -321,7 +321,7 @@ export class OrdersAdminComponent implements OnInit {
   }
 
   // Méthodes utilitaires
-  getTotalItems(order: Order): number {
+  getTotalItems(order: IOrder): number {
     return this.orderService.getTotalItems(order);
   }
 

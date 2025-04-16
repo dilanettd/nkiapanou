@@ -3,13 +3,13 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { Order } from '../../models2/order.model';
+import { IOrder } from '../../models2/order.model';
 import { handleHttpError } from '../errors';
 
 interface OrdersResponse {
   status: string;
   data: {
-    orders: Order[];
+    orders: IOrder[];
     current_page: number;
     per_page: number;
     total: number;
@@ -19,7 +19,7 @@ interface OrdersResponse {
 
 interface OrderResponse {
   status: string;
-  data: Order;
+  data: IOrder;
 }
 
 @Injectable({
@@ -32,7 +32,7 @@ export class PurchaseService {
   /**
    * Récupère la liste des commandes de l'utilisateur
    */
-  getUserOrders(): Observable<Order[]> {
+  getUserOrders(): Observable<IOrder[]> {
     return this.http.get<OrdersResponse>(`${this.apiUrl}/orders`).pipe(
       map((response) =>
         response.status === 'success' ? response.data.orders : []
@@ -47,7 +47,7 @@ export class PurchaseService {
   /**
    * Récupère les détails d'une commande spécifique
    */
-  getOrderDetails(orderId: number): Observable<Order | undefined> {
+  getOrderDetails(orderId: number): Observable<IOrder | undefined> {
     return this.http
       .get<OrderResponse>(`${this.apiUrl}/orders/${orderId}`)
       .pipe(
@@ -67,7 +67,7 @@ export class PurchaseService {
   /**
    * Crée une nouvelle commande
    */
-  createOrder(orderData: any): Observable<Order> {
+  createOrder(orderData: any): Observable<IOrder> {
     return this.http
       .post<OrderResponse>(`${this.apiUrl}/orders`, orderData)
       .pipe(
@@ -87,7 +87,7 @@ export class PurchaseService {
   /**
    * Annule une commande
    */
-  cancelOrder(orderId: number): Observable<Order | undefined> {
+  cancelOrder(orderId: number): Observable<IOrder | undefined> {
     return this.http
       .patch<OrderResponse>(`${this.apiUrl}/orders/${orderId}/cancel`, {})
       .pipe(

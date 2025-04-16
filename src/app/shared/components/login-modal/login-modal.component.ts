@@ -48,8 +48,6 @@ export class LoginModalComponent implements OnInit, OnDestroy {
     this.isForgotPassword = true;
   }
 
-  socialLogin() {}
-
   goBackToLogin() {
     this.isForgotPassword = false;
     this.errorMessage = null;
@@ -57,6 +55,37 @@ export class LoginModalComponent implements OnInit, OnDestroy {
 
   closeModal() {
     this.activeModal.dismissAll();
+  }
+
+  socialLogin(provider: 'facebook' | 'google') {
+    this.isSubmitted = true;
+    this.errorMessage = null;
+
+    let socialLoginObservable;
+
+    if (provider === 'facebook') {
+      socialLoginObservable = this.authService.loginWithFacebook();
+    } else {
+      socialLoginObservable = this.authService.loginWithGoogle();
+    }
+
+    this.loginSubscribe = socialLoginObservable.subscribe({
+      next: (response: any) => {
+        this.isSubmitted = false;
+
+        if (response.status === 'success' && response.user) {
+          this.toastr.success(`Connexion ${provider} réussie`);
+          this.activeModal.dismissAll();
+        } else {
+          this.errorMessage = response.message || 'Erreur de connexion sociale';
+        }
+      },
+      error: (err: any) => {
+        this.isSubmitted = false;
+        this.errorMessage =
+          err.message || `Erreur lors de la connexion ${provider}`;
+      },
+    });
   }
 
   onSubmit() {

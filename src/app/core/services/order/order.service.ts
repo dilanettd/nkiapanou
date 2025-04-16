@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap, map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { Order, IOrderItem } from '../../models2/order.model';
+import { IOrder, IOrderItem } from '../../models2/order.model';
 import { ProductService } from '../product/product.service';
 
 export interface OrderSearchParams {
@@ -28,7 +28,7 @@ export interface OrderSearchParams {
 export interface OrdersResponse {
   status: string;
   data: {
-    orders: Order[];
+    orders: IOrder[];
     current_page: number;
     per_page: number;
     total: number;
@@ -38,7 +38,7 @@ export interface OrdersResponse {
 
 export interface SingleOrderResponse {
   status: string;
-  data: Order;
+  data: IOrder;
 }
 
 @Injectable({
@@ -49,7 +49,7 @@ export class OrderService {
   private productService = inject(ProductService);
 
   private apiUrl = environment.API_URL;
-  private ordersSubject = new BehaviorSubject<Order[]>([]);
+  private ordersSubject = new BehaviorSubject<IOrder[]>([]);
 
   public orders$ = this.ordersSubject.asObservable();
 
@@ -79,7 +79,7 @@ export class OrderService {
   /**
    * Récupère une commande par son ID
    */
-  getOrderById(id: number): Observable<Order | null> {
+  getOrderById(id: number): Observable<IOrder | null> {
     return this.http
       .get<SingleOrderResponse>(`${this.apiUrl}/admin/orders/${id}`)
       .pipe(
@@ -99,7 +99,7 @@ export class OrderService {
   updateOrderStatus(
     id: number,
     status: 'pending' | 'processing' | 'shipped' | 'delivered' | 'cancelled'
-  ): Observable<Order | null> {
+  ): Observable<IOrder | null> {
     return this.http
       .patch<SingleOrderResponse>(`${this.apiUrl}/admin/orders/${id}/status`, {
         status,
@@ -121,7 +121,7 @@ export class OrderService {
   updatePaymentStatus(
     id: number,
     paymentStatus: 'pending' | 'paid' | 'failed' | 'refunded'
-  ): Observable<Order | null> {
+  ): Observable<IOrder | null> {
     return this.http
       .patch<SingleOrderResponse>(
         `${this.apiUrl}/admin/orders/${id}/payment-status`,
@@ -144,7 +144,7 @@ export class OrderService {
   updateTrackingNumber(
     id: number,
     trackingNumber: string
-  ): Observable<Order | null> {
+  ): Observable<IOrder | null> {
     return this.http
       .patch<SingleOrderResponse>(
         `${this.apiUrl}/admin/orders/${id}/tracking`,
@@ -216,7 +216,7 @@ export class OrderService {
   /**
    * Calcule le nombre total d'articles dans une commande
    */
-  getTotalItems(order: Order): number {
+  getTotalItems(order: IOrder): number {
     if (!order.items || order.items.length === 0) {
       return 0;
     }
@@ -405,7 +405,7 @@ export class OrderService {
    * Les commandes peuvent généralement être annulées si elles sont en statut 'pending' ou 'processing'
    * @param order La commande à vérifier
    */
-  canCancelOrder(order: Order): boolean {
+  canCancelOrder(order: IOrder): boolean {
     return ['pending', 'processing'].includes(order.status || '');
   }
 

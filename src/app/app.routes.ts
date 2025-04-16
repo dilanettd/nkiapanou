@@ -33,6 +33,14 @@ export const routes: Routes = [
     path: 'payment',
     children: [
       {
+        path: 'paypal',
+        loadComponent: () =>
+          import(
+            './pages/payment/components/paypal-payment/paypal-payment.component'
+          ).then((m) => m.PaypalPaymentComponent),
+        canActivate: [authGuard],
+      },
+      {
         path: 'stripe',
         loadComponent: () =>
           import(

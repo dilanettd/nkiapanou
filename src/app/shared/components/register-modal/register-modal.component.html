@@ -17,20 +17,24 @@
         <div class="social-login mb-5">
           <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
-              <a
+              <button
+                type="button"
                 class="btn w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-button py-2"
-                (click)="socialLogin()"
+                (click)="socialLogin('facebook')"
+                [disabled]="isLoading"
               >
                 <i class="lni lni-facebook-filled mr-2"></i> Connexion Facebook
-              </a>
+              </button>
             </div>
             <div>
-              <a
+              <button
+                type="button"
                 class="btn w-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-button py-2"
-                (click)="socialLogin()"
+                (click)="socialLogin('google')"
+                [disabled]="isLoading"
               >
                 <i class="lni lni-google mr-2"></i> Connexion Google
-              </a>
+              </button>
             </div>
           </div>
         </div>
@@ -272,7 +276,7 @@
         <button
           class="btn btn-primary flex-1"
           type="submit"
-          [disabled]="registrationForm.invalid"
+          [disabled]="registrationForm.invalid || isLoading"
         >
           <ng-container *ngIf="isLoading; else defaultText">
             <spinner></spinner>

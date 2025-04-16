@@ -23,6 +23,42 @@
         {{ errorMessage }}
       </div>
       }
+
+      <!-- Boutons de connexion sociale -->
+      <div class="social-login mb-5">
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <button
+              type="button"
+              class="btn w-full flex items-center justify-center bg-blue-600 hover:bg-blue-700 text-white rounded-button py-2"
+              (click)="socialLogin('facebook')"
+              [disabled]="isSubmitted"
+            >
+              <i class="lni lni-facebook-filled mr-2"></i> Facebook
+            </button>
+          </div>
+          <div>
+            <button
+              type="button"
+              class="btn w-full flex items-center justify-center bg-red-500 hover:bg-red-600 text-white rounded-button py-2"
+              (click)="socialLogin('google')"
+              [disabled]="isSubmitted"
+            >
+              <i class="lni lni-google mr-2"></i> Google
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Séparateur OU -->
+      <div class="alt-option relative text-center mb-5">
+        <span
+          class="bg-background-light px-4 relative z-10 text-text-light font-body"
+          >Ou</span
+        >
+        <hr class="absolute top-1/2 w-full border-t border-gray-300 -z-0" />
+      </div>
+
       <div class="form-group input-group mb-5">
         <label
           for="reg-email"
@@ -78,7 +114,7 @@
         <button
           class="btn btn-primary flex-1"
           type="submit"
-          [disabled]="loginForm.invalid"
+          [disabled]="loginForm.invalid || isSubmitted"
         >
           <ng-container *ngIf="isSubmitted; else defaultText">
             <spinner></spinner>
@@ -138,7 +174,7 @@
         <button
           class="btn btn-primary flex-1"
           type="submit"
-          [disabled]="forgotPasswordForm.invalid"
+          [disabled]="forgotPasswordForm.invalid || isSubmitted"
         >
           <ng-container *ngIf="isSubmitted; else resetText">
             <spinner></spinner>

@@ -1,8 +1,12 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
+import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { Order } from '../../../../core/models2/order.model';
+import { IOrder } from '../../../../core/models2/order.model';
 import { PurchaseService } from '../../../../core/services/purchase/purchase.service';
+import { CartService } from '../../../../core/services/cart/cart.service';
+import { switchMap } from 'rxjs/operators';
+import { of } from 'rxjs';
 
 @Component({
   selector: 'nkiapanou-purchases',
@@ -12,13 +16,15 @@ import { PurchaseService } from '../../../../core/services/purchase/purchase.ser
   styleUrl: './purchases.component.scss',
 })
 export class PurchasesComponent {
-  orders: Order[] = [];
+  orders: IOrder[] = [];
   loading: boolean = true;
-  selectedOrder: Order | null = null;
+  selectedOrder: IOrder | null = null;
   showDetails: boolean = false;
 
   private purchaseService = inject(PurchaseService);
   private toastr = inject(ToastrService);
+  private router = inject(Router);
+  private cartService = inject(CartService);
 
   ngOnInit(): void {
     this.loadUserOrders();
@@ -33,7 +39,7 @@ export class PurchasesComponent {
         this.loading = false;
       },
       error: (error) => {
-        this.toastr.error('Erreur lors du chargement des commandes');
+        this.toastr.error('Error loading orders');
         this.loading = false;
         console.error('Error loading orders:', error);
       },
@@ -49,14 +55,12 @@ export class PurchasesComponent {
           this.selectedOrder = order;
           this.showDetails = true;
         } else {
-          this.toastr.error('Commande introuvable');
+          this.toastr.error(' IOrder not found');
         }
         this.loading = false;
       },
       error: (error) => {
-        this.toastr.error(
-          'Erreur lors du chargement des détails de la commande'
-        );
+        this.toastr.error('Error loading order details');
         this.loading = false;
         console.error('Error loading order details:', error);
       },
@@ -66,6 +70,45 @@ export class PurchasesComponent {
   closeDetails(): void {
     this.showDetails = false;
     this.selectedOrder = null;
+  }
+
+  /**
+   * Pay now functionality for orders with pending or failed payment status
+   */
+  payNow(order: IOrder): void {
+    // Show confirmation alert about replacing cart
+    if (
+      confirm('This will replace any items in your current cart. Continue?')
+    ) {
+      this.loading = true;
+
+      // First clear the cart, then load the order items
+      this.cartService
+        .clearCart()
+        .pipe(
+          switchMap(() => {
+            // After clearing, load order items into cart
+            return this.cartService.loadOrderToCart(order.id);
+          })
+        )
+        .subscribe({
+          next: (result) => {
+            this.loading = false;
+            if (result.success) {
+              this.toastr.success('Order load into cart');
+              // Redirect to cart page
+              this.router.navigate(['/cart']);
+            } else {
+              this.toastr.error(result.message || 'Failed to load order');
+            }
+          },
+          error: (error) => {
+            this.loading = false;
+            console.error('Error processing payment:', error);
+            this.toastr.error('Error processing payment');
+          },
+        });
+    }
   }
 
   getStatusClass(status: string): string {
@@ -103,7 +146,7 @@ export class PurchasesComponent {
   getPaymentMethodLabel(method: string): string {
     switch (method) {
       case 'stripe':
-        return 'Carte bancaire (Stripe)';
+        return 'Credit Card (Stripe)';
       case 'paypal':
         return 'PayPal';
       default:
@@ -111,14 +154,35 @@ export class PurchasesComponent {
     }
   }
 
-  formatDate(dateString: string): string {
-    const options: Intl.DateTimeFormatOptions = {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    };
-    return new Date(dateString).toLocaleDateString('fr-FR', options);
+  getStatusLabel(status: string): string {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'processing':
+        return 'Processing';
+      case 'shipped':
+        return 'Shipped';
+      case 'delivered':
+        return 'Delivered';
+      case 'cancelled':
+        return 'Cancelled';
+      default:
+        return status;
+    }
+  }
+
+  getPaymentStatusLabel(status: string): string {
+    switch (status) {
+      case 'pending':
+        return 'Pending';
+      case 'paid':
+        return 'Paid';
+      case 'failed':
+        return 'Failed';
+      case 'refunded':
+        return 'Refunded';
+      default:
+        return status;
+    }
   }
 }

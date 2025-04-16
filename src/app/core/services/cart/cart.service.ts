@@ -1,11 +1,11 @@
 import { Injectable, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { BehaviorSubject, Observable, of, throwError } from 'rxjs';
-import { catchError, map, tap, finalize } from 'rxjs/operators';
+import { BehaviorSubject, forkJoin, Observable, of, throwError } from 'rxjs';
+import { catchError, map, tap, finalize, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { LocalStorageService } from 'ngx-webstorage';
 import { handleHttpError } from '../errors';
-import { ICartItem, Cart } from '../../models2/order.model';
+import { ICartItem, Cart, IOrder } from '../../models2/order.model';
 import { ProductService } from '../product/product.service';
 
 @Injectable({
@@ -18,6 +18,7 @@ export class CartService {
 
   private apiUrl = environment.API_URL;
   private storageKey = 'user_cart';
+  private orderUrl = `${this.apiUrl}/orders`;
 
   // BehaviorSubject to track cart changes
   private cartItemsSubject = new BehaviorSubject<ICartItem[]>([]);
@@ -336,6 +337,73 @@ export class CartService {
     }
 
     return of([]);
+  }
+
+  /**
+   * Load an existing order into the cart
+   * @param orderId The ID of the order to load
+   * @returns Observable with success flag and message
+   */
+  loadOrderToCart(
+    orderId: number
+  ): Observable<{ success: boolean; message?: string }> {
+    this.syncInProgressSubject.next(true);
+
+    // First get the order details with its items
+    return this.http
+      .get<any>(`${this.orderUrl}/${orderId}`)
+      .pipe(
+        map((response) => {
+          if (response && response.status === 'success' && response.data) {
+            const order = response.data as IOrder;
+
+            // Check if order has items
+            if (!order.items || order.items?.length === 0) {
+              return { success: false, message: 'Order has no items' };
+            }
+
+            // Process each item and add it to cart
+            const addItemObservables = order.items.map((item) => {
+              return this.addToCart(item.product_id, item.quantity);
+            });
+
+            if (addItemObservables.length > 0) {
+              // Combine all add item operations
+              return forkJoin(addItemObservables).pipe(
+                map(() => ({ success: true })),
+                catchError((error) => {
+                  console.error('Error adding items to cart:', error);
+                  return of({
+                    success: false,
+                    message: 'Error adding items to cart',
+                  });
+                })
+              );
+            } else {
+              return of({ success: false, message: 'No valid items to add' });
+            }
+          } else {
+            return of({ success: false, message: 'Failed to load order' });
+          }
+        }),
+        catchError((error) => {
+          console.error('Error loading order:', error);
+          return of({ success: false, message: 'Error loading order details' });
+        }),
+        finalize(() => {
+          this.syncInProgressSubject.next(false);
+        })
+      )
+      .pipe(
+        // Flatten the observable from map
+        switchMap((result) => {
+          if ('pipe' in result) {
+            return result;
+          } else {
+            return of(result);
+          }
+        })
+      );
   }
 
   /**
