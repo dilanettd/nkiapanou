@@ -14,8 +14,8 @@ import {
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { NgxImageCompressService } from 'ngx-image-compress';
-import { ICategory } from '../../../../../../core/models2/category.model';
-import { IProduct } from '../../../../../../core/models2/product.model';
+import { ICategory } from '../../../../../../core/models/category.model';
+import { IProduct } from '../../../../../../core/models/product.model';
 import { ProductService } from '../../../../../../core/services/product/product.service';
 import { CommonModule } from '@angular/common';
 import { RouterModule } from '@angular/router';

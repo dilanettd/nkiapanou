@@ -16,7 +16,7 @@ import {
 } from 'rxjs/operators';
 import { Subject, of } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
-import { IUser } from '../../core/models2/user.model';
+import { IUser } from '../../core/models/user.model';
 
 interface LoadingStates {
   initial: boolean;

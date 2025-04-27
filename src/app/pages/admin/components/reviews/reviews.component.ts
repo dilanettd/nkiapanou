@@ -10,7 +10,7 @@ import { ToastrService } from 'ngx-toastr';
 import {
   IProductReview,
   IProduct,
-} from '../../../../core/models2/product.model';
+} from '../../../../core/models/product.model';
 import { ProductService } from '../../../../core/services/product/product.service';
 import { ReviewService } from '../../../../core/services/review/review.service';
 

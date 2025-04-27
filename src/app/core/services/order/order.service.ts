@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap, map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { IOrder, IOrderItem } from '../../models2/order.model';
+import { IOrder, IOrderItem } from '../../models/order.model';
 import { ProductService } from '../product/product.service';
 
 export interface OrderSearchParams {

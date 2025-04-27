@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { map, catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { IProductReview } from '../../models2/product.model';
+import { IProductReview } from '../../models/product.model';
 import { handleHttpError } from '../errors';
 
 export interface ReviewSearchParams {

@@ -16,7 +16,7 @@ import { RegisterModalComponent } from '../../../shared/components/register-moda
 import { AuthService } from '../../services/auth/auth.service';
 import { CartService } from '../../services/cart/cart.service';
 import { CategoryService } from '../../services/category/category.service';
-import { ICategory } from '../../models2/category.model';
+import { ICategory } from '../../models/category.model';
 import { WishlistService } from '../../services/wishlist/wishlist.service';
 import { CookieService } from '../../services/cookie/cookie.service';
 

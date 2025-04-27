@@ -6,7 +6,7 @@ import {
   IShippingFormula,
   IShippingCalculationRequest,
   IShippingCalculationResult,
-} from '../../models2/order.model';
+} from '../../models/order.model';
 
 @Injectable({
   providedIn: 'root',

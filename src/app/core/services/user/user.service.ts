@@ -5,7 +5,7 @@ import { catchError, tap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { handleHttpError } from '../errors';
 import { AuthService } from '../auth/auth.service';
-import { IUser } from '../../models2/user.model';
+import { IUser } from '../../models/user.model';
 
 // Interface for updating the profile
 export interface IUpdateProfile {

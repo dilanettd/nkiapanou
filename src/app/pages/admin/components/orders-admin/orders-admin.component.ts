@@ -7,7 +7,7 @@ import {
   FormGroup,
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { IOrder } from '../../../../core/models2/order.model';
+import { IOrder } from '../../../../core/models/order.model';
 import { OrderService } from '../../../../core/services/order/order.service';
 
 @Component({

@@ -18,8 +18,8 @@ import {
   switchMap,
 } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { IProduct } from '../../models2/product.model';
-import { IUser, IWishlistItem } from '../../models2/user.model';
+import { IProduct } from '../../models/product.model';
+import { IUser, IWishlistItem } from '../../models/user.model';
 import { handleHttpError } from '../errors';
 
 @Injectable({

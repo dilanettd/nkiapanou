@@ -1,5 +1,5 @@
 import { Component, EventEmitter, inject, Input, Output } from '@angular/core';
-import { IProduct } from '../../../../../core/models2/product.model';
+import { IProduct } from '../../../../../core/models/product.model';
 import { WishlistService } from '../../../../../core/services/wishlist/wishlist.service';
 import { CartService } from '../../../../../core/services/cart/cart.service';
 import { CommonModule } from '@angular/common';

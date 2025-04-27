@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterModule } from '@angular/router';
-import { ICategory } from '../../../../../../core/models2/category.model';
-import { IProduct } from '../../../../../../core/models2/product.model';
+import { ICategory } from '../../../../../../core/models/category.model';
+import { IProduct } from '../../../../../../core/models/product.model';
 import { ProductSearchParams } from '../../../../../../core/services/product/product.service';
 
 @Component({

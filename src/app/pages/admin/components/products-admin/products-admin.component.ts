@@ -1,7 +1,7 @@
 import { Component, inject, OnInit, signal } from '@angular/core';
 import { ToastrService } from 'ngx-toastr';
-import { ICategory } from '../../../../core/models2/category.model';
-import { IProduct } from '../../../../core/models2/product.model';
+import { ICategory } from '../../../../core/models/category.model';
+import { IProduct } from '../../../../core/models/product.model';
 import { CategoryService } from '../../../../core/services/category/category.service';
 import {
   ProductService,

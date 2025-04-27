@@ -6,7 +6,7 @@ import {
   ITransaction,
   IRefundRequest,
   ITransactionStatistics,
-} from '../../models2/order.model';
+} from '../../models/order.model';
 
 @Injectable({
   providedIn: 'root',

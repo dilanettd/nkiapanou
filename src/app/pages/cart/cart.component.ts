@@ -11,9 +11,9 @@ import { RouterModule, Router } from '@angular/router';
 import { Subject, takeUntil, lastValueFrom, finalize } from 'rxjs';
 import { ToastrService } from 'ngx-toastr';
 
-import { ICartItem } from '../../core/models2/order.model';
-import { IProduct } from '../../core/models2/product.model';
-import { IUserAddress } from '../../core/models2/user.model';
+import { ICartItem } from '../../core/models/order.model';
+import { IProduct } from '../../core/models/product.model';
+import { IUserAddress } from '../../core/models/user.model';
 import { CartService } from '../../core/services/cart/cart.service';
 import { ProductService } from '../../core/services/product/product.service';
 import { UserService } from '../../core/services/user/user.service';

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, forkJoin, Observable, of } from 'rxjs';
 import { tap, catchError, map, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { IProduct, IProductImage } from '../../models2/product.model';
+import { IProduct, IProductImage } from '../../models/product.model';
 import { WishlistService } from '../wishlist/wishlist.service';
 import { handleHttpError } from '../errors';
 

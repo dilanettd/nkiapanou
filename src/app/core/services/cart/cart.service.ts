@@ -5,7 +5,7 @@ import { catchError, map, tap, finalize, switchMap } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
 import { LocalStorageService } from 'ngx-webstorage';
 import { handleHttpError } from '../errors';
-import { ICartItem, Cart, IOrder } from '../../models2/order.model';
+import { ICartItem, Cart, IOrder } from '../../models/order.model';
 import { ProductService } from '../product/product.service';
 
 @Injectable({

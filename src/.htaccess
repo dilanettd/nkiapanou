@@ -1,6 +1,10 @@
+# Fichier .htaccess à la racine (pour Angular)
 <IfModule mod_rewrite.c>
-  RewriteEngine On # Forced redirection to HTTPS RewriteCond %{HTTPS} off
-  RewriteRule ^(.*)$ https://%{HTTP_HOST}/$1 [R=301,L] #Angular rules
-  RewriteBase / RewriteRule ^index\.html$ - [L] RewriteCond %{REQUEST_FILENAME}
-  !-f RewriteCond %{REQUEST_FILENAME} !-d RewriteRule . /index.html [L]
+  RewriteEngine On # Rediriger les requêtes du dossier /uploads vers
+  /api/public/uploads RewriteRule ^uploads/(.*)$ api/public/uploads/$1 [L] # Si
+  la requête commence par /api, redirigez vers le dossier api RewriteCond
+  %{REQUEST_URI} ^/api RewriteRule ^api/(.*)$ api/public/$1 [L] # Si le fichier
+  demandé existe, servez-le directement RewriteCond %{REQUEST_FILENAME} -f [OR]
+  RewriteCond %{REQUEST_FILENAME} -d RewriteRule ^ - [L] # Sinon, redirigez tout
+  vers index.html d'Angular RewriteRule ^ index.html [L]
 </IfModule>

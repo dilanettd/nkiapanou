@@ -6,7 +6,7 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { IUserAddress } from '../../../../core/models2/user.model';
+import { IUserAddress } from '../../../../core/models/user.model';
 import { AddressService } from '../../../../core/services/address/address.service';
 import { CommonModule } from '@angular/common';
 

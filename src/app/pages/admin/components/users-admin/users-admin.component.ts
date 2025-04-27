@@ -7,7 +7,7 @@ import {
   FormGroup,
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
-import { IUser } from '../../../../core/models2/user.model';
+import { IUser } from '../../../../core/models/user.model';
 import { UserService } from '../../../../core/services/user/user.service';
 
 @Component({

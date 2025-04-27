@@ -1,5 +1,5 @@
-import { IUser } from './auth.state.model';
 import { IProduct } from './product.model';
+import { IUser } from './user.model';
 
 // 1. Order Model
 export interface IOrder {

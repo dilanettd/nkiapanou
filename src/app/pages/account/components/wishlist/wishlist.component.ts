@@ -3,7 +3,7 @@ import { Component, inject } from '@angular/core';
 import { RouterModule, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { WishlistService } from '../../../../core/services/wishlist/wishlist.service';
-import { IProduct } from '../../../../core/models2/product.model';
+import { IProduct } from '../../../../core/models/product.model';
 
 @Component({
   selector: 'nkiapanou-wishlist',

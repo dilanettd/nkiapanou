@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { Router, RouterLink } from '@angular/router';
 import { AuthService } from '../../../../core/services/auth/auth.service';
-import { IUser } from '../../../../core/models2/user.model';
+import { IUser } from '../../../../core/models/user.model';
 import { Subscription } from 'rxjs';
 import { trigger, transition, style, animate } from '@angular/animations';
 import { NotificationDropdownComponent } from './components/notification-dropdown/notification-dropdown.component';

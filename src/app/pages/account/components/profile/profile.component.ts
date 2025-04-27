@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { NgxImageCompressService } from 'ngx-image-compress';
-import { IUser } from '../../../../core/models2/user.model';
+import { IUser } from '../../../../core/models/user.model';
 import { AuthService } from '../../../../core/services/auth/auth.service';
 import { UserService } from '../../../../core/services/user/user.service';
 

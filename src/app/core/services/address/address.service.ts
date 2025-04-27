@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { IUserAddress } from '../../models2/user.model';
+import { IUserAddress } from '../../models/user.model';
 import { handleHttpError } from '../errors';
 
 interface ApiResponse<T> {

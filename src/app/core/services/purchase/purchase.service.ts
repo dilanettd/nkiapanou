@@ -3,7 +3,7 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { IOrder } from '../../models2/order.model';
+import { IOrder } from '../../models/order.model';
 import { handleHttpError } from '../errors';
 
 interface OrdersResponse {

@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
-import { IOrder } from '../../../../core/models2/order.model';
+import { IOrder } from '../../../../core/models/order.model';
 import { PurchaseService } from '../../../../core/services/purchase/purchase.service';
 import { CartService } from '../../../../core/services/cart/cart.service';
 import { switchMap } from 'rxjs/operators';

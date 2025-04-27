@@ -11,8 +11,8 @@ import {
 import { animate, style, transition, trigger } from '@angular/animations';
 import { ToastrService } from 'ngx-toastr';
 import { finalize, catchError, of, Observable } from 'rxjs';
-import { ICategory } from '../../core/models2/category.model';
-import { IProduct, IProductReview } from '../../core/models2/product.model';
+import { ICategory } from '../../core/models/category.model';
+import { IProduct, IProductReview } from '../../core/models/product.model';
 import { CategoryService } from '../../core/services/category/category.service';
 import { ProductService } from '../../core/services/product/product.service';
 import { ReviewService } from '../../core/services/review/review.service';

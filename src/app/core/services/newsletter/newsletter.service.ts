@@ -7,7 +7,7 @@ import {
   INewsletterSubscriber,
   INewsletterSubscriberCreate,
   INewsletterSubscriberUpdate,
-} from '../../models2/user.model';
+} from '../../models/user.model';
 
 @Injectable({
   providedIn: 'root',

@@ -19,6 +19,8 @@
     "@angular/platform-browser-dynamic": "^18.2.8",
     "@angular/router": "^18.2.8",
     "@ng-bootstrap/ng-bootstrap": "^17.0.1",
+    "@ngx-translate/core": "^16.0.4",
+    "@ngx-translate/http-loader": "^16.0.1",
     "@stripe/stripe-js": "^6.1.0",
     "@tailwindcss/forms": "^0.5.10",
     "bootstrap-icons": "^1.11.3",

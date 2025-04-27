@@ -10,7 +10,7 @@ import { CommonModule, Location } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterModule, ActivatedRoute, Router } from '@angular/router';
 import { Subject, takeUntil, switchMap, catchError, map, of } from 'rxjs';
-import { IProduct, IProductReview } from '../../core/models2/product.model';
+import { IProduct, IProductReview } from '../../core/models/product.model';
 import { AuthService } from '../../core/services/auth/auth.service';
 import { CartService } from '../../core/services/cart/cart.service';
 import { ProductService } from '../../core/services/product/product.service';

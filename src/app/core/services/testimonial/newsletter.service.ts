@@ -3,7 +3,7 @@ import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
 import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { INewsletterSubscriber } from '../../models2/user.model';
+import { INewsletterSubscriber } from '../../models/user.model';
 
 @Injectable({
   providedIn: 'root',

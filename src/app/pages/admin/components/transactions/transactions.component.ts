@@ -8,7 +8,7 @@ import {
   PAYMENT_METHODS,
   TRANSACTION_STATUS,
   TRANSACTION_TYPES,
-} from '../../../../core/models2/order.model';
+} from '../../../../core/models/order.model';
 import { TransactionService } from '../../../../core/services/transaction/transaction.service';
 import { CommonModule } from '@angular/common';
 

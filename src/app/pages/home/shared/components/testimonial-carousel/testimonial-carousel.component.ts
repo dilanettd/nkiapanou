@@ -12,7 +12,7 @@ import {
 } from '@angular/core';
 import { CommonModule, isPlatformBrowser } from '@angular/common';
 import { register } from 'swiper/element/bundle';
-import { IProductReview } from '../../../../../core/models2/product.model';
+import { IProductReview } from '../../../../../core/models/product.model';
 
 @Component({
   selector: 'nkiapanou-testimonial-carousel',

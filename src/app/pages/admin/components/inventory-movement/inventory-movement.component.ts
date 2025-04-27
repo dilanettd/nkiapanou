@@ -9,8 +9,8 @@ import {
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { switchMap, of } from 'rxjs';
-import { IInventoryMovement } from '../../../../core/models2/inventory-movement.model';
-import { IProduct } from '../../../../core/models2/product.model';
+import { IInventoryMovement } from '../../../../core/models/inventory-movement.model';
+import { IProduct } from '../../../../core/models/product.model';
 import { InventoryMovementService } from '../../../../core/services/inventory-movement/inventory-movement.service';
 import { ProductService } from '../../../../core/services/product/product.service';
 

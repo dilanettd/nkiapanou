@@ -7,7 +7,7 @@ import {
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs';
-import { IShippingFormula } from '../../../../core/models2/order.model';
+import { IShippingFormula } from '../../../../core/models/order.model';
 import { ShippingService } from '../../../../core/services/shipping/shipping.service';
 import { CommonModule } from '@angular/common';
 

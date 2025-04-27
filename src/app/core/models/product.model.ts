@@ -1,40 +1,38 @@
-import { IUser } from './auth.state.model';
-import { IShop } from './seller.model';
+import { ICategory } from './category.model';
+import { IUser } from './user.model';
+
+export interface IProduct {
+  id: number;
+  name: string;
+  slug: string;
+  description?: string;
+  price: number;
+  discount_price?: number;
+  quantity: number;
+  category_id: number;
+  status: 'active' | 'inactive' | 'out_of_stock';
+  featured: boolean;
+  weight?: number;
+  primary_image_url: string;
+  dimensions?: string;
+  origin_country?: string;
+  sku: string;
+  packaging?: string;
+  low_stock_threshold?: number;
+  created_at: string;
+  updated_at: string;
+  images: IProductImage[];
+  category?: ICategory;
+  reviews?: IProductReview[];
+}
 
 export interface IProductImage {
   id: number;
   product_id: number;
-  image_url: string;
-  width?: number;
-  height?: number;
-  thumbnail_url?: string;
-  created_at?: string;
-  updated_at?: string;
-}
-
-export interface IProduct {
-  id: number;
-  shop_id: number;
-  name: string;
-  brand?: string;
-  slug: string;
-  category: string;
-  subcategory?: string;
-  description?: string;
-  currency: string;
-  price: number;
-  rating: number;
-  visit: number;
-  stock_quantity: number;
-  installment_count: number;
-  min_installment_price?: number;
-  is_active: boolean;
-  created_at?: string;
-  updated_at?: string;
-  shop: IShop;
-  images: IProductImage[];
-  product_code_url: string;
-  product_code: string;
+  image_path: string;
+  is_primary: boolean;
+  created_at: string;
+  updated_at: string;
 }
 
 export interface IProductReview {
@@ -42,19 +40,10 @@ export interface IProductReview {
   product_id: number;
   user_id: number;
   rating: number;
-  review: string;
+  comment: string;
+  status?: 'published' | 'pending' | 'rejected';
   created_at: string;
   updated_at: string;
-  user: IUser;
-}
-
-export interface IShopReview {
-  id: number;
-  shop_id: number;
-  user_id: number;
-  rating: number;
-  review: string;
-  created_at: string;
-  updated_at: string;
-  user: IUser;
+  user?: IUser;
+  product?: IProduct;
 }

@@ -11,7 +11,7 @@ import {
   combineLatest,
   map,
 } from 'rxjs';
-import { IProduct } from '../../core/models2/product.model';
+import { IProduct } from '../../core/models/product.model';
 import { CartService } from '../../core/services/cart/cart.service';
 import {
   ProductService,

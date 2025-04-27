@@ -15,7 +15,7 @@ import {
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { NgxImageCompressService } from 'ngx-image-compress';
-import { ICategory } from '../../../../../../core/models2/category.model';
+import { ICategory } from '../../../../../../core/models/category.model';
 import { CategoryService } from '../../../../../../core/services/category/category.service';
 import { CommonModule } from '@angular/common';
 

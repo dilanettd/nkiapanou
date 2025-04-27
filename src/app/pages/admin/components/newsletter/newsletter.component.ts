@@ -9,7 +9,7 @@ import {
 } from '@angular/forms';
 import { ToastrService } from 'ngx-toastr';
 import { finalize } from 'rxjs';
-import { INewsletterSubscriber } from '../../../../core/models2/user.model';
+import { INewsletterSubscriber } from '../../../../core/models/user.model';
 import { NewsletterService } from '../../../../core/services/newsletter/newsletter.service';
 
 @Component({

@@ -3,7 +3,7 @@ import { HttpClient, HttpParams } from '@angular/common/http';
 import { BehaviorSubject, Observable } from 'rxjs';
 import { tap, catchError } from 'rxjs/operators';
 import { environment } from '../../../../environments/environment';
-import { IInventoryMovement } from '../../models2/inventory-movement.model';
+import { IInventoryMovement } from '../../models/inventory-movement.model';
 import { handleHttpError } from '../errors';
 
 export interface InventoryMovementSearchParams {
@@ -98,9 +98,7 @@ export class InventoryMovementService {
   /**
    * Récupère l'historique des mouvements pour un produit spécifique
    */
-  getProductHistory(
-    productId: number
-  ): Observable<{
+  getProductHistory(productId: number): Observable<{
     status: string;
     data: { product: any; movements: IInventoryMovement[] };
   }> {
